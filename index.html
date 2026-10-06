@@ -1,0 +1,992 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#123a26">
+<meta name="description" content="Daily tracker for the Full-Time Builder Day: wake time, time per block, reps, records, the Daily Five and a weekly grade.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23123a26'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11' stroke='%23e0ad55' stroke-width='3.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<title>Builder Day Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: two-column workday — schedule timeline (with time-taken column) left, Daily Five + weekly score + history right; stacks on phones */
+:root{
+  --bg:#f3f5f1; --surface:#ffffff; --sunk:#e8ece5; --line:#d5dcd2;
+  --ink:#13261b; --muted:#5b6a60; --forest:#123a26; --forest-ink:#f1f6f2;
+  --accent:#1f6b43; --accent-soft:#d8eadf; --brass:#b9842a; --brass-soft:#f6ead2; --brass-ink:#1b1408;
+  --warn:#a5432b; --warn-soft:#f7e2db;
+  --heat0:#e3e8e1; --heat1:#c6dccd; --heat2:#9cc4aa; --heat3:#6ea686; --heat4:#3f8660; --heat5:#1f6b43;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Public Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d1611; --surface:#142019; --sunk:#1a2920; --line:#273a2e;
+  --ink:#e4ece6; --muted:#93a598; --forest:#0a2617; --forest-ink:#e4ece6;
+  --accent:#5dbb88; --accent-soft:#1d3a2a; --brass:#e0ad55; --brass-soft:#3a2f1a; --brass-ink:#1b1408;
+  --warn:#ec8a70; --warn-soft:#3d2119;
+  --heat0:#1b2820; --heat1:#1f3d2b; --heat2:#2a5a3e; --heat3:#377a53; --heat4:#4a9c6c; --heat5:#6fd09b;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d1611; --surface:#142019; --sunk:#1a2920; --line:#273a2e;
+  --ink:#e4ece6; --muted:#93a598; --forest:#0a2617; --forest-ink:#e4ece6;
+  --accent:#5dbb88; --accent-soft:#1d3a2a; --brass:#e0ad55; --brass-soft:#3a2f1a; --brass-ink:#1b1408;
+  --warn:#ec8a70; --warn-soft:#3d2119;
+  --heat0:#1b2820; --heat1:#1f3d2b; --heat2:#2a5a3e; --heat3:#377a53; --heat4:#4a9c6c; --heat5:#6fd09b;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.wrap{max-width:1240px;margin:0 auto;padding:24px 16px 48px}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(26px,4vw,38px);line-height:1.05;margin:4px 0 0;text-wrap:balance;letter-spacing:-.01em}
+.datenav{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.datenav button{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer}
+.datenav button:hover:not(:disabled){border-color:var(--accent)}
+.datenav button:disabled{opacity:.4;cursor:default}
+.datenav .dlabel{font-family:var(--f-display);font-weight:700;font-size:17px;min-width:170px;text-align:center}
+.store-note{font-size:12px;color:var(--muted);margin-top:6px}
+
+.now{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;background:var(--forest);color:var(--forest-ink);border-radius:12px;padding:14px 18px;margin-bottom:20px}
+.now .tag{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;background:var(--brass);color:var(--brass-ink);padding:3px 8px;border-radius:4px;font-weight:600}
+.now .what{font-family:var(--f-display);font-weight:700;font-size:20px}
+.now .why{opacity:.8;flex:1 1 260px;min-width:0}
+.now .left{font-family:var(--f-mono);font-size:13px;opacity:.85}
+
+.grid{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:940px){.grid{grid-template-columns:minmax(0,1fr)}.side{order:-1}}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.panel h2{font-family:var(--f-display);font-weight:700;font-size:17px;margin:0}
+.phead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.phead .meta{font-family:var(--f-mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* timeline */
+.tl{list-style:none;margin:0;padding:0}
+.row{display:grid;grid-template-columns:84px 28px minmax(0,1fr) 168px;gap:12px;padding:12px 18px;border-bottom:1px solid var(--line);align-items:start}
+.row:last-child{border-bottom:0}
+.row.five{background:linear-gradient(90deg,var(--accent-soft),transparent 60%)}
+.row.current{box-shadow:inset 3px 0 0 var(--brass);background:var(--brass-soft)}
+.time{font-family:var(--f-mono);font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:3px;line-height:1.35}
+.chk{appearance:none;width:24px;height:24px;border:2px solid var(--line);border-radius:6px;background:var(--surface);cursor:pointer;display:grid;place-content:center;margin:0}
+.chk:hover{border-color:var(--accent)}
+.chk:checked{background:var(--accent);border-color:var(--accent)}
+.chk:checked::after{content:"";width:11px;height:6px;border-left:2.5px solid var(--surface);border-bottom:2.5px solid var(--surface);transform:rotate(-45deg) translate(1px,-1px)}
+.bname{font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.five .bname{font-family:var(--f-display);font-weight:800;letter-spacing:.02em}
+.pill{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:2px 6px;border-radius:4px;background:var(--accent);color:var(--surface);font-weight:600}
+.pill.nowp{background:var(--brass);color:var(--brass-ink)}
+.desc{color:var(--muted);font-size:14px;margin-top:2px}
+.row.done .bname{color:var(--muted)}
+.row.done .bname span.n{text-decoration:line-through;text-decoration-thickness:1.5px}
+.extra{margin-top:10px;display:grid;gap:8px}
+/* reps */
+.reps{display:grid;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.rep{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center}
+.rep .rname{font-weight:600;font-size:14px;min-width:0;overflow-wrap:anywhere}
+.rctl{display:flex;align-items:center;gap:4px}
+.rctl button{min-width:30px;height:30px;padding:0 6px;border-radius:7px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-family:var(--f-mono);font-size:13px;line-height:1}
+.rctl button:hover{border-color:var(--accent);color:var(--accent)}
+.rin{width:58px;font-family:var(--f-mono);font-size:15px;font-weight:600;text-align:center;padding:4px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums;-moz-appearance:textfield}
+.rin::-webkit-inner-spin-button,.rin::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.rin:focus{border-color:var(--accent);outline:none}
+.rtarget{font-family:var(--f-mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.rmeta{grid-column:1 / -1;display:flex;gap:6px 10px;flex-wrap:wrap;align-items:center;font-family:var(--f-mono);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.rbar{grid-column:1 / -1;height:5px;border-radius:3px;background:var(--sunk);overflow:hidden}
+.rbar i{display:block;height:100%;background:var(--accent)}
+.rbar.over i{background:var(--brass)}
+.tagok{color:var(--accent);font-weight:600}
+.tagover{color:var(--brass);font-weight:600}
+.tagshort{color:var(--warn);font-weight:600}
+.linkbtn{border:0;background:none;padding:0;cursor:pointer;font-family:var(--f-mono);font-size:11.5px;color:var(--accent);justify-self:start;text-decoration:underline dotted;text-underline-offset:3px}
+.linkbtn:hover{color:var(--brass)}
+.reped{display:grid;gap:6px}
+.redrow{display:grid;grid-template-columns:minmax(0,1fr) 72px 30px;gap:6px;align-items:center}
+.redrow input{font:inherit;font-size:13.5px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink);min-width:0}
+.redrow input:focus{border-color:var(--accent);outline:none}
+.redrow .x{height:30px;border-radius:7px;border:1px solid var(--line);background:var(--surface);cursor:pointer;color:var(--warn)}
+.redhead{display:grid;grid-template-columns:minmax(0,1fr) 72px 30px;gap:6px;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.redfoot{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.rgtitle{font-family:var(--f-display);font-weight:700;font-size:13.5px;letter-spacing:.02em}
+.wsel{display:grid;gap:4px}
+.wsel select{font:inherit;font-size:14px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);max-width:100%}
+.btn-sm{white-space:nowrap;border:1px solid var(--accent);background:var(--accent);color:var(--surface);border-radius:7px;padding:5px 12px;cursor:pointer;font-size:13px;font-weight:600}
+label.fl{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+input.tx{width:100%;font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+input.tx:focus{border-color:var(--accent);outline:none}
+.top3in{display:grid;grid-template-columns:22px minmax(0,1fr);gap:6px 8px;align-items:center}
+.top3in span{font-family:var(--f-mono);font-size:12px;color:var(--muted);text-align:right}
+
+/* time-taken column */
+.timing{display:grid;gap:4px;justify-items:end;text-align:right}
+.tval{display:flex;align-items:center;gap:6px}
+.mins{width:62px;font-family:var(--f-mono);font-size:15px;font-weight:600;text-align:right;padding:5px 6px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);font-variant-numeric:tabular-nums;-moz-appearance:textfield}
+.mins::-webkit-inner-spin-button,.mins::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.mins:focus{border-color:var(--accent);outline:none}
+.mins.clock{width:104px;text-align:center}
+.unit{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.tbtn{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--surface);cursor:pointer;display:grid;place-content:center;font-size:11px;line-height:1}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tbtn.run{background:var(--brass);border-color:var(--brass);color:var(--brass-ink)}
+.live{font-family:var(--f-mono);font-size:15px;font-weight:600;color:var(--brass);font-variant-numeric:tabular-nums;min-width:62px;text-align:right}
+.cmp{font-family:var(--f-mono);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;line-height:1.4}
+.delta{font-family:var(--f-mono);font-size:11px;font-weight:600;font-variant-numeric:tabular-nums}
+.delta.good{color:var(--accent)} .delta.bad{color:var(--warn)}
+.pb{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;background:var(--brass);color:var(--brass-ink);padding:2px 6px;border-radius:4px}
+.dir{border:0;background:none;padding:0;cursor:pointer;font-family:var(--f-mono);font-size:10.5px;color:var(--muted);text-decoration:underline dotted;text-underline-offset:3px}
+.dir:hover{color:var(--accent)}
+@media (max-width:600px){
+  .row{grid-template-columns:58px 26px minmax(0,1fr);gap:10px;padding:12px 14px}
+  .timing{grid-column:3 / -1;justify-items:start;text-align:left;grid-template-columns:auto;padding-top:4px;border-top:1px dashed var(--line)}
+}
+
+/* side */
+.side{display:grid;gap:20px}
+.fivegrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;padding:16px 18px 6px}
+.fbtn{border:1.5px solid var(--line);background:var(--bg);border-radius:10px;padding:10px 4px 8px;cursor:pointer;display:grid;gap:2px;justify-items:center;text-align:center}
+.fbtn:hover{border-color:var(--accent)}
+.fbtn .fn{font-family:var(--f-display);font-weight:800;font-size:12px;letter-spacing:.04em}
+.fbtn .fs{font-family:var(--f-mono);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.fbtn .dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);margin-bottom:4px}
+.fbtn.on{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.fbtn.on .fs{color:var(--surface);opacity:.85}
+.fbtn.on .dot{background:var(--surface);border-color:var(--surface)}
+.score{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:10px 18px 16px;flex-wrap:wrap}
+.score .big{font-family:var(--f-display);font-weight:800;font-size:40px;line-height:1;font-variant-numeric:tabular-nums}
+.score .big small{font-size:18px;color:var(--muted);font-weight:700}
+.score .streak{text-align:right;font-size:13px;color:var(--muted)}
+.score .streak b{display:block;font-family:var(--f-display);font-size:22px;color:var(--ink)}
+.alerts{display:grid;gap:8px;padding:0 18px 16px}
+.alerts:empty{display:none}
+.alert{background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:8px 12px;font-size:13.5px;font-weight:500}
+.alert.ok{background:var(--accent-soft);color:var(--accent)}
+
+/* weekly score */
+.wk{padding:16px 18px 18px;display:grid;gap:14px}
+.wkhead{display:flex;align-items:center;gap:16px}
+.grade{width:72px;height:72px;border-radius:14px;background:var(--forest);color:var(--forest-ink);display:grid;place-content:center;font-family:var(--f-display);font-weight:800;font-size:34px;line-height:1;flex:none}
+.wkhead .num{font-family:var(--f-display);font-weight:800;font-size:28px;line-height:1;font-variant-numeric:tabular-nums}
+.wkhead .num small{font-size:15px;color:var(--muted)}
+.wkhead .sub{font-size:13px;color:var(--muted);margin-top:4px}
+.parts{display:grid;gap:8px}
+.part{display:grid;grid-template-columns:minmax(0,1fr) 54px;gap:4px 10px;font-size:13px;align-items:center}
+.part .pts{font-family:var(--f-mono);font-size:12px;text-align:right;font-variant-numeric:tabular-nums}
+.bar{grid-column:1 / -1;height:6px;border-radius:3px;background:var(--sunk);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.part.off{color:var(--muted)} .part.off .bar i{background:var(--line)}
+.wkfacts{display:flex;gap:8px;flex-wrap:wrap}
+.wkfacts span{background:var(--bg);border-radius:6px;padding:4px 8px;font-size:12.5px}
+.wkfacts b{font-family:var(--f-mono)}
+.hist{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;align-items:end;height:120px;padding-top:4px}
+.hcol{display:grid;grid-template-rows:auto 1fr auto;height:100%;gap:3px;text-align:center;min-width:0}
+.hcol .v{font-family:var(--f-mono);font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.hcol .track{display:flex;align-items:flex-end}
+.hcol .fill{width:100%;border-radius:4px 4px 2px 2px;background:var(--heat3)}
+.hcol.best .fill{background:var(--brass)}
+.hcol.best .v{color:var(--brass);font-weight:600}
+.hcol.cur .fill{background:var(--accent)}
+.hcol .l{font-family:var(--f-mono);font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden}
+.beat{font-size:13px;color:var(--muted)}
+.beat b{color:var(--ink)}
+
+.plan{padding:14px 18px 16px}
+.plan ol{margin:0;padding-left:22px;display:grid;gap:4px}
+.plan .empty{color:var(--muted);font-size:14px;margin:0}
+.plan .grat{margin-top:10px;font-size:14px;color:var(--muted);font-style:italic}
+
+.heatwrap{padding:14px 18px 16px;overflow-x:auto}
+.heat{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,16px);gap:4px;width:max-content}
+.heat button{width:16px;height:16px;border-radius:3px;border:0;padding:0;cursor:pointer;background:var(--heat0)}
+.heat button.sel{outline:2px solid var(--brass);outline-offset:1px}
+.heat button.future{opacity:.35;cursor:default}
+.legend{display:flex;align-items:center;gap:4px;margin-top:10px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px}
+.stats div{background:var(--bg);border-radius:8px;padding:8px 10px}
+.stats b{display:block;font-family:var(--f-display);font-size:20px;font-variant-numeric:tabular-nums}
+.stats span{font-size:12px;color:var(--muted)}
+
+.rule{font-size:13px;color:var(--muted);text-align:center;margin-top:28px;font-family:var(--f-mono);letter-spacing:.06em}
+@media (max-width:480px){.fivegrid{gap:5px;padding:14px 12px 6px}.fbtn .fn{font-size:10.5px}}
+@media (prefers-reduced-motion:no-preference){.fbtn,.chk,.row,.bar i{transition:background-color .15s,border-color .15s,width .3s}}
+[hidden]{display:none!important}
+body{margin:0;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+img{max-width:100%}
+.auth{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:13px;color:var(--muted)}
+.auth .who{font-family:var(--f-mono);font-size:12px}
+.btn-g{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:7px 14px;cursor:pointer;font-weight:600;font-size:14px}
+.btn-g:hover{border-color:var(--accent)}
+.btn-g svg{width:16px;height:16px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">The Full-Time Builder Day · Years 1–3</div>
+      <h1>Builder Day Tracker</h1>
+      <div class="store-note" id="storeNote">Loading…</div>
+      <div class="auth" id="auth"></div>
+    </div>
+    <div class="datenav">
+      <button id="prev" aria-label="Previous day">←</button>
+      <div class="dlabel" id="dlabel">—</div>
+      <button id="next" aria-label="Next day">→</button>
+      <button id="today">Today</button>
+    </div>
+  </header>
+
+  <div class="now" id="nowbar"></div>
+
+  <div class="grid">
+    <section class="panel">
+      <div class="phead"><h2>Schedule</h2><span class="meta" id="blockMeta">0 / 14 blocks</span></div>
+      <ul class="tl" id="tl"></ul>
+    </section>
+
+    <aside class="side">
+      <section class="panel">
+        <div class="phead"><h2>Did I do the Five?</h2><span class="meta">never miss twice</span></div>
+        <div class="fivegrid" id="fivegrid"></div>
+        <div class="score">
+          <div class="big" id="fiveScore">0<small>/5</small></div>
+          <div class="streak">Full-Five streak<b id="streak">0 days</b></div>
+        </div>
+        <div class="alerts" id="alerts"></div>
+      </section>
+
+      <section class="panel">
+        <div class="phead"><h2>Weekly score</h2><span class="meta" id="wkLabel">Mon–Sun</span></div>
+        <div class="wk" id="wk"></div>
+      </section>
+
+      <section class="panel">
+        <div class="phead"><h2>Today's top 3</h2><span class="meta">set last night</span></div>
+        <div class="plan" id="plan"></div>
+      </section>
+
+      <section class="panel">
+        <div class="phead"><h2>Last 12 weeks</h2><span class="meta">Five per day</span></div>
+        <div class="heatwrap">
+          <div class="heat" id="heat"></div>
+          <div class="legend">0 <i style="background:var(--heat0)"></i><i style="background:var(--heat1)"></i><i style="background:var(--heat2)"></i><i style="background:var(--heat3)"></i><i style="background:var(--heat4)"></i><i style="background:var(--heat5)"></i> 5</div>
+          <div class="stats">
+            <div><b id="stBest">0</b><span>Best streak</span></div>
+            <div><b id="stFull">0</b><span>Full-Five days</span></div>
+            <div><b id="stAvg">0</b><span>Avg Five / day (30d)</span></div>
+          </div>
+        </div>
+      </section>
+    </aside>
+  </div>
+  <p class="rule">Excellence is a sleep-powered game.</p>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+const BLOCKS = [
+  {id:"wake",    s:"05:00", e:"05:30", name:"Wake", desc:"Water, light, no phone. Read tonight's plan from last night.", clock:true},
+  {id:"train",   s:"05:30", e:"06:45", name:"TRAIN", desc:"Gym. Log the session.", five:true},
+  {id:"study",   s:"06:45", e:"07:15", name:"Study", desc:"30 min reading in the craft (sales, marketing, AI, psychology of teaching)."},
+  {id:"build",   s:"07:15", e:"09:15", name:"BUILD — Deep Work 1", desc:"Client delivery / product building / the money-making work. Phone in another room.", five:true},
+  {id:"break",   s:"09:15", e:"09:45", name:"Break", desc:"Food. Walk. No feeds."},
+  {id:"publish", s:"09:45", e:"11:15", name:"PUBLISH — Deep Work 2", desc:"Create + ship today's content. One long-form or one video, repurposed into 2–3 short pieces.", five:true},
+  {id:"connect", s:"11:15", e:"12:00", name:"CONNECT", desc:"10 outreach touches. Follow-ups first, new contacts second.", five:true},
+  {id:"lunch",   s:"12:00", e:"13:00", name:"Lunch + admin", desc:"Emails, invoices, small tasks batched here — never in deep work."},
+  {id:"exec",    s:"13:00", e:"16:00", name:"Execution block", desc:"More client work, sales calls, building systems, editing."},
+  {id:"drills",  s:"16:00", e:"17:00", name:"Learning/skill drills", desc:"Deliberate practice on the weakest part of your craft."},
+  {id:"life",    s:"17:00", e:"20:00", name:"Life", desc:"People, food, family, faith, community. You are building loyalty here too."},
+  {id:"review",  s:"20:30", e:"20:45", name:"REVIEW", desc:"Scorecard (did I do the Five?), write tomorrow's top 3, one line of gratitude.", five:true},
+  {id:"wind",    s:"21:00", e:"22:00", name:"Wind down", desc:"No screens after 21:30."},
+  {id:"sleep",   s:"22:00", e:"05:00", name:"Sleep", desc:"Excellence is a sleep-powered game. 7+ hours, non-negotiable."},
+];
+const FIVE = ["train","build","publish","connect","review"];
+const SHORT = {train:"TRAIN",build:"BUILD",publish:"PUBLISH",connect:"CONNECT",review:"REVIEW"};
+// Default record direction: "lower" = finishing faster beats your record, "higher" = more time beats it.
+const DEFAULT_DIR = {sleep:"higher", life:"higher"};
+// Starter rep counters (editable on the page). Targets are the plan's minimums; going over is the point.
+const DEFAULT_REPS = {
+  publish: [{id:"videos",   name:"Videos / long-form", target:2}, {id:"shorts", name:"Short pieces", target:3}],
+  connect: [{id:"outreach", name:"Outreach touches", target:10}],
+};
+// TRAIN: Push / Pull / Legs twice a week, core on every training day, Sunday off.
+// Each muscle group gets hit twice a week at roughly 10–20 hard sets, the range research supports for building size and strength.
+// Targets are total reps across sets (4 × 10 = 40). Add weight once you clear the top of the range two sessions running.
+const DEFAULT_WORKOUTS = {
+  push: {name:"Push", focus:"Chest · shoulders · triceps", items:[
+    {id:"bench",    name:"Bench press",             target:32, hint:"4 × 6–10"},
+    {id:"ohp",      name:"Overhead press",          target:30, hint:"3 × 8–10"},
+    {id:"incline",  name:"Incline dumbbell press",  target:30, hint:"3 × 10"},
+    {id:"dips",     name:"Dips",                    target:30, hint:"3 sets, near failure"},
+    {id:"lateral",  name:"Lateral raises",          target:45, hint:"3 × 15"},
+    {id:"triceps",  name:"Triceps extensions",      target:36, hint:"3 × 12"},
+    {id:"pushups",  name:"Push-ups (finisher)",     target:50, hint:"fewest sets you can"}]},
+  pull: {name:"Pull", focus:"Back · rear delts · biceps", items:[
+    {id:"pullups",  name:"Pull-ups",                target:30, hint:"4 sets; add weight past 10"},
+    {id:"rows",     name:"Barbell / dumbbell rows", target:32, hint:"4 × 8"},
+    {id:"pulldown", name:"Lat pulldown / pullover", target:30, hint:"3 × 10"},
+    {id:"facepull", name:"Face pulls / rear delts", target:45, hint:"3 × 15"},
+    {id:"curls",    name:"Biceps curls",            target:36, hint:"3 × 12"},
+    {id:"hammer",   name:"Hammer curls",            target:30, hint:"3 × 10"}]},
+  legs: {name:"Legs", focus:"Quads · hamstrings · glutes · calves", items:[
+    {id:"squats",   name:"Squats",                  target:32, hint:"4 × 6–10"},
+    {id:"rdl",      name:"Romanian deadlifts",      target:30, hint:"3 × 8–10"},
+    {id:"lunges",   name:"Walking lunges",          target:36, hint:"3 × 12 total"},
+    {id:"hipthrust",name:"Hip thrusts",             target:30, hint:"3 × 10"},
+    {id:"legcurl",  name:"Leg curls / Nordics",     target:30, hint:"3 × 10"},
+    {id:"calves",   name:"Calf raises",             target:60, hint:"4 × 15"}]},
+  rest: {name:"Rest", focus:"Walk · mobility · recover", items:[
+    {id:"mobility", name:"Mobility (minutes)",      target:20},
+    {id:"steps",    name:"Walk (thousand steps)",   target:8}]},
+  core: {name:"Core", focus:"every training day", items:[
+    {id:"legraise", name:"Hanging leg raises",      target:30, hint:"3 × 10"},
+    {id:"plank",    name:"Plank (seconds)",         target:120, hint:"2 × 60s"}]},
+};
+const SPLIT_KEYS = ["push","pull","legs","rest"];
+const DEFAULT_SPLIT = ["push","pull","legs","push","pull","legs","rest"];   // Mon → Sun
+const DOW = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2,"0");
+const keyOf = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const fromKey = k => { const [y,m,d] = k.split("-").map(Number); return new Date(y,m-1,d); };
+const shift = (k,n) => { const d = fromKey(k); d.setDate(d.getDate()+n); return keyOf(d); };
+const mins = t => { const [h,m] = t.split(":").map(Number); return h*60+m; };
+const slotLen = b => { let l = mins(b.e) - mins(b.s); return l <= 0 ? l + 1440 : l; };
+const fmt = m => { m = Math.round(m); return m >= 60 ? `${Math.floor(m/60)}h${m%60 ? " " + pad(m%60) + "m" : ""}` : `${m}m`; };
+const blank = k => ({date:k, done:{}, top3:["","",""], gratitude:"", mins:{}, clock:{}, reps:{}, timer:null});
+function norm(v){
+  const d = Object.assign(blank(v.date), v);
+  if (d.touches && d.reps.outreach == null) d.reps = {...d.reps, outreach: d.touches};   // older CONNECT counter
+  return d;
+}
+const shortDate = k => fromKey(k).toLocaleDateString(undefined,{day:"numeric",month:"short"});
+
+let days = {};               // dateKey -> day object
+let settings = {dir:{}};
+let sel = keyOf(new Date());
+let store = null;
+
+/* ---------- storage ---------- */
+// Signed out: this browser's own copy. Signed in: a per-account cache, synced with Firestore.
+let LS_KEY = "builder-day-v2";
+function lsRead(key){ try { return JSON.parse(localStorage.getItem(key) || "null"); } catch(e){ return null; } }
+function lsLoad(){
+  const v2 = lsRead(LS_KEY);
+  if (v2) { days = v2.days || {}; settings = v2.settings || {dir:{}}; }
+  else { days = LS_KEY === "builder-day-v2" ? (lsRead("builder-day-v1") || {}) : {}; settings = {dir:{}}; }
+  for (const k in days) days[k] = norm(days[k]);
+}
+function lsSave(){ try { localStorage.setItem(LS_KEY, JSON.stringify({days, settings})); } catch(e){} }
+
+const busy = {};             // dateKey -> true while a debounced text edit is pending
+function makeDbStore(db, uid){
+  // users/{uid}/tracker/{day-YYYY-MM-DD | settings} — firestore.rules lets only that signed-in user read or write it
+  const col = db.collection("users").doc(uid).collection("tracker");
+  const writing = {}, pending = {};
+  async function flush(id){
+    if (writing[id]) return;
+    while (pending[id]) {
+      const body = pending[id]; delete pending[id];
+      writing[id] = true;
+      try { await col.doc(id).set(body); }
+      catch(e){ $("storeNote").textContent = e && e.code === "permission-denied" ? "Your account can't save here. Sign out and back in." : "A save didn't go through. It will retry on your next edit."; }
+      writing[id] = false;
+    }
+  }
+  let first = true;
+  return {
+    put(id, body){ pending[id] = JSON.parse(JSON.stringify(body)); flush(id); },
+    subscribe(onFirst){
+      return col.onSnapshot(snap => {
+        if (snap.metadata.hasPendingWrites) return;   // our own edit is already on screen
+        snap.docs.forEach(d => {
+          const v = d.data(); if (!v) return;
+          if (d.id === "settings") settings = Object.assign({dir:{}}, v);
+          else if (v.date && !busy[v.date]) days[v.date] = norm(v);
+        });
+        if (first) { first = false; onFirst && onFirst(snap); }
+        lsSave();
+        if (!editing()) render();
+      }, () => { $("storeNote").textContent = "Live sync stopped. Reload the page to reconnect."; });
+    }
+  };
+}
+
+const timers = {};
+function saveDay(day, debounce){
+  lsSave();
+  if (!store) return;
+  clearTimeout(timers[day.date]);
+  if (debounce) {
+    busy[day.date] = true;
+    timers[day.date] = setTimeout(() => { busy[day.date] = false; store.put("day-" + day.date, day); }, 700);
+  } else { busy[day.date] = false; store.put("day-" + day.date, day); }
+}
+function saveSettings(){ lsSave(); if (store) store.put("settings", settings); }
+const editing = () => { const a = document.activeElement; return a && ["tx","mins","rin","ed"].some(c => a.classList.contains(c)); };
+
+/* ---------- derived ---------- */
+const getDay = k => days[k] || blank(k);
+const ensure = k => days[k] || (days[k] = blank(k));
+const fiveCount = d => FIVE.filter(f => d.done && d.done[f]).length;
+const doneCount = d => BLOCKS.filter(b => d.done && d.done[b.id]).length;
+const dirOf = id => (settings.dir && settings.dir[id]) || DEFAULT_DIR[id] || "lower";
+const better = (id, a, b) => dirOf(id) === "higher" ? a > b : a < b;
+// Wake logs the clock time you got up (minutes after midnight, in day.clock); every other block logs minutes taken.
+const CLOCK = new Set(BLOCKS.filter(b => b.clock).map(b => b.id));
+const minsOf = (k, id) => {
+  const d = days[k]; if (!d) return null;
+  if (CLOCK.has(id)) { const v = d.clock && d.clock[id]; return v == null ? null : v; }
+  const v = d.mins && d.mins[id]; return v > 0 ? v : null;
+};
+const clockFmt = m => { m = ((Math.round(m) % 1440) + 1440) % 1440; return `${pad(Math.floor(m/60))}:${pad(m%60)}`; };
+const hasData = d => d && (doneCount(d) > 0 || Object.values(d.mins || {}).some(v => v > 0) || Object.keys(d.clock || {}).length > 0 || Object.values(d.reps || {}).some(v => v > 0));
+const workouts = () => Object.assign({}, DEFAULT_WORKOUTS, settings.workouts || {});
+const split = () => (settings.split && settings.split.length === 7) ? settings.split : DEFAULT_SPLIT;
+const defaultWorkoutFor = k => split()[(fromKey(k).getDay() + 6) % 7];
+const workoutKeyFor = k => (days[k] && days[k].workout) || defaultWorkoutFor(k);
+function repGroups(blockId, k){
+  if (blockId === "train") {
+    const wk = workoutKeyFor(k), W = workouts();
+    const gs = [{key:"w:" + wk, label:W[wk].name, title:`${W[wk].name} · ${W[wk].focus}`, items:W[wk].items}];
+    if (wk !== "rest") gs.push({key:"w:core", label:"Core", title:"Core · every training day", items:W.core.items});
+    return gs;
+  }
+  return [{key:blockId, label:(BLOCKS.find(b => b.id === blockId) || {}).name || "", title:null, items:(settings.reps || DEFAULT_REPS)[blockId] || []}];
+}
+function setGroupItems(key, items){
+  if (key.startsWith("w:")) { const wk = key.slice(2), W = workouts(); settings.workouts = {...(settings.workouts || {}), [wk]: {...W[wk], items}}; }
+  else settings.reps = {...(settings.reps || DEFAULT_REPS), [key]: items};
+}
+const repDefs = (id, k = sel) => repGroups(id, k).flatMap(g => g.items);
+const allRepDefs = (k = sel) => BLOCKS.flatMap(b => repDefs(b.id, k).map(r => ({...r, block:b.id})));
+const repOf = (k, rid) => { const v = days[k] && days[k].reps && days[k].reps[rid]; return v == null ? null : v; };
+function repBest(rid, skip, beforeOnly){
+  let best = null, when = null;
+  for (const k in days) {
+    if (k === skip || (beforeOnly && k >= beforeOnly)) continue;
+    const v = repOf(k, rid); if (v == null || v <= 0) continue;
+    if (best == null || v > best) { best = v; when = k; }
+  }
+  return best == null ? null : {v:best, k:when};
+}
+function repAvg(rid, keys){ const vs = keys.map(k => repOf(k, rid)).filter(v => v != null); return vs.length ? vs.reduce((a,b)=>a+b,0)/vs.length : null; }
+const repSum = (rid, keys) => keys.reduce((s,k) => s + (repOf(k, rid) || 0), 0);
+let editingReps = null;   // key of the counter group being edited
+function firstKey(){ const ks = Object.keys(days).filter(k => hasData(days[k])).sort(); return ks[0] || null; }
+function streakEnding(k){ let n = 0; while (fiveCount(getDay(k)) === 5) { n++; k = shift(k,-1); } return n; }
+function habitStreak(f, k){ let n = 0; while (getDay(k).done[f]) { n++; k = shift(k,-1); } return n; }
+
+// Personal best for a block across every day except `skip`
+function bestOf(id, skip, beforeOnly){
+  let best = null, when = null;
+  for (const k in days) {
+    if (k === skip || (beforeOnly && k >= beforeOnly)) continue;
+    const v = minsOf(k, id); if (v == null) continue;
+    if (best == null || better(id, v, best)) { best = v; when = k; }
+  }
+  return best == null ? null : {v:best, k:when};
+}
+function avgOf(id, keys){ const vs = keys.map(k => minsOf(k, id)).filter(v => v != null); return vs.length ? vs.reduce((a,b)=>a+b,0)/vs.length : null; }
+
+/* ---------- weekly score ---------- */
+function weekStart(k){ const d = fromKey(k); d.setDate(d.getDate() - (d.getDay()+6)%7); return keyOf(d); }
+function gradeOf(s){ return s >= 95 ? "A+" : s >= 90 ? "A" : s >= 80 ? "B" : s >= 70 ? "C" : s >= 60 ? "D" : "F"; }
+function scoreWeek(ws, withRecords){
+  const today = keyOf(new Date()), fk = firstKey();
+  const keys = [0,1,2,3,4,5,6].map(i => shift(ws,i));
+  const scorable = keys.filter(k => fk && k >= fk && k < today);  // today counts once it's over
+  if (!scorable.length) return null;
+  const n = scorable.length;
+  const five = scorable.reduce((s,k) => s + fiveCount(getDay(k)), 0) / (5*n);
+  const sched = scorable.reduce((s,k) => s + doneCount(getDay(k)), 0) / (BLOCKS.length*n);
+  const prevKeys = keys.map(k => shift(k,-7));
+  let compared = 0, improved = 0;
+  BLOCKS.forEach(b => { const a = avgOf(b.id, scorable), p = avgOf(b.id, prevKeys); if (a != null && p != null) { compared++; if (better(b.id, a, p)) improved++; } });
+  let doubles = 0;
+  scorable.forEach(k => { const y = shift(k,-1); if (y < fk) return; FIVE.forEach(f => { if (!getDay(k).done[f] && !getDay(y).done[f]) doubles++; }); });
+  let repFrac = null, hits = 0, slots = 0, rs = 0;
+  scorable.forEach(k => allRepDefs(k).filter(r => r.target > 0).forEach(r => { const v = repOf(k, r.id) || 0; rs += Math.min(v / r.target, 1); slots++; if (v >= r.target) hits++; }));
+  if (slots) repFrac = rs / slots;
+  const parts = [
+    {label:"Daily Five done", max:50, frac:five, note:`${Math.round(five*5*n)}/${5*n}`},
+    {label:"Schedule blocks done", max:15, frac:sched, note:`${Math.round(sched*BLOCKS.length*n)}/${BLOCKS.length*n}`},
+    {label:"Rep targets hit", max:10, frac:repFrac, note:slots ? `${hits}/${slots}` : "no rep counters"},
+    {label:"Beat last week's times", max:15, frac:compared ? improved/compared : null, note:compared ? `${improved}/${compared} blocks` : "needs 2 weeks of times"},
+    {label:"Never missed twice", max:10, frac:Math.max(0, 1 - doubles/5), note:doubles ? `${doubles} double miss${doubles>1?"es":""}` : "clean"},
+  ];
+  const live = parts.filter(p => p.frac != null);
+  const possible = live.reduce((s,p) => s + p.max, 0);
+  const earned = live.reduce((s,p) => s + p.max*p.frac, 0);
+  const score = Math.round(earned / possible * 100);
+  let records = 0;
+  if (withRecords) keys.filter(k => k <= today).forEach(k => BLOCKS.forEach(b => {
+    const v = minsOf(k, b.id); if (v == null) return;
+    const prior = bestOf(b.id, null, k); if (prior && better(b.id, v, prior.v)) records++;
+  }));
+  let repRecords = 0;
+  if (withRecords) keys.filter(k => k <= today).forEach(k => allRepDefs(k).forEach(r => {
+    const v = repOf(k, r.id); if (!v) return;
+    const prior = repBest(r.id, null, k); if (prior && v > prior.v) repRecords++;
+  }));
+  records += repRecords;
+  return {score, grade:gradeOf(score), n, final: keys[6] < today, parts, records, keys};
+}
+
+/* ---------- render ---------- */
+function render(){
+  const today = keyOf(new Date());
+  const day = getDay(sel);
+  const d = fromKey(sel);
+  $("dlabel").textContent = sel === today ? "Today · " + d.toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short"})
+                                           : d.toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short",year:"numeric"});
+  $("next").disabled = sel >= today;
+
+  // now bar
+  const nb = $("nowbar"); let curId = "";
+  if (sel === today) {
+    const now = new Date(), m = now.getHours()*60 + now.getMinutes();
+    let cur = null;
+    for (const b of BLOCKS) { const s = mins(b.s), e = mins(b.e); if (s < e ? (m >= s && m < e) : (m >= s || m < e)) cur = b; }
+    const next = cur ? null : BLOCKS.find(b => mins(b.s) > m);
+    if (cur) {
+      let left = mins(cur.e) - m; if (left < 0) left += 1440;
+      nb.innerHTML = `<span class="tag">Now</span><span class="what"></span><span class="why"></span><span class="left">${fmt(left)} left · until ${cur.e}</span>`;
+      nb.querySelector(".what").textContent = cur.name; nb.querySelector(".why").textContent = cur.desc;
+      curId = cur.id;
+    } else if (next) {
+      nb.innerHTML = `<span class="tag">Transition</span><span class="what"></span><span class="why"></span><span class="left">starts ${next.s}</span>`;
+      nb.querySelector(".what").textContent = "Next: " + next.name; nb.querySelector(".why").textContent = next.desc;
+    }
+    nb.hidden = false;
+  } else nb.hidden = true;
+
+  // timeline
+  const tl = $("tl"); tl.innerHTML = "";
+  const running = getDay(today).timer;
+  const prior7 = [1,2,3,4,5,6,7].map(i => shift(sel,-i));
+  let doneN = 0, pbsToday = 0;
+  BLOCKS.forEach(b => {
+    const on = !!day.done[b.id]; if (on) doneN++;
+    const li = document.createElement("li");
+    li.className = "row" + (b.five ? " five" : "") + (on ? " done" : "") + (curId === b.id ? " current" : "");
+    li.innerHTML = `<div class="time">${b.s}${b.id==="sleep" ? "" : "–<br>"+b.e}</div>
+      <input type="checkbox" class="chk" id="chk-${b.id}" ${on?"checked":""} aria-label="Mark ${b.name} done">
+      <div><label class="bname" for="chk-${b.id}"><span class="n"></span>${b.five?'<span class="pill">Five</span>':''}${curId===b.id?'<span class="pill nowp">Now</span>':''}</label><div class="desc"></div><div class="extra"></div></div>
+      <div class="timing"></div>`;
+    li.querySelector(".n").textContent = b.name;
+    li.querySelector(".desc").textContent = b.desc;
+    li.querySelector(".chk").addEventListener("change", e => toggle(b.id, e.target.checked));
+
+    // extras
+    const ex = li.querySelector(".extra");
+    pbsToday += renderReps(b, day, ex, prior7);
+    if (b.id === "review") {
+      const rv = document.createElement("div"); rv.className = "extra"; rv.style.marginTop = "0"; ex.appendChild(rv);
+      rv.innerHTML = `<label class="fl">Tomorrow's top 3</label><div class="top3in">${[0,1,2].map(i=>`<span>${i+1}</span><input class="tx" id="top-${i}" maxlength="140" placeholder="Priority ${i+1}">`).join("")}</div>
+        <label class="fl" for="grat">One line of gratitude</label><input class="tx" id="grat" maxlength="200" placeholder="Today I'm grateful for…">`;
+      [0,1,2].forEach(i => { const inp = rv.querySelector("#top-"+i); inp.value = day.top3[i]||""; inp.oninput = () => { const dd = ensure(sel); dd.top3 = [...dd.top3]; dd.top3[i] = inp.value; saveDay(dd,true); }; });
+      const g = rv.querySelector("#grat"); g.value = day.gratitude||""; g.oninput = () => { const dd = ensure(sel); dd.gratitude = g.value; saveDay(dd,true); };
+    }
+    if (!ex.childElementCount) ex.remove();
+
+    // time taken (or clock time, for Wake) + comparison
+    const tm = li.querySelector(".timing");
+    const val = minsOf(sel, b.id);
+    const isRunning = running && running.id === b.id && sel === today;
+    const tval = document.createElement("div"); tval.className = "tval";
+    const F = b.clock ? clockFmt : fmt;
+    if (b.clock) {
+      tval.innerHTML = `<input type="time" class="mins clock" id="m-${b.id}" aria-label="Time you woke up">`;
+      const inp = tval.querySelector("input"); inp.value = val != null ? clockFmt(val) : "";
+      inp.addEventListener("change", () => setClock(b.id, inp.value));
+      if (sel === today) {
+        const up = document.createElement("button"); up.className = "btn-sm"; up.textContent = "I'm up";
+        up.title = "Log the current time as your wake time";
+        up.onclick = () => { const n = new Date(); setClock(b.id, `${pad(n.getHours())}:${pad(n.getMinutes())}`); };
+        tval.appendChild(up);
+      }
+    } else if (isRunning) {
+      tval.innerHTML = `<span class="live" id="live-${b.id}">0:00</span><button class="tbtn run" aria-label="Stop timer for ${b.name}">■</button>`;
+      tval.querySelector("button").onclick = stopTimer;
+    } else {
+      tval.innerHTML = `<input type="number" class="mins" id="m-${b.id}" min="0" max="1440" inputmode="numeric" placeholder="—" aria-label="Minutes taken for ${b.name}"><span class="unit">min</span>`;
+      const inp = tval.querySelector("input"); inp.value = val ?? "";
+      inp.addEventListener("change", () => setMins(b.id, inp.value));
+      if (sel === today) {
+        const st = document.createElement("button"); st.className = "tbtn"; st.textContent = "▶"; st.setAttribute("aria-label", `Start timer for ${b.name}`);
+        st.onclick = () => startTimer(b.id); tval.appendChild(st);
+      }
+    }
+    tm.appendChild(tval);
+
+    const pb = bestOf(b.id, sel), avg = avgOf(b.id, prior7);
+    if (val != null && pb && better(b.id, val, pb.v)) { pbsToday++; const s = document.createElement("span"); s.className = "pb"; s.textContent = "New record"; tm.appendChild(s); }
+    else if (val != null && avg != null) {
+      const diff = Math.round(val - avg), s = document.createElement("span");
+      s.className = "delta " + (diff === 0 ? "" : better(b.id, val, avg) ? "good" : "bad");
+      s.textContent = diff === 0 ? "= 7-day avg"
+        : b.clock ? `${fmt(Math.abs(diff))} ${diff < 0 ? "earlier" : "later"} than avg`
+        : `${diff > 0 ? "▲" : "▼"} ${fmt(Math.abs(diff))} vs avg`;
+      tm.appendChild(s);
+    }
+    const cmp = document.createElement("div"); cmp.className = "cmp";
+    cmp.textContent = pb ? `Record ${F(pb.v)} · ${shortDate(pb.k)}` : b.clock ? `Plan ${b.s} · no record yet` : `Slot ${fmt(slotLen(b))} · no record yet`;
+    tm.appendChild(cmp);
+    if (avg != null) { const a = document.createElement("div"); a.className = "cmp"; a.textContent = `7-day avg ${F(avg)}`; tm.appendChild(a); }
+    const dir = document.createElement("button"); dir.className = "dir";
+    dir.textContent = b.clock ? (dirOf(b.id) === "higher" ? "↑ later wins" : "↓ earlier wins")
+                              : (dirOf(b.id) === "higher" ? "↑ more time wins" : "↓ faster wins");
+    dir.title = "Switch which direction counts as a record for this block";
+    dir.onclick = () => { settings.dir = {...settings.dir, [b.id]: dirOf(b.id) === "higher" ? "lower" : "higher"}; saveSettings(); render(); };
+    tm.appendChild(dir);
+
+    tl.appendChild(li);
+  });
+  const totalMins = BLOCKS.filter(b => !b.clock).reduce((s,b) => s + (minsOf(sel,b.id) || 0), 0);
+  $("blockMeta").textContent = `${doneN} / ${BLOCKS.length} blocks · ${fmt(totalMins)} logged${pbsToday ? ` · ${pbsToday} record${pbsToday>1?"s":""}` : ""}`;
+  tickLive();
+
+  // five
+  const fg = $("fivegrid"); fg.innerHTML = "";
+  FIVE.forEach(f => {
+    const on = !!day.done[f], st = habitStreak(f, sel);
+    const btn = document.createElement("button");
+    btn.className = "fbtn" + (on ? " on" : "");
+    btn.setAttribute("aria-pressed", on);
+    btn.innerHTML = `<span class="dot"></span><span class="fn">${SHORT[f]}</span><span class="fs">${st}d</span>`;
+    btn.onclick = () => toggle(f, !on);
+    fg.appendChild(btn);
+  });
+  const fc = fiveCount(day);
+  $("fiveScore").innerHTML = `${fc}<small>/5</small>`;
+  const sk = fc === 5 ? streakEnding(sel) : streakEnding(shift(sel,-1));
+  $("streak").textContent = sk + (sk === 1 ? " day" : " days");
+
+  // never miss twice
+  const al = $("alerts"); al.innerHTML = "";
+  const yk = shift(sel,-1), y = getDay(yk), hasY = hasData(days[yk]);
+  const add = (txt, ok) => { const p = document.createElement("div"); p.className = "alert" + (ok?" ok":""); p.textContent = txt; al.appendChild(p); };
+  const missedY = hasY ? FIVE.filter(f => !y.done[f] && !day.done[f]) : [];
+  if (missedY.length && sel === today) add(`Missed yesterday: ${missedY.map(f=>SHORT[f]).join(", ")}. Don't miss twice. Do it today.`);
+  if (missedY.length && sel !== today) add(`Missed twice in a row: ${missedY.map(f=>SHORT[f]).join(", ")}.`);
+  if (fc === 5) add("All Five done. The day is won.", true);
+
+  renderWeek(today);
+
+  // plan from last night
+  const items = (y.top3||[]).filter(s => s && s.trim());
+  const plan = $("plan"); plan.innerHTML = "";
+  if (items.length) {
+    const ol = document.createElement("ol");
+    items.forEach(s => { const li = document.createElement("li"); li.textContent = s; ol.appendChild(li); });
+    plan.appendChild(ol);
+  } else {
+    const p = document.createElement("p"); p.className = "empty";
+    p.textContent = "Nothing set last night. Write tomorrow's top 3 in tonight's REVIEW block and it shows here in the morning.";
+    plan.appendChild(p);
+  }
+  if (y.gratitude) { const g = document.createElement("div"); g.className = "grat"; g.textContent = "Last night: " + y.gratitude; plan.appendChild(g); }
+
+  renderHeat(today);
+}
+
+function renderWeek(today){
+  const ws = weekStart(sel);
+  const w = scoreWeek(ws, true);
+  $("wkLabel").textContent = `${shortDate(ws)} – ${shortDate(shift(ws,6))}`;
+  const box = $("wk"); box.innerHTML = "";
+
+  // history: this week and the 7 before it
+  const hist = [7,6,5,4,3,2,1,0].map(i => { const k = shift(ws, -7*i); const s = scoreWeek(k, false); return {k, s: s ? s.score : null, final: s && s.final}; });
+  const past = hist.filter(h => h.s != null && h.k !== ws);
+  const allFinal = []; // best finished week across all history
+  const fk = firstKey();
+  if (fk) for (let k = weekStart(fk); k < ws; k = shift(k,7)) { const s = scoreWeek(k,false); if (s && s.final) allFinal.push({k, s:s.score}); }
+  const best = allFinal.reduce((b,h) => (!b || h.s > b.s) ? h : b, null);
+
+  if (!w) {
+    const p = document.createElement("p"); p.className = "beat";
+    p.textContent = sel >= weekStart(today) ? "Your week gets scored from tomorrow, once today is finished. Each finished day counts toward it." : "No tracked days in this week.";
+    box.appendChild(p);
+  } else {
+    const head = document.createElement("div"); head.className = "wkhead";
+    head.innerHTML = `<div class="grade"></div><div><div class="num"></div><div class="sub"></div></div>`;
+    head.querySelector(".grade").textContent = w.grade;
+    head.querySelector(".num").innerHTML = `${w.score}<small> / 100</small>`;
+    head.querySelector(".sub").textContent = w.final ? "Final score for the week" : `So far · ${w.n} of 7 days scored`;
+    box.appendChild(head);
+
+    const parts = document.createElement("div"); parts.className = "parts";
+    w.parts.forEach(p => {
+      const el = document.createElement("div"); el.className = "part" + (p.frac == null ? " off" : "");
+      el.innerHTML = `<span></span><span class="pts">${p.frac == null ? "—" : Math.round(p.max*p.frac)}/${p.max}</span><div class="bar"><i style="width:${p.frac == null ? 0 : Math.round(p.frac*100)}%"></i></div>`;
+      el.firstChild.textContent = `${p.label} · ${p.note}`;
+      parts.appendChild(el);
+    });
+    box.appendChild(parts);
+
+    const facts = document.createElement("div"); facts.className = "wkfacts";
+    facts.innerHTML = `<span>Records set <b>${w.records}</b></span>`;
+    const wkKeys = w.keys.filter(k => k <= today), lastKeys = w.keys.map(k => shift(k,-7));
+    const seen = new Map();
+    [...wkKeys, ...lastKeys].forEach(k => allRepDefs(k).forEach(r => { if (!seen.has(r.id)) seen.set(r.id, r); }));
+    seen.forEach(r => {
+      const now = repSum(r.id, wkKeys), prev = repSum(r.id, lastKeys);
+      if (!now && !prev) return;
+      const s = document.createElement("span");
+      const arrow = now > prev ? "▲" : now < prev ? "▼" : "=";
+      s.innerHTML = `<span></span> <b>${now}</b> <span class="${now > prev ? "tagok" : now < prev ? "tagshort" : ""}">${arrow} ${prev} last wk</span>`;
+      s.firstChild.textContent = r.name;
+      facts.appendChild(s);
+    });
+    box.appendChild(facts);
+  }
+
+  if (past.length || w) {
+    const hb = document.createElement("div"); hb.className = "hist";
+    hist.forEach(h => {
+      const c = document.createElement("div");
+      c.className = "hcol" + (h.k === ws ? " cur" : "") + (best && h.k === best.k ? " best" : "");
+      c.title = `Week of ${shortDate(h.k)}: ${h.s ?? "no data"}`;
+      c.innerHTML = `<span class="v">${h.s ?? "·"}</span><div class="track"><div class="fill" style="height:${h.s == null ? 2 : Math.max(4, h.s)}%"></div></div><span class="l">${shortDate(h.k)}</span>`;
+      hb.appendChild(c);
+    });
+    box.appendChild(hb);
+    const beat = document.createElement("p"); beat.className = "beat";
+    if (best) beat.innerHTML = `Best week: <b>${best.s}</b> (${gradeOf(best.s)}), week of ${shortDate(best.k)}. ${w && w.score > best.s ? "You're beating it this week." : `Score <b>${best.s + 1}+</b> to set a new record.`}`;
+    else beat.textContent = "Finish your first full week to set the record to beat.";
+    box.appendChild(beat);
+  }
+}
+
+function renderHeat(today){
+  const heat = $("heat"); heat.innerHTML = "";
+  const end = fromKey(today); end.setDate(end.getDate() + (6 - end.getDay()));
+  const start = new Date(end); start.setDate(start.getDate() - 7*12 + 1);
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
+    const k = keyOf(d), b = document.createElement("button");
+    const fc = days[k] ? fiveCount(days[k]) : 0;
+    b.style.background = `var(--heat${fc})`;
+    b.title = `${fromKey(k).toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short"})}: ${fc}/5`;
+    b.setAttribute("aria-label", b.title);
+    if (k > today) { b.className = "future"; b.disabled = true; }
+    else b.onclick = () => { sel = k; render(); };
+    if (k === sel) b.classList.add("sel");
+    heat.appendChild(b);
+  }
+  const keys = Object.keys(days).filter(k => fiveCount(days[k]) === 5).sort();
+  let best = 0, run = 0, last = null;
+  keys.forEach(k => { run = (last && shift(last,1) === k) ? run+1 : 1; best = Math.max(best, run); last = k; });
+  $("stBest").textContent = best;
+  $("stFull").textContent = keys.length;
+  let sum = 0; for (let i = 0; i < 30; i++) sum += fiveCount(getDay(shift(today,-i)));
+  $("stAvg").textContent = (sum/30).toFixed(1);
+}
+
+/* ---------- timer ---------- */
+function tickLive(){
+  const t = getDay(keyOf(new Date())).timer; if (!t) return;
+  const el = $("live-" + t.id); if (!el) return;
+  const s = Math.max(0, Math.floor((Date.now() - t.start)/1000));
+  el.textContent = s >= 3600 ? `${Math.floor(s/3600)}:${pad(Math.floor(s/60)%60)}:${pad(s%60)}` : `${Math.floor(s/60)}:${pad(s%60)}`;
+}
+function startTimer(id){
+  const k = keyOf(new Date()), d = ensure(k);
+  if (d.timer) finishTimer(d);
+  d.timer = {id, start: Date.now()};
+  saveDay(d,false); render();
+}
+function finishTimer(d){
+  const t = d.timer; if (!t) return;
+  const add = Math.max(1, Math.round((Date.now() - t.start)/60000));
+  d.mins = {...d.mins, [t.id]: (d.mins[t.id] || 0) + add};
+  d.done = {...d.done, [t.id]: true};
+  d.timer = null;
+}
+function stopTimer(){ const d = ensure(keyOf(new Date())); finishTimer(d); saveDay(d,false); render(); }
+
+/* ---------- actions ---------- */
+function toggle(id, on){ const d = ensure(sel); d.done = {...d.done, [id]: on}; saveDay(d,false); render(); }
+function setMins(id, raw){
+  const n = Math.round(Number(raw));
+  const d = ensure(sel); d.mins = {...d.mins};
+  if (raw === "" || !(n > 0)) delete d.mins[id]; else d.mins[id] = Math.min(n, 1440);
+  saveDay(d,false); render();
+}
+function setClock(id, str){
+  const d = ensure(sel); d.clock = {...d.clock};
+  if (!str) delete d.clock[id];
+  else { const [h,m] = str.split(":").map(Number); d.clock[id] = h*60 + m; d.done = {...d.done, [id]: true}; }
+  saveDay(d,false); render();
+}
+function setRep(rid, blockId, n){
+  const d = ensure(sel); d.reps = {...d.reps};
+  if (n == null) delete d.reps[rid]; else d.reps[rid] = Math.max(0, Math.min(100000, Math.round(n)));
+  const defs = repDefs(blockId).filter(r => r.target > 0);
+  if (defs.length && defs.every(r => (d.reps[r.id] || 0) >= r.target)) d.done = {...d.done, [blockId]: true};
+  saveDay(d,false); render();
+}
+
+/* ---------- rep counters ---------- */
+// A block's counters come in groups. TRAIN shows the day's workout plus core; other blocks have one plain group.
+let repDraft = [];
+function renderReps(b, day, ex, prior7){
+  let recs = 0;
+  if (b.id === "train") {
+    const wk = workoutKeyFor(sel), W = workouts();
+    const bar = document.createElement("div"); bar.className = "wsel";
+    bar.innerHTML = `<label class="fl" for="wsel">Workout</label><select id="wsel" class="ed">${SPLIT_KEYS.map(k => `<option value="${k}">${W[k].name} · ${W[k].focus}</option>`).join("")}</select>`;
+    const se = bar.querySelector("select"); se.value = wk;
+    se.onchange = () => { const d = ensure(sel); d.workout = se.value === defaultWorkoutFor(sel) ? null : se.value; saveDay(d,false); render(); };
+    const sp = document.createElement("div"); sp.className = "rmeta";
+    sp.textContent = "Week: " + DOW.map((n,i) => `${n} ${W[split()[i]].name}`).join(" · ");
+    ex.append(bar, sp);
+  }
+  repGroups(b.id, sel).forEach(g => {
+    if (editingReps === g.key) { renderRepEditor(g, ex); return; }
+    if (g.items.length) {
+      const box = document.createElement("div"); box.className = "reps";
+      if (g.title) { const t = document.createElement("div"); t.className = "rgtitle"; t.textContent = g.title; box.appendChild(t); }
+      g.items.forEach(r => {
+        const v = day.reps[r.id], has = v != null, n = v || 0;
+        const el = document.createElement("div"); el.className = "rep";
+        el.innerHTML = `<span class="rname"></span>
+          <div class="rctl"><button data-d="-1" aria-label="One fewer">−</button><input type="number" class="rin" min="0" inputmode="numeric" placeholder="0"><button data-d="1" aria-label="One more">+</button>${r.target >= 20 ? '<button data-d="5">+5</button><button data-d="10">+10</button>' : ""}${r.target > 0 ? `<span class="rtarget">/ ${r.target}</span>` : ""}</div>
+          ${r.target > 0 ? `<div class="rbar${n > r.target ? " over" : ""}"><i style="width:${Math.min(100, Math.round(n / r.target * 100))}%"></i></div>` : ""}
+          <div class="rmeta"></div>`;
+        el.querySelector(".rname").textContent = r.name;
+        const inp = el.querySelector(".rin"); inp.value = has ? v : "";
+        inp.setAttribute("aria-label", `${r.name} count`);
+        inp.addEventListener("change", () => setRep(r.id, b.id, inp.value === "" ? null : Number(inp.value)));
+        el.querySelectorAll("button[data-d]").forEach(btn => btn.onclick = () => setRep(r.id, b.id, n + Number(btn.dataset.d)));
+        const meta = el.querySelector(".rmeta");
+        const tag = (cls, txt) => { const s = document.createElement("span"); s.className = cls; s.textContent = txt; meta.appendChild(s); };
+        if (r.hint) tag("", r.hint);
+        if (has && r.target > 0) {
+          if (n > r.target) tag("tagover", `+${n - r.target} over target`);
+          else if (n === r.target) tag("tagok", "Target hit");
+          else tag("tagshort", `${r.target - n} short`);
+        }
+        const pb = repBest(r.id, sel), avg = repAvg(r.id, prior7);
+        if (has && n > 0 && pb && n > pb.v) { recs++; tag("pb", "New record"); }
+        if (pb) tag("", `Record ${pb.v} · ${shortDate(pb.k)}`);
+        if (avg != null) tag("", `7-day avg ${Math.round(avg*10)/10}`);
+        box.appendChild(el);
+      });
+      ex.appendChild(box);
+    }
+    const link = document.createElement("button"); link.className = "linkbtn";
+    link.textContent = g.items.length ? `Edit ${g.label} counters` : "+ Track reps";
+    link.onclick = () => { editingReps = g.key; repDraft = g.items.map(r => ({...r})); if (!repDraft.length) repDraft.push(newRep()); render(); };
+    ex.appendChild(link);
+  });
+  return recs;
+}
+const newRep = () => ({id: "r" + Date.now().toString(36) + Math.random().toString(36).slice(2,5), name: "", target: 10});
+function renderRepEditor(g, ex){
+  const box = document.createElement("div"); box.className = "reps reped";
+  box.innerHTML = `<div class="rgtitle"></div><div class="redhead"><span>Counter</span><span>Target</span><span></span></div>`;
+  box.firstChild.textContent = `Editing ${g.label} counters` + (g.key === "w:core" ? " (every training day)" : g.key.startsWith("w:") ? ` (used every ${g.label} day)` : "");
+  repDraft.forEach((r, i) => {
+    const row = document.createElement("div"); row.className = "redrow";
+    row.innerHTML = `<input class="ed" maxlength="40" placeholder="e.g. Sit-ups" aria-label="Counter name"><input class="ed" type="number" min="0" inputmode="numeric" aria-label="Daily target"><button class="x" aria-label="Remove counter">✕</button>`;
+    const [nm, tg] = row.querySelectorAll("input");
+    nm.value = r.name; tg.value = r.target;
+    nm.oninput = () => { r.name = nm.value; };
+    tg.oninput = () => { r.target = Math.max(0, Math.round(Number(tg.value) || 0)); };
+    row.querySelector(".x").onclick = () => { repDraft.splice(i, 1); render(); };
+    box.appendChild(row);
+  });
+  const foot = document.createElement("div"); foot.className = "redfoot";
+  foot.innerHTML = `<button class="btn-sm">Save counters</button><button class="linkbtn">+ Add counter</button><button class="linkbtn">Cancel</button>`;
+  const [save, add, cancel] = foot.querySelectorAll("button");
+  save.onclick = () => {
+    const clean = repDraft.filter(r => r.name.trim()).map(r => ({id: r.id, name: r.name.trim(), target: r.target, ...(r.hint ? {hint: r.hint} : {})}));
+    setGroupItems(g.key, clean);
+    editingReps = null; saveSettings(); render();
+  };
+  add.onclick = () => { repDraft.push(newRep()); render(); };
+  cancel.onclick = () => { editingReps = null; render(); };
+  box.appendChild(foot);
+  const hint = document.createElement("div"); hint.className = "rmeta";
+  hint.textContent = "Target = total reps across all sets (4 sets of 10 = 40). Target 0 just counts. Past counts stay saved if you remove a counter.";
+  box.appendChild(hint);
+  ex.appendChild(box);
+}
+
+$("prev").onclick = () => { sel = shift(sel,-1); render(); };
+$("next").onclick = () => { const t = keyOf(new Date()); if (sel < t) { sel = shift(sel,1); render(); } };
+$("today").onclick = () => { sel = keyOf(new Date()); render(); };
+setInterval(tickLive, 1000);
+setInterval(() => { if (!editing()) render(); }, 60000);
+
+/* ---------- boot ---------- */
+lsLoad();
+render();
+
+const G_ICON = '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
+(function boot(){
+  const cfg = window.FIREBASE_CONFIG;
+  if (!window.firebase || !cfg || !cfg.apiKey) {
+    $("storeNote").textContent = "Saved in this browser only. Sync isn't set up yet.";
+    return;
+  }
+  firebase.initializeApp(cfg);
+  const auth = firebase.auth(), db = firebase.firestore();
+  db.enablePersistence({synchronizeTabs: true}).catch(() => {});   // works offline, syncs when back
+  let unsub = null;
+  const authBox = $("auth");
+
+  auth.getRedirectResult().catch(e => { $("storeNote").textContent = "Sign-in didn't finish: " + (e.message || e.code); });
+  auth.onAuthStateChanged(u => {
+    authBox.innerHTML = "";
+    if (unsub) { unsub(); unsub = null; }
+    store = null;
+    if (!u) {
+      LS_KEY = "builder-day-v2"; lsLoad(); render();
+      $("storeNote").textContent = "Saved in this browser only. Sign in to sync across your devices.";
+      const b = document.createElement("button"); b.className = "btn-g"; b.innerHTML = G_ICON + "<span>Sign in with Google</span>";
+      b.onclick = () => {
+        const p = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(p).catch(e => {
+          if (["auth/popup-blocked","auth/operation-not-supported-in-this-environment","auth/cancelled-popup-request"].includes(e.code)) auth.signInWithRedirect(p);
+          else if (e.code !== "auth/popup-closed-by-user") $("storeNote").textContent = "Sign-in didn't work: " + (e.message || e.code);
+        });
+      };
+      authBox.appendChild(b);
+      return;
+    }
+    // Signed in: load this account's cached copy, then live data from Firestore
+    const local = lsRead("builder-day-v2");
+    LS_KEY = "builder-day-v2:" + u.uid; lsLoad(); render();
+    $("storeNote").textContent = "Syncing…";
+    store = makeDbStore(db, u.uid);
+    unsub = store.subscribe(snap => {
+      $("storeNote").textContent = "Synced to your account. Private to you, on every device you sign in on.";
+      // First sign-in on a device that was used signed-out: carry those days into an empty account
+      if (snap.empty && local && local.days && Object.keys(local.days).length) {
+        for (const k in local.days) { days[k] = norm(local.days[k]); store.put("day-" + k, days[k]); }
+        if (local.settings) { settings = Object.assign({dir:{}}, local.settings); store.put("settings", settings); }
+      }
+    });
+    const who = document.createElement("span"); who.className = "who"; who.textContent = u.email || u.displayName || "Signed in";
+    const out = document.createElement("button"); out.className = "dir"; out.textContent = "Sign out";
+    out.onclick = () => auth.signOut();
+    authBox.append(who, out);
+  });
+})();
+</script>
+</body>
+</html>
