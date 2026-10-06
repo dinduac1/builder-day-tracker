@@ -388,12 +388,13 @@ function migratePlan(){
   const W = JSON.parse(JSON.stringify({full: DEFAULT_WORKOUTS.full, core: DEFAULT_WORKOUTS.core}));
   const defaultIds = new Set(Object.values(DEFAULT_WORKOUTS).flatMap(w => w.items.map(r => r.id)));
   const nm = t => String(t || "").toLowerCase().replace(/\(.*?\)/g, "").replace(/[^a-z]/g, "");
-  Object.values(settings.workouts || {}).forEach(w => (w.items || []).forEach(r => {
+  const added = [...Object.values(settings.workouts || {}).flatMap(w => w.items || []), ...((settings.reps || {}).train || [])];
+  added.forEach(r => {
     if (defaultIds.has(r.id) || !nm(r.name)) return;
     const slot = [...W.full.items, ...W.core.items].find(d => nm(d.name) === nm(r.name) || nm(d.name).startsWith(nm(r.name)) || nm(r.name).startsWith(nm(d.name)));
     if (slot) { slot.id = r.id; if (r.target > 0) slot.target = r.target; }
     else if (!W.full.items.concat(W.core.items).some(d => d.id === r.id)) W.full.items.push({id: r.id, name: r.name, target: r.target});
-  }));
+  });
   settings = {...settings, workouts: W, plan: PLAN_VERSION};
   delete settings.split;
   return true;
