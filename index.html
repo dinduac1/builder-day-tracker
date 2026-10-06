@@ -319,41 +319,51 @@ const DEFAULT_REPS = {
   publish: [{id:"videos",   name:"Videos / long-form", target:2}, {id:"shorts", name:"Short pieces", target:3}],
   connect: [{id:"outreach", name:"Outreach touches", target:10}],
 };
-// TRAIN: Push / Pull / Legs twice a week, core on every training day, Sunday off.
-// Each muscle group gets hit twice a week at roughly 10–20 hard sets, the range research supports for building size and strength.
-// Targets are total reps across sets (4 × 10 = 40). Add weight once you clear the top of the range two sessions running.
+// TRAIN: full body every day Mon–Sat, Sunday off. Every area gets moderate daily volume (2–4 sets),
+// which is recoverable six days a week as long as most sets stop 1–2 reps short of failure.
+// Targets are total reps across sets (3 × 10 = 30). Beat them by adding reps first, then weight.
 const DEFAULT_WORKOUTS = {
+  full: {name:"Full body", focus:"Chest · back · shoulders · arms · legs · glutes · calves", items:[
+    {id:"pushups",  name:"Push-ups",                target:50, hint:"Chest + triceps · 3–4 sets"},
+    {id:"pullups",  name:"Pull-ups",                target:20, hint:"Back + biceps · 4 × 5 (negatives or band if needed)"},
+    {id:"rows",     name:"Dumbbell / barbell rows", target:30, hint:"Back · 3 × 10"},
+    {id:"ohp",      name:"Overhead press",          target:30, hint:"Shoulders · 3 × 10 (or pike push-ups)"},
+    {id:"dips",     name:"Dips",                    target:30, hint:"Chest + triceps · 3 × 10"},
+    {id:"lateral",  name:"Lateral raises",          target:30, hint:"Side delts · 2 × 15"},
+    {id:"curls",    name:"Biceps curls",            target:30, hint:"Biceps · 3 × 10"},
+    {id:"squats",   name:"Squats",                  target:50, hint:"Quads + glutes · 3–4 sets"},
+    {id:"lunges",   name:"Lunges",                  target:30, hint:"Legs · 3 × 10 alternating"},
+    {id:"rdl",      name:"Romanian deadlifts",      target:30, hint:"Hamstrings + glutes · 3 × 10"},
+    {id:"bridges",  name:"Glute bridges / hip thrusts", target:30, hint:"Glutes · 2 × 15"},
+    {id:"calves",   name:"Calf raises",             target:60, hint:"Calves · 3 × 20"}]},
+  core: {name:"Core", focus:"every training day", items:[
+    {id:"situps",   name:"Sit-ups",                 target:50, hint:"Abs · 2–3 sets"},
+    {id:"legraise", name:"Leg raises",              target:30, hint:"Lower abs · 3 × 10"},
+    {id:"plank",    name:"Plank (seconds)",         target:120, hint:"2 × 60s"},
+    {id:"sideplank",name:"Side plank (seconds)",    target:90, hint:"45s each side"}]},
+  rest: {name:"Rest", focus:"Walk · mobility · recover", items:[
+    {id:"mobility", name:"Mobility / stretching (minutes)", target:20},
+    {id:"steps",    name:"Walk (thousand steps)",   target:8}]},
   push: {name:"Push", focus:"Chest · shoulders · triceps", items:[
     {id:"bench",    name:"Bench press",             target:32, hint:"4 × 6–10"},
     {id:"ohp",      name:"Overhead press",          target:30, hint:"3 × 8–10"},
-    {id:"incline",  name:"Incline dumbbell press",  target:30, hint:"3 × 10"},
-    {id:"dips",     name:"Dips",                    target:30, hint:"3 sets, near failure"},
+    {id:"dips",     name:"Dips",                    target:30, hint:"3 × 10"},
     {id:"lateral",  name:"Lateral raises",          target:45, hint:"3 × 15"},
-    {id:"triceps",  name:"Triceps extensions",      target:36, hint:"3 × 12"},
-    {id:"pushups",  name:"Push-ups (finisher)",     target:50, hint:"fewest sets you can"}]},
+    {id:"pushups",  name:"Push-ups",                target:50}]},
   pull: {name:"Pull", focus:"Back · rear delts · biceps", items:[
-    {id:"pullups",  name:"Pull-ups",                target:30, hint:"4 sets; add weight past 10"},
+    {id:"pullups",  name:"Pull-ups",                target:30, hint:"4 sets"},
     {id:"rows",     name:"Barbell / dumbbell rows", target:32, hint:"4 × 8"},
-    {id:"pulldown", name:"Lat pulldown / pullover", target:30, hint:"3 × 10"},
     {id:"facepull", name:"Face pulls / rear delts", target:45, hint:"3 × 15"},
-    {id:"curls",    name:"Biceps curls",            target:36, hint:"3 × 12"},
-    {id:"hammer",   name:"Hammer curls",            target:30, hint:"3 × 10"}]},
+    {id:"curls",    name:"Biceps curls",            target:36, hint:"3 × 12"}]},
   legs: {name:"Legs", focus:"Quads · hamstrings · glutes · calves", items:[
-    {id:"squats",   name:"Squats",                  target:32, hint:"4 × 6–10"},
-    {id:"rdl",      name:"Romanian deadlifts",      target:30, hint:"3 × 8–10"},
-    {id:"lunges",   name:"Walking lunges",          target:36, hint:"3 × 12 total"},
-    {id:"hipthrust",name:"Hip thrusts",             target:30, hint:"3 × 10"},
-    {id:"legcurl",  name:"Leg curls / Nordics",     target:30, hint:"3 × 10"},
-    {id:"calves",   name:"Calf raises",             target:60, hint:"4 × 15"}]},
-  rest: {name:"Rest", focus:"Walk · mobility · recover", items:[
-    {id:"mobility", name:"Mobility (minutes)",      target:20},
-    {id:"steps",    name:"Walk (thousand steps)",   target:8}]},
-  core: {name:"Core", focus:"every training day", items:[
-    {id:"legraise", name:"Hanging leg raises",      target:30, hint:"3 × 10"},
-    {id:"plank",    name:"Plank (seconds)",         target:120, hint:"2 × 60s"}]},
+    {id:"squats",   name:"Squats",                  target:50},
+    {id:"rdl",      name:"Romanian deadlifts",      target:30, hint:"3 × 10"},
+    {id:"lunges",   name:"Lunges",                  target:30, hint:"3 × 10"},
+    {id:"calves",   name:"Calf raises",             target:60, hint:"3 × 20"}]},
 };
-const SPLIT_KEYS = ["push","pull","legs","rest"];
-const DEFAULT_SPLIT = ["push","pull","legs","push","pull","legs","rest"];   // Mon → Sun
+const SPLIT_KEYS = ["full","rest","push","pull","legs"];
+const DEFAULT_SPLIT = ["full","full","full","full","full","full","rest"];   // Mon → Sun
+const PLAN_VERSION = 2;
 const DOW = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
 const $ = id => document.getElementById(id);
@@ -369,6 +379,24 @@ function norm(v){
   const d = Object.assign(blank(v.date), v);
   if (d.touches && d.reps.outreach == null) d.reps = {...d.reps, outreach: d.touches};   // older CONNECT counter
   return d;
+}
+// Plan v2 switched TRAIN to daily full body. Keep counters the person added: ones named like a
+// default (Push-ups, Sit-ups, Squats…) take over that slot with their own id so logged counts still match;
+// anything else is added to the full-body list.
+function migratePlan(){
+  if (settings.plan === PLAN_VERSION) return false;
+  const W = JSON.parse(JSON.stringify({full: DEFAULT_WORKOUTS.full, core: DEFAULT_WORKOUTS.core}));
+  const defaultIds = new Set(Object.values(DEFAULT_WORKOUTS).flatMap(w => w.items.map(r => r.id)));
+  const nm = t => String(t || "").toLowerCase().replace(/\(.*?\)/g, "").replace(/[^a-z]/g, "");
+  Object.values(settings.workouts || {}).forEach(w => (w.items || []).forEach(r => {
+    if (defaultIds.has(r.id) || !nm(r.name)) return;
+    const slot = [...W.full.items, ...W.core.items].find(d => nm(d.name) === nm(r.name) || nm(d.name).startsWith(nm(r.name)) || nm(r.name).startsWith(nm(d.name)));
+    if (slot) { slot.id = r.id; if (r.target > 0) slot.target = r.target; }
+    else if (!W.full.items.concat(W.core.items).some(d => d.id === r.id)) W.full.items.push({id: r.id, name: r.name, target: r.target});
+  }));
+  settings = {...settings, workouts: W, plan: PLAN_VERSION};
+  delete settings.split;
+  return true;
 }
 const shortDate = k => fromKey(k).toLocaleDateString(undefined,{day:"numeric",month:"short"});
 
@@ -386,6 +414,7 @@ function lsLoad(){
   if (v2) { days = v2.days || {}; settings = v2.settings || {dir:{}}; }
   else { days = LS_KEY === "builder-day-v2" ? (lsRead("builder-day-v1") || {}) : {}; settings = {dir:{}}; }
   for (const k in days) days[k] = norm(days[k]);
+  if (migratePlan()) lsSave();
 }
 function lsSave(){ try { localStorage.setItem(LS_KEY, JSON.stringify({days, settings})); } catch(e){} }
 
@@ -412,7 +441,7 @@ function makeDbStore(db, uid){
         if (snap.metadata.hasPendingWrites) return;   // our own edit is already on screen
         snap.docs.forEach(d => {
           const v = d.data(); if (!v) return;
-          if (d.id === "settings") settings = Object.assign({dir:{}}, v);
+          if (d.id === "settings") { settings = Object.assign({dir:{}}, v); if (migratePlan()) store.put("settings", settings); }
           else if (v.date && !busy[v.date]) days[v.date] = norm(v);
         });
         if (first) { first = false; onFirst && onFirst(snap); }
@@ -978,7 +1007,7 @@ const G_ICON = '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107"
       // First sign-in on a device that was used signed-out: carry those days into an empty account
       if (snap.empty && local && local.days && Object.keys(local.days).length) {
         for (const k in local.days) { days[k] = norm(local.days[k]); store.put("day-" + k, days[k]); }
-        if (local.settings) { settings = Object.assign({dir:{}}, local.settings); store.put("settings", settings); }
+        if (local.settings) { settings = Object.assign({dir:{}}, local.settings); migratePlan(); store.put("settings", settings); }
       }
     });
     const who = document.createElement("span"); who.className = "who"; who.textContent = u.email || u.displayName || "Signed in";
