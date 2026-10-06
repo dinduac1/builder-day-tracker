@@ -60,7 +60,7 @@ h1{font-family:var(--f-display);font-weight:800;font-size:clamp(26px,4vw,38px);l
 .now .left{font-family:var(--f-mono);font-size:13px;opacity:.85}
 
 .grid{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(0,1fr);gap:20px;align-items:start}
-@media (max-width:940px){.grid{grid-template-columns:minmax(0,1fr)}.side{order:-1}}
+@media (max-width:940px){.grid{display:flex;flex-direction:column}.grid > .side{display:contents}.p-five{order:1}.p-plan{order:2}.p-sched{order:3}.p-week{order:4}.p-heat{order:5}}
 
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:12px}
 .panel h2{font-family:var(--f-display);font-weight:700;font-size:17px;margin:0}
@@ -114,8 +114,8 @@ h1{font-family:var(--f-display);font-weight:800;font-size:clamp(26px,4vw,38px);l
 .redhead{display:grid;grid-template-columns:minmax(0,1fr) 72px 30px;gap:6px;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .redfoot{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 .rgtitle{font-family:var(--f-display);font-weight:700;font-size:13.5px;letter-spacing:.02em}
-.wsel{display:grid;gap:4px}
-.wsel select{font:inherit;font-size:14px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);max-width:100%}
+.wsel{display:grid;gap:4px;min-width:0}
+.wsel select{width:100%;min-width:0;font:inherit;font-size:14px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);max-width:100%}
 .btn-sm{white-space:nowrap;border:1px solid var(--accent);background:var(--accent);color:var(--surface);border-radius:7px;padding:5px 12px;cursor:pointer;font-size:13px;font-weight:600}
 label.fl{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 input.tx{width:100%;font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
@@ -141,9 +141,29 @@ input.tx:focus{border-color:var(--accent);outline:none}
 .pb{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;background:var(--brass);color:var(--brass-ink);padding:2px 6px;border-radius:4px}
 .dir{border:0;background:none;padding:0;cursor:pointer;font-family:var(--f-mono);font-size:10.5px;color:var(--muted);text-decoration:underline dotted;text-underline-offset:3px}
 .dir:hover{color:var(--accent)}
+.tmeta{display:grid;gap:4px;justify-items:end}
+.row > div{min-width:0}
+/* Phone: checkbox + time + timer on one line, the block's content full width below, its record line last */
 @media (max-width:600px){
-  .row{grid-template-columns:58px 26px minmax(0,1fr);gap:10px;padding:12px 14px}
-  .timing{grid-column:3 / -1;justify-items:start;text-align:left;grid-template-columns:auto;padding-top:4px;border-top:1px dashed var(--line)}
+  .row{grid-template-columns:26px minmax(0,1fr) auto;grid-template-areas:"chk time tval" "main main main" "meta meta meta";gap:8px 10px;padding:14px}
+  .row > .chk{grid-area:chk;align-self:center}
+  .row > .time{grid-area:time;align-self:center;padding:0;font-size:12px}
+  .row > .time br{display:none}
+  .row > div:nth-child(3){grid-area:main}
+  .timing{display:contents}
+  .tval{grid-area:tval;justify-self:end}
+  .tmeta{grid-area:meta;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;justify-items:start}
+  .mins.clock{width:92px}
+  .rctl .big{display:none}
+  .rctl button{min-width:36px;height:36px}
+  .rin{width:54px;height:36px}
+  .reps{padding:10px}
+  .phead{padding:12px 14px}
+  .now{padding:12px 14px}
+  .now .what{font-size:18px}
+  .datenav{width:100%}
+  .datenav .dlabel{flex:1;min-width:0}
+  h1{font-size:28px}
 }
 
 /* side */
@@ -246,13 +266,13 @@ img{max-width:100%}
   <div class="now" id="nowbar"></div>
 
   <div class="grid">
-    <section class="panel">
+    <section class="panel p-sched">
       <div class="phead"><h2>Schedule</h2><span class="meta" id="blockMeta">0 / 14 blocks</span></div>
       <ul class="tl" id="tl"></ul>
     </section>
 
     <aside class="side">
-      <section class="panel">
+      <section class="panel p-five">
         <div class="phead"><h2>Did I do the Five?</h2><span class="meta">never miss twice</span></div>
         <div class="fivegrid" id="fivegrid"></div>
         <div class="score">
@@ -262,17 +282,17 @@ img{max-width:100%}
         <div class="alerts" id="alerts"></div>
       </section>
 
-      <section class="panel">
+      <section class="panel p-week">
         <div class="phead"><h2>Weekly score</h2><span class="meta" id="wkLabel">Mon–Sun</span></div>
         <div class="wk" id="wk"></div>
       </section>
 
-      <section class="panel">
+      <section class="panel p-plan">
         <div class="phead"><h2>Today's top 3</h2><span class="meta">set last night</span></div>
         <div class="plan" id="plan"></div>
       </section>
 
-      <section class="panel">
+      <section class="panel p-heat">
         <div class="phead"><h2>Last 12 weeks</h2><span class="meta">Five per day</span></div>
         <div class="heatwrap">
           <div class="heat" id="heat"></div>
@@ -660,27 +680,28 @@ function render(){
       }
     }
     tm.appendChild(tval);
+    const tmeta = document.createElement("div"); tmeta.className = "tmeta"; tm.appendChild(tmeta);
 
     const pb = bestOf(b.id, sel), avg = avgOf(b.id, prior7);
-    if (val != null && pb && better(b.id, val, pb.v)) { pbsToday++; const s = document.createElement("span"); s.className = "pb"; s.textContent = "New record"; tm.appendChild(s); }
+    if (val != null && pb && better(b.id, val, pb.v)) { pbsToday++; const s = document.createElement("span"); s.className = "pb"; s.textContent = "New record"; tmeta.appendChild(s); }
     else if (val != null && avg != null) {
       const diff = Math.round(val - avg), s = document.createElement("span");
       s.className = "delta " + (diff === 0 ? "" : better(b.id, val, avg) ? "good" : "bad");
       s.textContent = diff === 0 ? "= 7-day avg"
         : b.clock ? `${fmt(Math.abs(diff))} ${diff < 0 ? "earlier" : "later"} than avg`
         : `${diff > 0 ? "▲" : "▼"} ${fmt(Math.abs(diff))} vs avg`;
-      tm.appendChild(s);
+      tmeta.appendChild(s);
     }
     const cmp = document.createElement("div"); cmp.className = "cmp";
     cmp.textContent = pb ? `Record ${F(pb.v)} · ${shortDate(pb.k)}` : b.clock ? `Plan ${b.s} · no record yet` : `Slot ${fmt(slotLen(b))} · no record yet`;
-    tm.appendChild(cmp);
-    if (avg != null) { const a = document.createElement("div"); a.className = "cmp"; a.textContent = `7-day avg ${F(avg)}`; tm.appendChild(a); }
+    tmeta.appendChild(cmp);
+    if (avg != null) { const a = document.createElement("div"); a.className = "cmp"; a.textContent = `7-day avg ${F(avg)}`; tmeta.appendChild(a); }
     const dir = document.createElement("button"); dir.className = "dir";
     dir.textContent = b.clock ? (dirOf(b.id) === "higher" ? "↑ later wins" : "↓ earlier wins")
                               : (dirOf(b.id) === "higher" ? "↑ more time wins" : "↓ faster wins");
     dir.title = "Switch which direction counts as a record for this block";
     dir.onclick = () => { settings.dir = {...settings.dir, [b.id]: dirOf(b.id) === "higher" ? "lower" : "higher"}; saveSettings(); render(); };
-    tm.appendChild(dir);
+    tmeta.appendChild(dir);
 
     tl.appendChild(li);
   });
@@ -893,7 +914,7 @@ function renderReps(b, day, ex, prior7){
         const v = day.reps[r.id], has = v != null, n = v || 0;
         const el = document.createElement("div"); el.className = "rep";
         el.innerHTML = `<span class="rname"></span>
-          <div class="rctl"><button data-d="-1" aria-label="One fewer">−</button><input type="number" class="rin" min="0" inputmode="numeric" placeholder="0"><button data-d="1" aria-label="One more">+</button>${r.target >= 20 ? '<button data-d="5">+5</button><button data-d="10">+10</button>' : ""}${r.target > 0 ? `<span class="rtarget">/ ${r.target}</span>` : ""}</div>
+          <div class="rctl"><button data-d="-1" aria-label="One fewer">−</button><input type="number" class="rin" min="0" inputmode="numeric" placeholder="0"><button data-d="1" aria-label="One more">+</button>${r.target >= 20 ? '<button class="big" data-d="5">+5</button><button class="big" data-d="10">+10</button>' : ""}${r.target > 0 ? `<span class="rtarget">/ ${r.target}</span>` : ""}</div>
           ${r.target > 0 ? `<div class="rbar${n > r.target ? " over" : ""}"><i style="width:${Math.min(100, Math.round(n / r.target * 100))}%"></i></div>` : ""}
           <div class="rmeta"></div>`;
         el.querySelector(".rname").textContent = r.name;
