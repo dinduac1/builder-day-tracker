@@ -1,0 +1,9 @@
+.git
+.gitignore
+.deploy
+.wrangler
+README.md
+firestore.rules
+wrangler.jsonc
+.assetsignore
+node_modules
