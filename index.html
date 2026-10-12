@@ -249,8 +249,12 @@ input.tx:focus{border-color:var(--accent);outline:none}
 .startwk small{font-family:var(--f-mono);font-weight:400;font-size:12px;opacity:.85}
 .ovl{position:fixed;inset:0;z-index:50;background:var(--bg);overflow-y:auto;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px calc(env(safe-area-inset-bottom,0px) + 24px)}
 .ovl .in{max-width:640px;margin:0 auto;display:grid;gap:14px}
-.ovl .bar{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.ovl .close{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 14px;cursor:pointer}
+.ovl .bar{display:flex;align-items:center;justify-content:space-between;gap:10px;position:sticky;top:0;z-index:3;background:var(--bg);padding:6px 0;margin-top:-6px}
+.ovl .close{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 16px;cursor:pointer;font-weight:600;font-size:15px;min-height:44px}
+.leave{position:sticky;top:56px;z-index:3;background:var(--surface);border:1px solid var(--brass);border-radius:12px;padding:14px;display:grid;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.leave b{font-family:var(--f-display);font-size:17px}
+.leave p{margin:0;color:var(--muted);font-size:14px}
+.leave .ctrl{justify-content:stretch}.leave .ctrl button{flex:1}
 .ovl .prog{font-family:var(--f-mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .ovl .pbar{height:5px;border-radius:3px;background:var(--sunk);overflow:hidden}
 .ovl .pbar i{display:block;height:100%;background:var(--accent);transition:width .3s}
@@ -1187,14 +1191,46 @@ function guideBlock(e){
   return g;
 }
 const ovl = () => $("ovl");
-function closeOverlay(){ const o = ovl(); o.hidden = true; o.innerHTML = ""; document.body.style.overflow = ""; releaseWake(); clearInterval(player.tick); }
-function openOverlay(){ const o = ovl(); o.hidden = false; o.scrollTop = 0; document.body.style.overflow = "hidden"; return o; }
+let ovlInHistory = false;   // an overlay pushes one history entry so the phone's Back gesture lands here, not off the page
+function closeOverlay(fromBack){
+  const o = ovl(); o.hidden = true; o.innerHTML = ""; document.body.style.overflow = "";
+  releaseWake(); clearInterval(player.tick); player.active = false;
+  if (ovlInHistory && !fromBack) { ovlInHistory = false; try { history.back(); } catch(e){} }
+  else ovlInHistory = false;
+}
+function openOverlay(){
+  const o = ovl(); o.hidden = false; o.scrollTop = 0; document.body.style.overflow = "hidden";
+  if (!ovlInHistory) { try { history.pushState({bdOverlay: 1}, ""); ovlInHistory = true; } catch(e){} }
+  return o;
+}
+window.addEventListener("popstate", () => {
+  if (ovl().hidden) return;
+  ovlInHistory = false;
+  if (player.active && player.phase !== "done") {
+    // keep the workout open and ask first
+    try { history.pushState({bdOverlay: 1}, ""); ovlInHistory = true; } catch(e){}
+    askLeave();
+  } else closeOverlay(true);
+});
+function askLeave(){
+  const o = ovl(), inn = o.querySelector(".in");
+  if (!inn || inn.querySelector(".leave")) return;
+  const done = Object.keys(player.log).length;
+  const box = document.createElement("div"); box.className = "leave";
+  box.innerHTML = `<b>Leave the workout?</b><p>${done ? `The ${done} exercise${done > 1 ? "s" : ""} you've finished will be saved to today's TRAIN.` : "Nothing's been logged yet."}</p>
+    <div class="ctrl"><button class="go">Keep going</button><button>Save &amp; leave</button></div>`;
+  const [keep, leave] = box.querySelectorAll("button");
+  keep.onclick = () => box.remove();
+  leave.onclick = () => { saveWorkoutLog(); closeOverlay(); render(); };
+  inn.insertBefore(box, inn.children[1] || null);
+  o.scrollTop = 0;
+}
 
 function openGuide(k, r){
   const e = EXERCISES[k], o = openOverlay();
-  o.innerHTML = `<div class="in"><div class="bar"><span class="prog">Exercise guide</span><button class="close">Close</button></div></div>`;
+  o.innerHTML = `<div class="in"><div class="bar"><span class="prog">Exercise guide</span><button class="close">✕ Close</button></div></div>`;
   const inn = o.querySelector(".in");
-  o.querySelector(".close").onclick = closeOverlay;
+  o.querySelector(".close").onclick = () => closeOverlay();
   inn.appendChild(videoBox(e, true));
   const h = document.createElement("h2"); h.className = "exname"; h.textContent = r ? r.name : e.name; inn.appendChild(h);
   if (r && r.target) { const t = document.createElement("div"); t.className = "prog"; t.textContent = r.unit === "sec" ? `Hold ${fmtSec(r.target)}` : `Target ${r.target} reps`; inn.appendChild(t); }
@@ -1217,7 +1253,7 @@ function beep(freq = 880, dur = .12, vol = .25){
   } catch(e){}
 }
 function startWorkout(items){
-  Object.assign(player, {items: items.map(r => ({...r})), i: 0, phase: "work", running: false, count: 0, started: Date.now(), log: {}});
+  Object.assign(player, {items: items.map(r => ({...r})), i: 0, phase: "work", running: false, count: 0, started: Date.now(), log: {}, active: true, saved: false});
   keepAwake(); beep(660, .1); beep(990, .15);
   openOverlay(); showWork();
 }
@@ -1231,7 +1267,7 @@ function showWork(){
   const timed = r.unit === "sec";
   player.phase = "work"; player.count = timed ? 0 : r.target; player.left = timed ? r.target : 0; player.running = false;
   o.innerHTML = `<div class="in">
-    <div class="bar"><span class="prog">${player.i + 1} of ${player.items.length} · ${fmtSec(Math.round((Date.now() - player.started) / 1000))} elapsed</span><button class="close">End</button></div>
+    <div class="bar"><span class="prog">${player.i + 1} of ${player.items.length} · ${fmtSec(Math.round((Date.now() - player.started) / 1000))} elapsed</span><button class="close">✕ End</button></div>
     <div class="pbar"><i style="width:${Math.round(player.i / player.items.length * 100)}%"></i></div>
     <div class="vslot"></div>
     <h2 class="exname"></h2>
@@ -1241,7 +1277,7 @@ function showWork(){
     <div class="gslot"></div></div>`;
   o.querySelector(".exname").textContent = r.name;
   if (e) { o.querySelector(".vslot").appendChild(videoBox(e, true)); o.querySelector(".gslot").appendChild(guideBlock(e)); }
-  o.querySelector(".close").onclick = finishWorkout; o.scrollTop = 0;
+  o.querySelector(".close").onclick = askLeave; o.scrollTop = 0;
   o.querySelector("#pprev").onclick = () => { if (player.i > 0) { player.i--; showWork(); } };
   o.querySelector("#pskip").onclick = () => nextExercise(false);
   const big = o.querySelector("#pbig"), ctrl = o.querySelector("#pctrl");
@@ -1280,7 +1316,7 @@ function nextExercise(didIt){
 function showRest(){
   const r = player.items[player.i], k = exKeyFor(r), e = k ? EXERCISES[k] : null, o = ovl();
   player.phase = "rest"; player.left = restSecs();
-  o.innerHTML = `<div class="in"><div class="bar"><span class="prog">${player.i} of ${player.items.length} done</span><button class="close">End</button></div>
+  o.innerHTML = `<div class="in"><div class="bar"><span class="prog">${player.i} of ${player.items.length} done</span><button class="close">✕ End</button></div>
     <div class="pbar"><i style="width:${Math.round(player.i / player.items.length * 100)}%"></i></div>
     <div class="rest"><div class="lbl">Rest</div><div class="big" id="rbig"></div>
       <div class="ctrl"><button id="rplus">+20s</button><button class="go" id="rskip">Skip rest</button></div>
@@ -1289,7 +1325,7 @@ function showRest(){
     </div></div>`;
   o.querySelector(".nextup b").textContent = r.name;
   o.querySelector(".nextup .prog").textContent = r.unit === "sec" ? `Hold ${fmtSec(r.target)}` : `${r.target} reps`;
-  o.querySelector(".close").onclick = finishWorkout; o.scrollTop = 0;
+  o.querySelector(".close").onclick = askLeave; o.scrollTop = 0;
   const big = o.querySelector("#rbig"), paint = () => { big.textContent = fmtSec(Math.max(0, player.left)); };
   paint();
   o.querySelector("#rplus").onclick = () => { player.left += 20; paint(); };
@@ -1304,17 +1340,23 @@ function showRest(){
     if (player.left <= 0) { clearInterval(player.tick); beep(990, .15); showWork(); }
   }, 1000);
 }
-function finishWorkout(){
+/** Adds the workout so far to today's tracker, once. */
+function saveWorkoutLog(){
   clearInterval(player.tick);
   const ids = Object.keys(player.log), mins = Math.max(1, Math.round((Date.now() - player.started) / 60000));
-  // log into today's tracker (adds to anything already logged)
   const d = ensure(keyOf(new Date()));
-  d.reps = {...d.reps}; ids.forEach(id => { d.reps[id] = (d.reps[id] || 0) + player.log[id]; });
-  if (ids.length) {
+  if (!player.saved && ids.length) {
+    player.saved = true;
+    d.reps = {...d.reps}; ids.forEach(id => { d.reps[id] = (d.reps[id] || 0) + player.log[id]; });
     d.mins = {...d.mins, train: (d.mins.train || 0) + mins};
     if (ids.length >= Math.ceil(player.items.length * .8)) d.done = {...d.done, train: true};
     saveDay(d, false);
   }
+  return {ids, mins, d};
+}
+function finishWorkout(){
+  const {ids, mins, d} = saveWorkoutLog();
+  player.phase = "done";
   releaseWake();
   const o = ovl();
   o.innerHTML = `<div class="in"><div class="bar"><span class="prog">Workout finished</span><button class="close">Close</button></div>
