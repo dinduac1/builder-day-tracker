@@ -282,6 +282,15 @@ input.tx:focus{border-color:var(--accent);outline:none}
 .restpick{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
 .restpick button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 12px;font-family:var(--f-mono);font-size:12px;cursor:pointer}
 .restpick button.on{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.ovl .bar .btns{display:flex;gap:8px}
+.donebanner{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--accent-soft);color:var(--accent);border-radius:10px;padding:10px 12px;font-weight:600}
+.donebanner button{border:1px solid var(--accent);background:none;color:var(--accent);border-radius:8px;padding:6px 12px;cursor:pointer;font-weight:600}
+.exlist{display:grid;gap:6px}
+.exlist button{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 12px;cursor:pointer;font:inherit;color:inherit}
+.exlist button.cur{border-color:var(--brass)}
+.exlist .n{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.exlist .st{font-family:var(--f-mono);font-size:12px;color:var(--muted);white-space:nowrap}
+.exlist .ok .st{color:var(--accent);font-weight:600}
 .summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .summary div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}
 .summary b{display:block;font-family:var(--f-display);font-size:24px}
@@ -1210,7 +1219,10 @@ window.addEventListener("popstate", () => {
     // keep the workout open and ask first
     try { history.pushState({bdOverlay: 1}, ""); ovlInHistory = true; } catch(e){}
     askLeave();
-  } else closeOverlay(true);
+  } else {
+    if (player.active) saveWorkoutLog();   // e.g. Back from the review list after finishing
+    closeOverlay(true);
+  }
 });
 function askLeave(){
   const o = ovl(), inn = o.querySelector(".in");
@@ -1253,13 +1265,13 @@ function beep(freq = 880, dur = .12, vol = .25){
   } catch(e){}
 }
 function startWorkout(items){
-  Object.assign(player, {items: items.map(r => ({...r})), i: 0, phase: "work", running: false, count: 0, started: Date.now(), log: {}, active: true, saved: false});
+  Object.assign(player, {items: items.map(r => ({...r})), i: 0, phase: "work", running: false, count: 0, started: Date.now(), log: {}, active: true, savedLog: {}, savedMins: 0, autoDone: false, finished: false});
   keepAwake(); beep(660, .1); beep(990, .15);
   openOverlay(); showWork();
 }
 function logCurrent(value){
   const r = player.items[player.i];
-  if (value > 0) player.log[r.id] = (player.log[r.id] || 0) + value;
+  if (value > 0) player.log[r.id] = value; else delete player.log[r.id];
 }
 function showWork(){
   clearInterval(player.tick);
@@ -1267,7 +1279,7 @@ function showWork(){
   const timed = r.unit === "sec";
   player.phase = "work"; player.count = timed ? 0 : r.target; player.left = timed ? r.target : 0; player.running = false;
   o.innerHTML = `<div class="in">
-    <div class="bar"><span class="prog">${player.i + 1} of ${player.items.length} · ${fmtSec(Math.round((Date.now() - player.started) / 1000))} elapsed</span><button class="close">✕ End</button></div>
+    <div class="bar"><span class="prog">${player.i + 1} of ${player.items.length} · ${fmtSec(Math.round((Date.now() - player.started) / 1000))} elapsed</span><span class="btns"><button class="close" id="plist">☰ List</button><button class="close">✕ End</button></span></div>
     <div class="pbar"><i style="width:${Math.round(player.i / player.items.length * 100)}%"></i></div>
     <div class="vslot"></div>
     <h2 class="exname"></h2>
@@ -1276,8 +1288,15 @@ function showWork(){
     <div class="ctrl"><button class="ghost" id="pprev">← Previous</button><button class="ghost" id="pskip">Skip →</button></div>
     <div class="gslot"></div></div>`;
   o.querySelector(".exname").textContent = r.name;
+  o.querySelector("#plist").onclick = showList;
+  if (player.log[r.id] != null) {
+    const b = document.createElement("div"); b.className = "donebanner";
+    b.innerHTML = `<span>✓ Done · ${timed ? fmtSec(player.log[r.id]) : player.log[r.id] + " reps"}</span><button>Unmark</button>`;
+    b.querySelector("button").onclick = () => { delete player.log[r.id]; showWork(); };
+    o.querySelector(".pbar").after(b);
+  }
   if (e) { o.querySelector(".vslot").appendChild(videoBox(e, true)); o.querySelector(".gslot").appendChild(guideBlock(e)); }
-  o.querySelector(".close").onclick = askLeave; o.scrollTop = 0;
+  o.querySelector(".bar .close:last-child").onclick = askLeave; o.scrollTop = 0;
   o.querySelector("#pprev").onclick = () => { if (player.i > 0) { player.i--; showWork(); } };
   o.querySelector("#pskip").onclick = () => nextExercise(false);
   const big = o.querySelector("#pbig"), ctrl = o.querySelector("#pctrl");
@@ -1300,11 +1319,30 @@ function showWork(){
   } else {
     const paint = () => { big.innerHTML = `${player.count}<small> reps</small>`; };
     paint();
-    ctrl.innerHTML = `<button id="pminus">−</button><button class="go" id="pgo">Done ✓</button><button id="pplus">+</button>`;
+    if (player.log[r.id] != null) player.count = player.log[r.id];
+    ctrl.innerHTML = `<button id="pminus">−</button><button class="go" id="pgo">${player.log[r.id] != null ? "Update ✓" : "Done ✓"}</button><button id="pplus">+</button>`;
     ctrl.querySelector("#pminus").onclick = () => { player.count = Math.max(0, player.count - 1); paint(); };
     ctrl.querySelector("#pplus").onclick = () => { player.count++; paint(); };
     ctrl.querySelector("#pgo").onclick = () => { beep(1320, .2); logCurrent(player.count); nextExercise(true); };
   }
+}
+function showList(){
+  clearInterval(player.tick);
+  const o = ovl(), doneN = Object.keys(player.log).length;
+  o.innerHTML = `<div class="in"><div class="bar"><span class="prog">${doneN} of ${player.items.length} done</span><span class="btns">${player.phase !== "done" ? `<button class="close" id="lback">Back to exercise</button>` : ""}${player.finished ? `<button class="close" id="lsave">Save &amp; close</button>` : ""}</span></div>
+    <p class="prog">Tap an exercise to go back to it. Done ones can be unmarked there.</p><div class="exlist"></div></div>`;
+  const list = o.querySelector(".exlist");
+  player.items.forEach((r, idx) => {
+    const v = player.log[r.id], b = document.createElement("button");
+    b.className = (v != null ? "ok" : "") + (idx === player.i && player.phase !== "done" ? " cur" : "");
+    b.innerHTML = `<span class="n">${idx + 1}</span><span></span><span class="st">${v != null ? "✓ " + (r.unit === "sec" ? fmtSec(v) : v) : "—"}</span>`;
+    b.children[1].textContent = r.name;
+    b.onclick = () => { player.i = idx; if (player.phase === "done") { player.phase = "work"; keepAwake(); } showWork(); };
+    list.appendChild(b);
+  });
+  const back = o.querySelector("#lback"); if (back) back.onclick = showWork;
+  const sv = o.querySelector("#lsave"); if (sv) sv.onclick = () => { saveWorkoutLog(); closeOverlay(); render(); };
+  o.scrollTop = 0;
 }
 function nextExercise(didIt){
   clearInterval(player.tick);
@@ -1325,7 +1363,7 @@ function showRest(){
     </div></div>`;
   o.querySelector(".nextup b").textContent = r.name;
   o.querySelector(".nextup .prog").textContent = r.unit === "sec" ? `Hold ${fmtSec(r.target)}` : `${r.target} reps`;
-  o.querySelector(".close").onclick = askLeave; o.scrollTop = 0;
+  o.querySelector(".bar .close:last-child").onclick = askLeave; o.scrollTop = 0;
   const big = o.querySelector("#rbig"), paint = () => { big.textContent = fmtSec(Math.max(0, player.left)); };
   paint();
   o.querySelector("#rplus").onclick = () => { player.left += 20; paint(); };
@@ -1340,23 +1378,32 @@ function showRest(){
     if (player.left <= 0) { clearInterval(player.tick); beep(990, .15); showWork(); }
   }, 1000);
 }
-/** Adds the workout so far to today's tracker, once. */
+/** Brings today's tracker in line with this workout: adds what's new, takes back anything unmarked. */
 function saveWorkoutLog(){
   clearInterval(player.tick);
   const ids = Object.keys(player.log), mins = Math.max(1, Math.round((Date.now() - player.started) / 60000));
   const d = ensure(keyOf(new Date()));
-  if (!player.saved && ids.length) {
-    player.saved = true;
-    d.reps = {...d.reps}; ids.forEach(id => { d.reps[id] = (d.reps[id] || 0) + player.log[id]; });
-    d.mins = {...d.mins, train: (d.mins.train || 0) + mins};
-    if (ids.length >= Math.ceil(player.items.length * .8)) d.done = {...d.done, train: true};
-    saveDay(d, false);
+  const all = new Set([...ids, ...Object.keys(player.savedLog)]);
+  let changed = false;
+  d.reps = {...d.reps};
+  all.forEach(id => {
+    const delta = (player.log[id] || 0) - (player.savedLog[id] || 0);
+    if (delta) { changed = true; d.reps[id] = Math.max(0, (d.reps[id] || 0) + delta); if (!d.reps[id]) delete d.reps[id]; }
+  });
+  player.savedLog = {...player.log};
+  if (ids.length && mins !== player.savedMins) {
+    d.mins = {...d.mins, train: Math.max(0, (d.mins.train || 0) - player.savedMins + mins)};
+    player.savedMins = mins; changed = true;
   }
+  const enough = ids.length >= Math.ceil(player.items.length * .8);
+  if (enough && !d.done.train) { d.done = {...d.done, train: true}; player.autoDone = true; changed = true; }
+  else if (!enough && player.autoDone && d.done.train) { d.done = {...d.done, train: false}; player.autoDone = false; changed = true; }
+  if (changed) saveDay(d, false);
   return {ids, mins, d};
 }
 function finishWorkout(){
   const {ids, mins, d} = saveWorkoutLog();
-  player.phase = "done";
+  player.phase = "done"; player.finished = true;
   releaseWake();
   const o = ovl();
   o.innerHTML = `<div class="in"><div class="bar"><span class="prog">Workout finished</span><button class="close">Close</button></div>
@@ -1364,6 +1411,9 @@ function finishWorkout(){
     <div class="summary"><div><b>${ids.length}</b><span>of ${player.items.length} exercises</span></div><div><b>${mins}</b><span>minutes</span></div><div><b>${ids.reduce((t, id) => t + (player.items.find(x => x.id === id)?.unit === "sec" ? 0 : player.log[id]), 0)}</b><span>reps</span></div></div>
     <p class="prog">${ids.length ? "Saved to today's TRAIN block" + (d.done.train ? " and ticked it." : ".") : "Tap Start workout whenever you're ready."}</p></div>`;
   o.querySelector(".close").onclick = () => { closeOverlay(); render(); };
+  const rv = document.createElement("button"); rv.className = "close"; rv.textContent = "Review exercises";
+  rv.onclick = showList;
+  o.querySelector(".in").appendChild(rv);
   beep(660, .12); beep(880, .12); beep(1320, .25);
 }
 
