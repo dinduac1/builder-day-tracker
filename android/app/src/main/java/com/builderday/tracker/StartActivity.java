@@ -15,8 +15,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
-import android.view.Gravity;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.browser.customtabs.CustomTabColorSchemeParams;
@@ -39,18 +37,19 @@ import java.io.StringWriter;
  * is saved and shown on the next launch.
  */
 public class StartActivity extends Activity {
-    private static final int RC_NOTIF = 10;
+    private static final int RC_NOTIF = 10, RC_AUTH = 11;
     private static final String TAG = "BuilderDay";
     private SharedPreferences prefs;
     private TwaLauncher launcher;
-    private boolean notifAsked, launched, showingProblem;
+    private boolean notifAsked, launched, showingProblem, unlocked, unlocking, waitForTap;
+    private android.widget.Button unlockButton;
 
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
         prefs = getSharedPreferences("setup", MODE_PRIVATE);
         installCrashRecorder();
-        showOpening();
+        showLock();
 
         String lastCrash = prefs.getString("lastCrash", null);
         if (lastCrash != null) {
@@ -72,6 +71,7 @@ public class StartActivity extends Activity {
     protected void onResume() {
         super.onResume();
         if (showingProblem || launched) return;
+        if (!unlocked) { if (!waitForTap) unlock(); return; }   // after a cancel, wait for the Unlock button
         try { nextStep(); }
         catch (Throwable t) { showProblem("Builder Day couldn't start.", trace(t)); }
     }
@@ -156,14 +156,108 @@ public class StartActivity extends Activity {
         catch (Throwable t) { Log.w(TAG, "couldn't open " + i.getAction(), t); return false; }
     }
 
-    private void showOpening() {
-        TextView t = new TextView(this);
-        t.setText("Opening Builder Day…");
-        t.setTextSize(18);
-        t.setTextColor(0xFFE4ECE6);
-        t.setGravity(Gravity.CENTER);
-        t.setBackgroundColor(0xFF0D1611);
-        setContentView(t);
+    /* ---------- app lock: fingerprint / face, or the phone's PIN, pattern or password ---------- */
+
+    /** Branded lock screen behind the system unlock prompt. */
+    private void showLock() {
+        float dp = getResources().getDisplayMetrics().density;
+        android.widget.LinearLayout root = new android.widget.LinearLayout(this);
+        root.setOrientation(android.widget.LinearLayout.VERTICAL);
+        root.setGravity(android.view.Gravity.CENTER);
+        root.setBackgroundColor(0xFF0D1611);
+        int pad = (int) (32 * dp);
+        root.setPadding(pad, pad, pad, pad);
+
+        android.widget.ImageView icon = new android.widget.ImageView(this);
+        icon.setImageResource(R.mipmap.ic_launcher);
+        root.addView(icon, new android.widget.LinearLayout.LayoutParams((int) (88 * dp), (int) (88 * dp)));
+
+        android.widget.TextView name = new android.widget.TextView(this);
+        name.setText("Builder Day");
+        name.setTextSize(26);
+        name.setTextColor(0xFFE4ECE6);
+        name.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        name.setGravity(android.view.Gravity.CENTER);
+        name.setPadding(0, (int) (18 * dp), 0, (int) (6 * dp));
+        root.addView(name);
+
+        android.widget.TextView sub = new android.widget.TextView(this);
+        sub.setText("Locked · use your fingerprint or screen lock");
+        sub.setTextSize(15);
+        sub.setTextColor(0xFF93A598);
+        sub.setGravity(android.view.Gravity.CENTER);
+        root.addView(sub);
+
+        unlockButton = new android.widget.Button(this);
+        unlockButton.setText("Unlock");
+        unlockButton.setAllCaps(false);
+        unlockButton.setTextSize(17);
+        unlockButton.setTextColor(0xFF1B1408);
+        unlockButton.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        android.graphics.drawable.GradientDrawable bg = new android.graphics.drawable.GradientDrawable();
+        bg.setColor(0xFFE0AD55);
+        bg.setCornerRadius(14 * dp);
+        unlockButton.setBackground(bg);
+        unlockButton.setVisibility(android.view.View.INVISIBLE);   // shown if the prompt is dismissed
+        unlockButton.setOnClickListener(v -> { waitForTap = false; unlock(); });
+        android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams((int) (220 * dp), (int) (56 * dp));
+        lp.topMargin = (int) (36 * dp);
+        root.addView(unlockButton, lp);
+        setContentView(root);
+    }
+
+    private void unlock() {
+        if (unlocking || unlocked) return;
+        android.app.KeyguardManager km = getSystemService(android.app.KeyguardManager.class);
+        if (km == null || !km.isDeviceSecure()) {
+            // No fingerprint, PIN, pattern or password on this phone, so there's nothing to check against
+            toast("Set a screen lock in your phone's settings to lock Builder Day.");
+            onUnlocked();
+            return;
+        }
+        unlocking = true;
+        if (unlockButton != null) unlockButton.setVisibility(android.view.View.INVISIBLE);
+        if (Build.VERSION.SDK_INT >= 30) {
+            android.hardware.biometrics.BiometricPrompt prompt = new android.hardware.biometrics.BiometricPrompt.Builder(this)
+                    .setTitle("Unlock Builder Day")
+                    .setSubtitle("Fingerprint, face, or your phone's PIN, pattern or password")
+                    .setAllowedAuthenticators(android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_WEAK
+                            | android.hardware.biometrics.BiometricManager.Authenticators.DEVICE_CREDENTIAL)
+                    .build();
+            prompt.authenticate(new android.os.CancellationSignal(), getMainExecutor(),
+                    new android.hardware.biometrics.BiometricPrompt.AuthenticationCallback() {
+                        @Override public void onAuthenticationSucceeded(android.hardware.biometrics.BiometricPrompt.AuthenticationResult r) {
+                            unlocking = false; onUnlocked();
+                        }
+                        @Override public void onAuthenticationError(int code, CharSequence msg) {
+                            unlocking = false; showUnlockButton();
+                        }
+                    });
+        } else {
+            // Android 8–10: the system's confirm-your-screen-lock screen (fingerprint where the phone offers it)
+            Intent i = km.createConfirmDeviceCredentialIntent("Unlock Builder Day", "Use your screen lock to continue");
+            if (i == null) { unlocking = false; onUnlocked(); return; }
+            startActivityForResult(i, RC_AUTH);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int rc, int result, Intent data) {
+        super.onActivityResult(rc, result, data);
+        if (rc != RC_AUTH) return;
+        unlocking = false;
+        if (result == RESULT_OK) onUnlocked(); else showUnlockButton();
+    }
+
+    private void showUnlockButton() {
+        waitForTap = true;
+        if (unlockButton != null) unlockButton.setVisibility(android.view.View.VISIBLE);
+    }
+
+    private void onUnlocked() {
+        unlocked = true;
+        try { nextStep(); }
+        catch (Throwable t) { showProblem("Builder Day couldn't start.", trace(t)); }
     }
 
     private void showProblem(String headline, String detail) {
