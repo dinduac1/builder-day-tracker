@@ -65,7 +65,7 @@ h1{font-family:var(--f-display);font-weight:800;font-size:clamp(26px,4vw,38px);l
 .now .left{font-family:var(--f-mono);font-size:13px;opacity:.85}
 
 .grid{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(0,1fr);gap:20px;align-items:start}
-@media (max-width:940px){.grid{display:flex;flex-direction:column}.grid > .side{display:contents}.p-five{order:1}.p-plan{order:2}.p-sched{order:3}.p-week{order:4}.p-heat{order:5}.p-remind{order:6}}
+@media (max-width:940px){.grid{display:flex;flex-direction:column}.grid > .side{display:contents}.p-five{order:1}.p-day{order:2}.p-plan{order:3}.p-sched{order:4}.p-week{order:5}.p-heat{order:6}.p-remind{order:7}}
 
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:12px}
 .panel h2{font-family:var(--f-display);font-weight:700;font-size:17px;margin:0}
@@ -195,6 +195,18 @@ input.tx:focus{border-color:var(--accent);outline:none}
 /* weekly score */
 .wk{padding:16px 18px 18px;display:grid;gap:14px}
 .wkhead{display:flex;align-items:center;gap:16px}
+.aim{display:grid;gap:6px;background:var(--bg);border-radius:10px;padding:10px 12px;font-size:14px}
+.aim b{font-family:var(--f-display)}
+.aim .bar{height:8px;border-radius:4px;background:var(--sunk);overflow:hidden;position:relative}
+.aim .bar i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.aim .bar u{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--brass)}
+.aim.hit{background:var(--accent-soft);color:var(--accent)}
+.dstrip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.dstrip button{display:grid;gap:2px;justify-items:center;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:6px 2px;cursor:pointer;font:inherit;color:inherit}
+.dstrip button.sel{border-color:var(--brass)}
+.dstrip .g{font-family:var(--f-display);font-weight:800;font-size:16px}
+.dstrip .l{font-family:var(--f-mono);font-size:10px;color:var(--muted)}
+.gA{color:var(--accent)} .gB{color:var(--ink)} .gC{color:var(--brass)} .gD,.gF{color:var(--warn)}
 .grade{width:72px;height:72px;border-radius:14px;background:var(--forest);color:var(--forest-ink);display:grid;place-content:center;font-family:var(--f-display);font-weight:800;font-size:34px;line-height:1;flex:none}
 .wkhead .num{font-family:var(--f-display);font-weight:800;font-size:28px;line-height:1;font-variant-numeric:tabular-nums}
 .wkhead .num small{font-size:15px;color:var(--muted)}
@@ -349,6 +361,11 @@ img{max-width:100%}
           <div class="streak">Full-Five streak<b id="streak">0 days</b></div>
         </div>
         <div class="alerts" id="alerts"></div>
+      </section>
+
+      <section class="panel p-day">
+        <div class="phead"><h2>Daily score</h2><span class="meta" id="dayLabel">today</span></div>
+        <div class="wk" id="dayScore"></div>
       </section>
 
       <section class="panel p-week">
@@ -720,7 +737,46 @@ function avgOf(id, keys){ const vs = keys.map(k => minsOf(k, id)).filter(v => v 
 
 /* ---------- weekly score ---------- */
 function weekStart(k){ const d = fromKey(k); d.setDate(d.getDate() - (d.getDay()+6)%7); return keyOf(d); }
-function gradeOf(s){ return s >= 95 ? "A+" : s >= 90 ? "A" : s >= 80 ? "B" : s >= 70 ? "C" : s >= 60 ? "D" : "F"; }
+const GRADES = [[97,"A+"],[93,"A"],[90,"A-"],[87,"B+"],[83,"B"],[80,"B-"],[77,"C+"],[73,"C"],[70,"C-"],[67,"D+"],[63,"D"],[60,"D-"],[0,"F"]];
+function gradeOf(s){ return GRADES.find(([min]) => s >= min)[1]; }
+const gradeMin = g => (GRADES.find(x => x[1] === g) || [0])[0];
+/** The next grade up from a score (an A+ day's target is to hold the A+). */
+function nextGrade(score){
+  const i = GRADES.findIndex(([min]) => score >= min);
+  const [min, g] = GRADES[Math.max(0, i - 1)];
+  return {grade: g, min};
+}
+const gClass = g => "g" + g[0];
+
+/** One day's score: the weekly formula applied to a single day. Today is scored live from what's logged so far. */
+function scoreDay(k){
+  const today = keyOf(new Date()), fk = firstKey(), d = getDay(k);
+  if (k > today || (!hasData(days[k]) && k !== today)) return null;
+  const five = fiveCount(d) / 5;
+  const sched = doneCount(d) / BLOCKS.length;
+  let repFrac = null, hits = 0;
+  const defs = allRepDefs(k).filter(r => r.target > 0);
+  if (defs.length) {
+    let t = 0;
+    defs.forEach(r => { const v = repOf(k, r.id) || 0; t += Math.min(v / r.target, 1); if (v >= r.target) hits++; });
+    repFrac = t / defs.length;
+  }
+  const prior7 = [1,2,3,4,5,6,7].map(i => shift(k, -i));
+  let compared = 0, improved = 0;
+  BLOCKS.forEach(b => { const v = minsOf(k, b.id), a = avgOf(b.id, prior7); if (v != null && a != null) { compared++; if (better(b.id, v, a)) improved++; } });
+  const y = shift(k, -1);
+  const doubles = fk && y >= fk ? FIVE.filter(f => !d.done[f] && !getDay(y).done[f]).length : 0;
+  const parts = [
+    {label:"Daily Five done", max:50, frac:five, note:`${fiveCount(d)}/5`},
+    {label:"Schedule blocks done", max:15, frac:sched, note:`${doneCount(d)}/${BLOCKS.length}`},
+    {label:"Rep targets hit", max:10, frac:repFrac, note:defs.length ? `${hits}/${defs.length}` : "no rep counters"},
+    {label:"Beat your 7-day average times", max:15, frac:compared ? improved / compared : null, note:compared ? `${improved}/${compared} blocks` : "log times to score this"},
+    {label:"Never missed twice", max:10, frac:1 - doubles / 5, note:doubles ? `${doubles} missed two days running` : "clean"},
+  ];
+  const live = parts.filter(p => p.frac != null);
+  const score = Math.round(live.reduce((t, p) => t + p.max * p.frac, 0) / live.reduce((t, p) => t + p.max, 0) * 100);
+  return {score, grade: gradeOf(score), parts, live: k === today};
+}
 function scoreWeek(ws, withRecords){
   const today = keyOf(new Date()), fk = firstKey();
   const keys = [0,1,2,3,4,5,6].map(i => shift(ws,i));
@@ -902,6 +958,7 @@ function render(){
   if (missedY.length && sel !== today) add(`Missed twice in a row: ${missedY.map(f=>SHORT[f]).join(", ")}.`);
   if (fc === 5) add("All Five done. The day is won.", true);
 
+  renderDayScore(today);
   renderWeek(today);
 
   // plan from last night
@@ -919,6 +976,58 @@ function render(){
   if (y.gratitude) { const g = document.createElement("div"); g.className = "grat"; g.textContent = "Last night: " + y.gratitude; plan.appendChild(g); }
 
   renderHeat(today);
+}
+
+function renderDayScore(today){
+  const box = $("dayScore"); box.innerHTML = "";
+  const isToday = sel === today;
+  $("dayLabel").textContent = isToday ? "today · live" : shortDate(sel);
+  const ds = scoreDay(sel), ys = scoreDay(shift(sel, -1));
+  if (!ds) { const p = document.createElement("p"); p.className = "beat"; p.textContent = "No tracked activity on this day."; box.appendChild(p); }
+  else {
+    const head = document.createElement("div"); head.className = "wkhead";
+    head.innerHTML = `<div class="grade"></div><div><div class="num"></div><div class="sub"></div></div>`;
+    head.querySelector(".grade").textContent = ds.grade;
+    head.querySelector(".num").innerHTML = `${ds.score}<small> / 100</small>`;
+    head.querySelector(".sub").textContent = isToday ? "So far today. It updates as you log." : "Final score for the day";
+    box.appendChild(head);
+
+    // the target: one grade up from the day before
+    const aim = document.createElement("div"); aim.className = "aim";
+    if (ys) {
+      const t = nextGrade(ys.score), hit = ds.score >= t.min;
+      if (hit) aim.classList.add("hit");
+      const holding = t.grade === ys.grade;
+      aim.innerHTML = `<div>${shortDate(shift(sel, -1))}: <b class="${gClass(ys.grade)}">${ys.grade}</b> (${ys.score}). ${holding ? "Aim to hold" : "Aim for"} <b>${t.grade}</b> (${t.min}+) ${isToday ? "today" : "on this day"}.</div>
+        <div class="bar"><i style="width:${Math.min(100, ds.score)}%"></i><u style="left:${t.min}%"></u></div>
+        <div>${hit ? (holding ? `Holding ${t.grade}. Keep it.` : `Target reached: ${ds.grade} beats yesterday.`) : `${t.min - ds.score} more point${t.min - ds.score === 1 ? "" : "s"} to reach ${t.grade}.`}</div>`;
+    } else {
+      aim.innerHTML = `<div>No score for the day before yet. Today's grade becomes tomorrow's target.</div>`;
+    }
+    box.appendChild(aim);
+
+    const parts = document.createElement("div"); parts.className = "parts";
+    ds.parts.forEach(p => {
+      const el = document.createElement("div"); el.className = "part" + (p.frac == null ? " off" : "");
+      el.innerHTML = `<span></span><span class="pts">${p.frac == null ? "—" : Math.round(p.max * p.frac)}/${p.max}</span><div class="bar"><i style="width:${p.frac == null ? 0 : Math.round(p.frac * 100)}%"></i></div>`;
+      el.firstChild.textContent = `${p.label} · ${p.note}`;
+      parts.appendChild(el);
+    });
+    box.appendChild(parts);
+  }
+
+  // last 7 days, ending on the selected day
+  const strip = document.createElement("div"); strip.className = "dstrip";
+  for (let i = 6; i >= 0; i--) {
+    const k = shift(sel, -i), sc = scoreDay(k), b = document.createElement("button");
+    if (k === sel) b.classList.add("sel");
+    b.innerHTML = `<span class="g ${sc ? gClass(sc.grade) : ""}">${sc ? sc.grade : "·"}</span><span class="l">${fromKey(k).toLocaleDateString(undefined, {weekday: "short"})}</span>`;
+    b.title = sc ? `${shortDate(k)}: ${sc.grade} (${sc.score})` : `${shortDate(k)}: no data`;
+    if (k <= today) b.onclick = () => { sel = k; render(); };
+    else b.disabled = true;
+    strip.appendChild(b);
+  }
+  box.appendChild(strip);
 }
 
 function renderWeek(today){
