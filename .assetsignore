@@ -12,3 +12,4 @@ firebase-debug.log
 .firebaserc
 firebase.json
 worker.js
+android

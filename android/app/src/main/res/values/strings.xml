@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Builder Day</string>
+    <string name="site_url">https://builder-day-tracker.dinduking1.workers.dev/</string>
+    <string name="asset_statements" translatable="false">
+        [{
+            \"relation\": [\"delegate_permission/common.handle_all_urls\"],
+            \"target\": {\"namespace\": \"web\", \"site\": \"https://builder-day-tracker.dinduking1.workers.dev\"}
+        }]
+    </string>
+    <color name="forest">#FF123A26</color>
+    <color name="forest_dark">#FF0D1611</color>
+    <color name="brass">#FFE0AD55</color>
+</resources>

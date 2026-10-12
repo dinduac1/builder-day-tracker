@@ -6,6 +6,13 @@
 const SITE = "https://builder-day-tracker.dinduking1.workers.dev";
 const VAPID_PUBLIC = "BNMbHPCzDjxThTtHX7eY2MTrtAf3vEYP08NEWrVxYOcnR_XsdNGejmcbzlyHrKBKqhJuB5pIpbeVDp1cJLuVM4k";
 
+// Android app (android/) signing certificate. Must match android/builderday.jks.
+const ASSET_LINKS = [{
+  relation: ["delegate_permission/common.handle_all_urls"],
+  target: {namespace: "android_app", package_name: "com.builderday.tracker",
+    sha256_cert_fingerprints: ["FA:B1:C5:CA:65:A1:77:4F:35:E5:63:FF:B8:C5:2E:F3:B8:92:4A:12:C4:C7:BA:B3:38:61:9C:DF:46:12:33:B1"]},
+}];
+
 // Keep in step with BLOCKS in index.html
 const BLOCKS = [
   {id:"wake",    s:"05:00", e:"05:30", name:"Wake", desc:"Water, light, no phone. Read tonight's plan from last night."},
@@ -27,6 +34,8 @@ const BLOCKS = [
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
+    // Lets the Android app open this site full screen (Trusted Web Activity) without a URL bar
+    if (url.pathname === "/.well-known/assetlinks.json") return json(ASSET_LINKS);
     if (url.pathname.startsWith("/api/")) {
       try { return await api(req, env, url); }
       catch (e) { return json({error: String(e && e.message || e)}, 500); }
