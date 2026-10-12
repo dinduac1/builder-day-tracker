@@ -17,22 +17,16 @@ import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
 
-import androidx.browser.customtabs.CustomTabColorSchemeParams;
-import androidx.browser.trusted.TrustedWebActivityIntentBuilder;
-
-import com.google.androidbrowserhelper.trusted.TwaLauncher;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
 /**
- * App entry point and the tracker's host.
+ * App entry point: unlock, permissions, reminders, then the tracker.
  * 1. Asks once for what reminders need: notifications, then (if the phone requires it) exact alarms and the
  *    full-screen wake-up screen.
  * 2. Schedules every reminder.
- * 3. Opens the tracker full screen in Chrome (Trusted Web Activity), launched directly from here.
- *    (The library's own LauncherActivity relaunches itself into a new task when it isn't the first screen,
- *    and on HyperOS that relaunch quits before Chrome starts.)
+ * 3. Opens the tracker in the app's own screen (TrackerActivity).
  * Nothing here may crash the app: failures are shown with a way to keep going, and a crash anywhere else
  * is saved and shown on the next launch.
  */
@@ -40,7 +34,6 @@ public class StartActivity extends Activity {
     private static final int RC_NOTIF = 10, RC_AUTH = 11;
     private static final String TAG = "BuilderDay";
     private SharedPreferences prefs;
-    private TwaLauncher launcher;
     private boolean notifAsked, launched, showingProblem, unlocked, unlocking, waitForTap;
     private android.widget.Button unlockButton;
 
@@ -115,34 +108,12 @@ public class StartActivity extends Activity {
 
     private void openTracker() {
         launched = true;
-        try {
-            Uri site = Uri.parse(getString(R.string.site_url));
-            TrustedWebActivityIntentBuilder builder = new TrustedWebActivityIntentBuilder(site)
-                    .setDefaultColorSchemeParams(new CustomTabColorSchemeParams.Builder()
-                            .setToolbarColor(0xFF123A26)
-                            .setNavigationBarColor(0xFF0D1611)
-                            .build());
-            launcher = new TwaLauncher(this);
-            launcher.launch(builder, null, null, null, TwaLauncher.CCT_FALLBACK_STRATEGY);
-        } catch (Throwable t) {
-            Log.e(TAG, "trusted web activity failed", t);
-            openInBrowser();
-            finish();
-        }
-    }
-
-    /** Back from the tracker means the person is leaving the app. */
-    @Override
-    protected void onRestart() {
-        super.onRestart();
-        if (launched) finish();
+        startActivity(new Intent(this, TrackerActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP));
+        finish();
     }
 
     @Override
-    protected void onDestroy() {
-        if (launcher != null) launcher.destroy();
-        super.onDestroy();
-    }
+    protected void onDestroy() { super.onDestroy(); }
 
     private void openInBrowser() {
         Uri site = Uri.parse(getString(R.string.site_url));

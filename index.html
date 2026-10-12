@@ -1165,6 +1165,7 @@ setInterval(tickLive, 1000);
 setInterval(() => { if (!editing()) render(); }, 60000);
 
 /* ---------- exercise guide + guided workout ---------- */
+const NATIVE = window.BuilderDayNative || null;   // set when running inside the Builder Day Android app
 const EMBED_VIDEO = true;   // artifacts can't embed other sites; they link out instead
 const nameKey = t => String(t || "").toLowerCase().replace(/·.*$/, "").replace(/\(.*?\)/g, "").replace(/[^a-z]/g, "");
 function exKeyFor(r){
@@ -1252,8 +1253,8 @@ function openGuide(k, r){
 // --- guided workout player
 const player = {items:[], i:0, phase:"work", left:0, running:false, count:0, started:0, log:{}, tick:null};
 let wakeLock = null;
-async function keepAwake(){ try { wakeLock = await navigator.wakeLock?.request("screen"); } catch(e){} }
-function releaseWake(){ try { wakeLock && wakeLock.release(); } catch(e){} wakeLock = null; }
+async function keepAwake(){ try { NATIVE ? NATIVE.keepAwake(true) : (wakeLock = await navigator.wakeLock?.request("screen")); } catch(e){} }
+function releaseWake(){ try { NATIVE ? NATIVE.keepAwake(false) : (wakeLock && wakeLock.release()); } catch(e){} wakeLock = null; }
 let actx = null;
 function beep(freq = 880, dur = .12, vol = .25){
   try {
@@ -1513,7 +1514,7 @@ async function sendTest(){
     renderReminders(j.ok ? "Test sent. It should arrive in a few seconds." : "The test didn't go through" + (j.status ? ` (push service said ${j.status})` : "") + ".", !j.ok);
   } catch(e) { renderReminders("Couldn't reach the reminder server.", true); }
 }
-if (REMINDERS) {
+if (REMINDERS && !NATIVE) {
   $("remindLink").onclick = () => $("remindPanel").scrollIntoView({behavior: "smooth", block: "start"});
   (async () => {
     if ("serviceWorker" in navigator) {
@@ -1542,7 +1543,11 @@ const G_ICON = '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107"
   let unsub = null;
   const authBox = $("auth");
 
-  auth.getRedirectResult().catch(e => { $("storeNote").textContent = "Sign-in didn't finish: " + (e.message || e.code); });
+  // Inside the Android app, Google sign-in runs natively and hands back an ID token
+  window.__bdNativeSignIn = idToken => auth.signInWithCredential(firebase.auth.GoogleAuthProvider.credential(idToken))
+    .catch(e => { $("storeNote").textContent = "Sign-in didn't finish: " + (e.message || e.code); });
+  window.__bdNativeSignInError = msg => { $("storeNote").textContent = msg; };
+  if (!NATIVE) auth.getRedirectResult().catch(e => { $("storeNote").textContent = "Sign-in didn't finish: " + (e.message || e.code); });
   auth.onAuthStateChanged(u => {
     authBox.innerHTML = "";
     if (unsub) { unsub(); unsub = null; }
@@ -1552,6 +1557,7 @@ const G_ICON = '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107"
       $("storeNote").textContent = "Saved in this browser only. Sign in to sync across your devices.";
       const b = document.createElement("button"); b.className = "btn-g"; b.innerHTML = G_ICON + "<span>Sign in with Google</span>";
       b.onclick = () => {
+        if (NATIVE) { $("storeNote").textContent = "Choose your Google account…"; NATIVE.signInWithGoogle(); return; }
         const p = new firebase.auth.GoogleAuthProvider();
         auth.signInWithPopup(p).catch(e => {
           if (["auth/popup-blocked","auth/operation-not-supported-in-this-environment","auth/cancelled-popup-request"].includes(e.code)) auth.signInWithRedirect(p);
@@ -1576,7 +1582,7 @@ const G_ICON = '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107"
     });
     const who = document.createElement("span"); who.className = "who"; who.textContent = u.email || u.displayName || "Signed in";
     const out = document.createElement("button"); out.className = "dir"; out.textContent = "Sign out";
-    out.onclick = () => auth.signOut();
+    out.onclick = () => { auth.signOut(); if (NATIVE) NATIVE.signOut(); };
     authBox.append(who, out);
   });
 })();
