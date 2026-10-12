@@ -16,8 +16,8 @@ android {
         applicationId 'com.builderday.tracker'
         minSdk 26
         targetSdk 35
-        versionCode 2
-        versionName '1.1'
+        versionCode 3
+        versionName '1.2'
     }
     signingConfigs {
         release {
@@ -41,4 +41,5 @@ android {
 
 dependencies {
     implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
+    implementation 'androidx.browser:browser:1.8.0'
 }

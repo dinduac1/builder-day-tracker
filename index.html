@@ -241,6 +241,45 @@ input.tx:focus{border-color:var(--accent);outline:none}
 @media (max-width:480px){.fivegrid{gap:5px;padding:14px 12px 6px}.fbtn .fn{font-size:10.5px}}
 @media (prefers-reduced-motion:no-preference){.fbtn,.chk,.row,.bar i{transition:background-color .15s,border-color .15s,width .3s}}
 [hidden]{display:none!important}
+/* exercise guide + guided workout */
+.rname.ex{border:0;background:none;padding:0;cursor:pointer;color:inherit;font:inherit;font-weight:600;font-size:14px;text-align:left;display:inline-flex;align-items:center;gap:6px}
+.rname.ex::after{content:"?";display:inline-grid;place-content:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--line);font-family:var(--f-mono);font-size:10px;color:var(--muted);flex:none}
+.rname.ex:hover{color:var(--accent)}
+.startwk{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border:0;border-radius:12px;padding:14px;background:var(--accent);color:var(--surface);font-family:var(--f-display);font-weight:800;font-size:17px;cursor:pointer}
+.startwk small{font-family:var(--f-mono);font-weight:400;font-size:12px;opacity:.85}
+.ovl{position:fixed;inset:0;z-index:50;background:var(--bg);overflow-y:auto;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px calc(env(safe-area-inset-bottom,0px) + 24px)}
+.ovl .in{max-width:640px;margin:0 auto;display:grid;gap:14px}
+.ovl .bar{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ovl .close{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 14px;cursor:pointer}
+.ovl .prog{font-family:var(--f-mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.ovl .pbar{height:5px;border-radius:3px;background:var(--sunk);overflow:hidden}
+.ovl .pbar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+.vid{position:relative;width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000}
+.vid iframe,.vid img{position:absolute;inset:0;width:100%;height:100%;border:0;object-fit:cover}
+.vid .play{position:absolute;inset:0;display:grid;place-content:center;background:rgba(0,0,0,.35);color:#fff;border:0;cursor:pointer;font-family:var(--f-display);font-weight:700;font-size:16px;gap:6px}
+.exname{font-family:var(--f-display);font-weight:800;font-size:26px;line-height:1.1;margin:0;text-wrap:balance}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips span{font-family:var(--f-mono);font-size:11px;padding:3px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+.guide h3{font-family:var(--f-display);font-size:15px;margin:4px 0 6px}
+.guide ol,.guide ul{margin:0;padding-left:20px;display:grid;gap:5px;font-size:14.5px}
+.guide ul{color:var(--muted)}
+.big{font-family:var(--f-display);font-weight:800;font-size:64px;line-height:1;text-align:center;font-variant-numeric:tabular-nums}
+.big small{font-size:22px;color:var(--muted)}
+.ctrl{display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap}
+.ctrl button{border-radius:12px;border:1px solid var(--line);background:var(--surface);padding:12px 18px;font-size:16px;cursor:pointer;min-width:56px;font-weight:600}
+.ctrl .go{background:var(--accent);border-color:var(--accent);color:var(--surface);font-family:var(--f-display);font-weight:800;flex:1;max-width:320px}
+.ctrl .ghost{background:none}
+.rest{display:grid;gap:14px;text-align:center;padding-top:20px}
+.rest .lbl{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.nextup{display:flex;align-items:center;gap:12px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px}
+.nextup img{width:96px;aspect-ratio:16/9;object-fit:cover;border-radius:8px;flex:none}
+.restpick{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.restpick button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 12px;font-family:var(--f-mono);font-size:12px;cursor:pointer}
+.restpick button.on{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.summary div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}
+.summary b{display:block;font-family:var(--f-display);font-size:24px}
+.summary span{font-size:12px;color:var(--muted)}
 .remind{padding:14px 18px 16px;display:grid;gap:12px}
 .remind p{margin:0;font-size:14px;color:var(--muted)}
 .remind .row2{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -325,6 +364,7 @@ img{max-width:100%}
       </section>
     </aside>
   </div>
+  <div class="ovl" id="ovl" hidden></div>
   <p class="rule">Excellence is a sleep-powered game.</p>
 </div>
 
@@ -358,28 +398,116 @@ const DEFAULT_REPS = {
   publish: [{id:"videos",   name:"Videos / long-form", target:2}, {id:"shorts", name:"Short pieces", target:3}],
   connect: [{id:"outreach", name:"Outreach touches", target:10}],
 };
+// v2 plan lists, kept so older saved settings migrate cleanly
+const V2_FULL = {name:"Full body", items:[{id:"pushups",name:"Push-ups",target:50},{id:"pullups",name:"Pull-ups",target:20},{id:"rows",name:"Dumbbell / barbell rows",target:30},{id:"ohp",name:"Overhead press",target:30},{id:"dips",name:"Dips",target:30},{id:"lateral",name:"Lateral raises",target:30},{id:"curls",name:"Biceps curls",target:30},{id:"squats",name:"Squats",target:50},{id:"lunges",name:"Lunges",target:30},{id:"rdl",name:"Romanian deadlifts",target:30},{id:"bridges",name:"Glute bridges / hip thrusts",target:30},{id:"calves",name:"Calf raises",target:60}]};
+const V2_CORE = {name:"Core", items:[{id:"situps",name:"Sit-ups",target:50},{id:"legraise",name:"Leg raises",target:30},{id:"plank",name:"Plank (seconds)",target:120},{id:"sideplank",name:"Side plank (seconds)",target:90}]};
+const DEFAULT_IDS_V2 = new Set([...V2_FULL.items, ...V2_CORE.items, ...["bench","ohp","incline","dips","lateral","triceps","pushups","pullups","rows","pulldown","facepull","curls","hammer","squats","rdl","lunges","hipthrust","legcurl","calves","mobility","steps","legraise","plank"].map(id => ({id}))].map(r => r.id));
+// Exercise guide: demo video (YouTube id), muscles, how-to steps and common mistakes.
+const EXERCISES = {
+  wide:     {name:"Wide Arm Push-Ups", video:"pQUsUHvyoI0", muscles:["Chest","Shoulders","Triceps"],
+             steps:["Hands on the floor wider than your shoulders, fingers forward.","Body in one straight line from head to heels; squeeze glutes and abs.","Lower your chest until it's a fist's height from the floor, elbows going out at about 45°.","Push the floor away to straight arms without locking your elbows hard."],
+             mistakes:["Hips sagging or piking up","Flaring elbows straight out to the sides","Half reps"]},
+  row:      {name:"Bent Over Dumbbell Row", video:"v_pbjQAv3Ec", muscles:["Upper back","Lats","Biceps"],
+             steps:["Hinge forward at the hips with a flat back, knees soft; support yourself on a bench or your free hand on your knee.","Let the dumbbell hang straight below your shoulder.","Pull it toward your hip, driving the elbow back and squeezing your shoulder blade in.","Lower slowly to a full stretch."],
+             mistakes:["Rounding the lower back","Twisting the torso to swing the weight","Shrugging the shoulder up to the ear"]},
+  press:    {name:"Military Press", video:"RtUakokbuPs", muscles:["Shoulders","Triceps","Core"],
+             steps:["Stand tall, feet hip-width, dumbbells at shoulder height, palms forward.","Brace your abs and squeeze your glutes so your lower back doesn't arch.","Press straight up until your arms are extended overhead.","Lower under control back to your shoulders."],
+             mistakes:["Leaning back to push the weight","Bouncing off the shoulders","Pressing forward instead of straight up"]},
+  pushup:   {name:"Push-Ups", video:"WDIpL0pjun0", muscles:["Chest","Triceps","Shoulders","Core"],
+             steps:["Hands just wider than shoulders, directly under them.","Straight line from head to heels; brace your core.","Lower until your chest nearly touches the floor, elbows about 45° from your body.","Press back up in one piece."],
+             mistakes:["Sagging hips","Head dropping forward","Elbows flared at 90°"]},
+  bicstretch:{name:"Standing Biceps Stretch", video:"jw8EXo5h0ec", muscles:["Biceps","Chest","Front shoulder"],
+             steps:["Stand beside a wall or door frame.","Place your palm on the wall behind you at shoulder height, arm straight, thumb up.","Slowly turn your body away from the wall until you feel a stretch along the front of the arm.","Breathe slowly and hold; don't bounce."],
+             mistakes:["Bending the elbow","Turning so far it hurts the shoulder"]},
+  lateral:  {name:"Dumbbell Side Lateral Raise", video:"XPPfnSEATJA", muscles:["Side shoulders"],
+             steps:["Stand tall with a light dumbbell in each hand at your sides, slight bend in the elbows.","Raise your arms out to the sides, leading with the elbows.","Stop at shoulder height, pinkies roughly level with thumbs.","Lower slowly over about two seconds."],
+             mistakes:["Swinging or using momentum","Shrugging the shoulders up","Lifting above shoulder height"]},
+  dips:     {name:"Triceps Dips", video:"0326dy_-CzM", muscles:["Triceps","Chest","Front shoulder"],
+             steps:["Sit on the edge of a sturdy chair or bench, hands gripping the edge beside your hips, fingers forward.","Slide your hips off the edge, legs out in front.","Bend your elbows straight back to about 90°, keeping your back close to the bench.","Press up until your arms are straight."],
+             mistakes:["Elbows flaring out","Dropping too low and straining the shoulders","Pushing with the legs"]},
+  hammer:   {name:"Alternate Hammer Curl", video:"2VrOO1LuG7M", muscles:["Biceps","Brachialis","Forearms"],
+             steps:["Stand with a dumbbell in each hand, palms facing your body.","Keep your elbows pinned to your sides.","Curl one dumbbell up, palm still facing in, then lower it slowly.","Alternate arms; each lift counts as one rep."],
+             mistakes:["Swinging the body","Elbows drifting forward","Dropping the weight quickly"]},
+  diamond:  {name:"Diamond Push-Ups", video:"44j1WnLTT54", muscles:["Triceps","Inner chest"],
+             steps:["Put your hands together under your chest so thumbs and index fingers form a diamond.","Straight body line, core braced.","Lower your chest toward your hands, elbows close to your sides.","Press back up. Drop to your knees if your form breaks."],
+             mistakes:["Hips sagging","Elbows flaring wide","Hands too far forward"]},
+  tristretch:{name:"Triceps Stretch", video:"o71LMT6ah48", muscles:["Triceps","Lats"],
+             steps:["Raise one arm overhead and bend the elbow so your hand drops behind your head.","With the other hand, hold the bent elbow.","Gently pull the elbow toward your head until you feel the back of the arm stretch.","Stand tall and breathe; hold."],
+             mistakes:["Arching the lower back","Pulling hard on the elbow"]},
+  squat:    {name:"Squats", video:"DlS-GAF8Edg", muscles:["Quads","Glutes","Hamstrings"],
+             steps:["Stand with feet slightly wider than hip-width, toes turned out a little.","Brace your core and push your hips back as if sitting into a chair.","Lower until your thighs are at least parallel to the floor, knees tracking over your toes and heels down.","Drive through your whole foot to stand tall and squeeze your glutes at the top."],
+             mistakes:["Knees caving in","Heels lifting","Rounding the back or dropping the chest"]},
+  lunges:   {name:"Lunges", video:"ALsbyH1JnRY", muscles:["Quads","Glutes","Hamstrings"],
+             steps:["Stand tall, feet hip-width.","Step forward and lower until both knees are at about 90°, back knee just above the floor.","Keep your front knee over your foot and your torso upright.","Push through the front heel to return; alternate legs."],
+             mistakes:["Front knee caving in","Leaning far forward","Steps too short"]},
+  hinge:    {name:"Hip Hinge", video:"gVzth5ngEZ4", muscles:["Hamstrings","Glutes","Lower back"],
+             steps:["Stand feet hip-width, knees slightly bent (hold dumbbells if you like).","Push your hips straight back, keeping your back flat and chest proud.","Lower until you feel a stretch in your hamstrings, weights close to your legs.","Squeeze your glutes to drive your hips forward and stand tall."],
+             mistakes:["Rounding the back","Turning it into a squat","Hyper-extending at the top"]},
+  bridge:   {name:"Glute Bridge", video:"nuapk_-Q2BI", muscles:["Glutes","Hamstrings","Core"],
+             steps:["Lie on your back, knees bent, feet flat and hip-width apart, arms by your sides.","Tuck your pelvis slightly and brace your abs.","Drive through your heels to lift your hips until knees, hips and shoulders are in a line.","Hold at the top squeezing your glutes the whole time."],
+             mistakes:["Arching the lower back at the top","Pushing through the toes","Letting the knees fall in or out"]},
+  calf:     {name:"Calf Raises", video:"tFXMJWa5R0c", muscles:["Calves"],
+             steps:["Stand tall with the balls of your feet on the floor or a step, holding a wall for balance.","Rise as high as you can onto your toes.","Squeeze and pause at the top for a second.","Lower slowly all the way down."],
+             mistakes:["Bouncing","Rolling onto the outer edge of the foot","Partial range"]},
+  decline:  {name:"Decline Push-Ups", video:"YPhffUXrRLY", muscles:["Upper chest","Shoulders","Triceps"],
+             steps:["Put your feet on a bench or chair behind you, hands on the floor slightly wider than shoulders.","Body straight from head to heels, core braced.","Lower your chest toward the floor, elbows about 45°.","Press back up without letting your hips drop."],
+             mistakes:["Lower back arching","Elbows flaring","Feet too high before regular push-ups feel easy"]},
+  calfstretch:{name:"Calf Stretch", video:"YTYQo4WvJHA", muscles:["Calves","Achilles"],
+             steps:["Face a wall with your hands on it.","Step one foot back, heel down, toes pointing forward, back knee straight.","Lean into the wall, bending the front knee, until you feel the back calf stretch.","Hold steady and breathe."],
+             mistakes:["Heel lifting off the floor","Back foot turned out"]},
+  situps:   {name:"Sit-Ups", video:"iL06z9PWYs8", muscles:["Abs","Hip flexors"],
+             steps:["Lie on your back, knees bent, feet flat (anchored if needed).","Cross your arms on your chest or hands lightly by your ears.","Curl up, chest toward knees, until you're sitting upright.","Roll back down slowly, one vertebra at a time."],
+             mistakes:["Pulling on the neck","Throwing yourself up with momentum","Dropping back down fast"]},
+  legraise: {name:"Leg Raises", video:"SuIxXbKnwx4", muscles:["Lower abs","Hip flexors"],
+             steps:["Lie flat, legs straight, hands under your hips or by your sides.","Press your lower back into the floor.","Raise your legs together to vertical, keeping them straight.","Lower slowly until just above the floor; don't let your back arch."],
+             mistakes:["Lower back lifting off the floor","Swinging the legs","Dropping them quickly"]},
+  plank:    {name:"Plank", video:"mwlp75MS6Rg", muscles:["Core","Shoulders","Glutes"],
+             steps:["Forearms on the floor, elbows under shoulders.","Legs straight behind you, on your toes.","Squeeze glutes and abs so your body is a straight line from head to heels.","Breathe steadily and hold."],
+             mistakes:["Hips too high or sagging","Holding your breath","Looking up and straining the neck"]},
+  sideplank:{name:"Side Plank", video:"pitOuJxdyI0", muscles:["Obliques","Core","Glutes"],
+             steps:["Lie on your side, elbow under your shoulder, feet stacked.","Lift your hips so your body forms a straight line.","Keep your hips pushed forward, not sagging back.","Hold; free hand on your hip or reaching up."],
+             mistakes:["Hips dropping","Rolling forward or back","Shoulder shrugging toward the ear"]},
+  cobra:    {name:"Cobra Stretch", video:"NjQzGzKO2Ao", muscles:["Abs","Hip flexors","Lower back"],
+             steps:["Lie on your stomach, hands under your shoulders, legs long.","Press gently through your hands to lift your chest, hips staying on the floor.","Keep your elbows slightly bent and shoulders away from your ears.","Hold and breathe; ease off if your lower back pinches."],
+             mistakes:["Locking the arms and cranking the back","Hips lifting off the floor","Shrugging"]},
+};
+
+// Your FULL BODY TRAIN 10 routine (from Home Workout), in order. unit "sec" = timed hold.
+const ROUTINE = [
+  {id:"wide_pushups", ex:"wide",       name:"Wide Arm Push-Ups",                 target:30},
+  {id:"row_left",     ex:"row",        name:"Bent Over Dumbbell Rows · left",    target:30},
+  {id:"row_right",    ex:"row",        name:"Bent Over Dumbbell Rows · right",   target:30},
+  {id:"military",     ex:"press",      name:"Military Press",                    target:30},
+  {id:"pushups",      ex:"pushup",     name:"Push-Ups",                          target:30},
+  {id:"bic_str_l",    ex:"bicstretch", name:"Standing Biceps Stretch · left",    target:30, unit:"sec"},
+  {id:"bic_str_r",    ex:"bicstretch", name:"Standing Biceps Stretch · right",   target:30, unit:"sec"},
+  {id:"lateral",      ex:"lateral",    name:"Dumbbell Side Lateral Raise",       target:30},
+  {id:"dips",         ex:"dips",       name:"Triceps Dips",                      target:30},
+  {id:"hammer",       ex:"hammer",     name:"Alternate Hammer Curl",             target:30},
+  {id:"diamond",      ex:"diamond",    name:"Diamond Push-Ups",                  target:30},
+  {id:"tri_str_l",    ex:"tristretch", name:"Triceps Stretch · left",            target:60, unit:"sec"},
+  {id:"tri_str_r",    ex:"tristretch", name:"Triceps Stretch · right",           target:60, unit:"sec"},
+  {id:"squats",       ex:"squat",      name:"Squats",                            target:30},
+  {id:"lunges",       ex:"lunges",     name:"Lunges",                            target:10},
+  {id:"hip_hinge",    ex:"hinge",      name:"Hip Hinge",                         target:30},
+  {id:"bridge_hold",  ex:"bridge",     name:"Bridge (hold)",                     target:180, unit:"sec"},
+  {id:"calves",       ex:"calf",       name:"Calf Raises",                       target:30},
+  {id:"decline",      ex:"decline",    name:"Decline Push-Ups",                  target:30},
+  {id:"calf_str_l",   ex:"calfstretch",name:"Calf Stretch · left",               target:20, unit:"sec"},
+  {id:"calf_str_r",   ex:"calfstretch",name:"Calf Stretch · right",              target:20, unit:"sec"},
+  {id:"situps",       ex:"situps",     name:"Sit-Ups",                           target:10},
+  {id:"legraise",     ex:"legraise",   name:"Leg Raises",                        target:10},
+  {id:"plank",        ex:"plank",      name:"Plank",                             target:120, unit:"sec"},
+  {id:"side_plank_r", ex:"sideplank",  name:"Side Plank · right",                target:60, unit:"sec"},
+  {id:"side_plank_l", ex:"sideplank",  name:"Side Plank · left",                 target:60, unit:"sec"},
+  {id:"cobra",        ex:"cobra",      name:"Cobra Stretch",                     target:60, unit:"sec"},
+];
 // TRAIN: full body every day Mon–Sat, Sunday off. Every area gets moderate daily volume (2–4 sets),
 // which is recoverable six days a week as long as most sets stop 1–2 reps short of failure.
 // Targets are total reps across sets (3 × 10 = 30). Beat them by adding reps first, then weight.
 const DEFAULT_WORKOUTS = {
-  full: {name:"Full body", focus:"Chest · back · shoulders · arms · legs · glutes · calves", items:[
-    {id:"pushups",  name:"Push-ups",                target:50, hint:"Chest + triceps · 3–4 sets"},
-    {id:"pullups",  name:"Pull-ups",                target:20, hint:"Back + biceps · 4 × 5 (negatives or band if needed)"},
-    {id:"rows",     name:"Dumbbell / barbell rows", target:30, hint:"Back · 3 × 10"},
-    {id:"ohp",      name:"Overhead press",          target:30, hint:"Shoulders · 3 × 10 (or pike push-ups)"},
-    {id:"dips",     name:"Dips",                    target:30, hint:"Chest + triceps · 3 × 10"},
-    {id:"lateral",  name:"Lateral raises",          target:30, hint:"Side delts · 2 × 15"},
-    {id:"curls",    name:"Biceps curls",            target:30, hint:"Biceps · 3 × 10"},
-    {id:"squats",   name:"Squats",                  target:50, hint:"Quads + glutes · 3–4 sets"},
-    {id:"lunges",   name:"Lunges",                  target:30, hint:"Legs · 3 × 10 alternating"},
-    {id:"rdl",      name:"Romanian deadlifts",      target:30, hint:"Hamstrings + glutes · 3 × 10"},
-    {id:"bridges",  name:"Glute bridges / hip thrusts", target:30, hint:"Glutes · 2 × 15"},
-    {id:"calves",   name:"Calf raises",             target:60, hint:"Calves · 3 × 20"}]},
-  core: {name:"Core", focus:"every training day", items:[
-    {id:"situps",   name:"Sit-ups",                 target:50, hint:"Abs · 2–3 sets"},
-    {id:"legraise", name:"Leg raises",              target:30, hint:"Lower abs · 3 × 10"},
-    {id:"plank",    name:"Plank (seconds)",         target:120, hint:"2 × 60s"},
-    {id:"sideplank",name:"Side plank (seconds)",    target:90, hint:"45s each side"}]},
+  full: {name:"Full body", focus:"FULL BODY TRAIN 10 · stretches included", items: ROUTINE.map(r => ({...r}))},
+  core: {name:"Core", focus:"every training day", items:[]},   // core work is inside the routine now
   rest: {name:"Rest", focus:"Walk · mobility · recover", items:[
     {id:"mobility", name:"Mobility / stretching (minutes)", target:20},
     {id:"steps",    name:"Walk (thousand steps)",   target:8}]},
@@ -402,7 +530,7 @@ const DEFAULT_WORKOUTS = {
 };
 const SPLIT_KEYS = ["full","rest","push","pull","legs"];
 const DEFAULT_SPLIT = ["full","full","full","full","full","full","rest"];   // Mon → Sun
-const PLAN_VERSION = 2;
+const PLAN_VERSION = 3;
 const DOW = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
 const $ = id => document.getElementById(id);
@@ -424,8 +552,14 @@ function norm(v){
 // anything else is added to the full-body list.
 function migratePlan(){
   if (settings.plan === PLAN_VERSION) return false;
-  const W = JSON.parse(JSON.stringify({full: DEFAULT_WORKOUTS.full, core: DEFAULT_WORKOUTS.core}));
-  const defaultIds = new Set(Object.values(DEFAULT_WORKOUTS).flatMap(w => w.items.map(r => r.id)));
+  if (settings.plan === 2) {
+    const W = settings.workouts || {};
+    const own = [...((W.full || {}).items || []), ...((W.core || {}).items || [])].filter(r => /^r[a-z0-9]{6,}$/.test(r.id) && !ROUTINE.some(x => x.id === r.id));
+    settings = {...settings, workouts: {...W, full: {...DEFAULT_WORKOUTS.full, items: [...ROUTINE.map(r => ({...r})), ...own]}, core: {...DEFAULT_WORKOUTS.core, items: []}}, plan: PLAN_VERSION};
+    return true;
+  }
+  const W = JSON.parse(JSON.stringify({full: V2_FULL, core: V2_CORE}));
+  const defaultIds = DEFAULT_IDS_V2;
   const nm = t => String(t || "").toLowerCase().replace(/\(.*?\)/g, "").replace(/[^a-z]/g, "");
   const added = [...Object.values(settings.workouts || {}).flatMap(w => w.items || []), ...((settings.reps || {}).train || [])];
   added.forEach(r => {
@@ -434,7 +568,7 @@ function migratePlan(){
     if (slot) { slot.id = r.id; if (r.target > 0) slot.target = r.target; }
     else if (!W.full.items.concat(W.core.items).some(d => d.id === r.id)) W.full.items.push({id: r.id, name: r.name, target: r.target});
   });
-  settings = {...settings, workouts: W, plan: PLAN_VERSION};
+  settings = {...settings, workouts: {...W, full: {...DEFAULT_WORKOUTS.full, items: [...ROUTINE.map(r => ({...r})), ...W.full.items.filter(r => !DEFAULT_IDS_V2.has(r.id) && !ROUTINE.some(x => x.id === r.id))]}, core: {...DEFAULT_WORKOUTS.core, items: []}}, plan: PLAN_VERSION};
   delete settings.split;
   return true;
 }
@@ -529,7 +663,7 @@ function repGroups(blockId, k){
   if (blockId === "train") {
     const wk = workoutKeyFor(k), W = workouts();
     const gs = [{key:"w:" + wk, label:W[wk].name, title:`${W[wk].name} · ${W[wk].focus}`, items:W[wk].items}];
-    if (wk !== "rest") gs.push({key:"w:core", label:"Core", title:"Core · every training day", items:W.core.items});
+    if (wk !== "rest" && W.core.items.length) gs.push({key:"w:core", label:"Core", title:"Core · every training day", items:W.core.items});
     return gs;
   }
   return [{key:blockId, label:(BLOCKS.find(b => b.id === blockId) || {}).name || "", title:null, items:(settings.reps || DEFAULT_REPS)[blockId] || []}];
@@ -923,6 +1057,14 @@ function renderReps(b, day, ex, prior7){
     const sp = document.createElement("div"); sp.className = "rmeta";
     sp.textContent = "Week: " + DOW.map((n,i) => `${n} ${W[split()[i]].name}`).join(" · ");
     ex.append(bar, sp);
+    const items = repDefs("train", sel);
+    if (items.length && wk !== "rest") {
+      const go = document.createElement("button"); go.className = "startwk";
+      const mins = Math.round(items.reduce((t, r) => t + (r.unit === "sec" ? r.target : r.target * 3) + restSecs(), 0) / 60);
+      go.innerHTML = `<span>▶ Start workout</span><small>${items.length} exercises · ~${mins} min</small>`;
+      go.onclick = () => startWorkout(items);
+      ex.appendChild(go);
+    }
   }
   repGroups(b.id, sel).forEach(g => {
     if (editingReps === g.key) { renderRepEditor(g, ex); return; }
@@ -933,10 +1075,15 @@ function renderReps(b, day, ex, prior7){
         const v = day.reps[r.id], has = v != null, n = v || 0;
         const el = document.createElement("div"); el.className = "rep";
         el.innerHTML = `<span class="rname"></span>
-          <div class="rctl"><button data-d="-1" aria-label="One fewer">−</button><input type="number" class="rin" min="0" inputmode="numeric" placeholder="0"><button data-d="1" aria-label="One more">+</button>${r.target >= 20 ? '<button class="big" data-d="5">+5</button><button class="big" data-d="10">+10</button>' : ""}${r.target > 0 ? `<span class="rtarget">/ ${r.target}</span>` : ""}</div>
+          <div class="rctl"><button data-d="-1" aria-label="One fewer">−</button><input type="number" class="rin" min="0" inputmode="numeric" placeholder="0"><button data-d="1" aria-label="One more">+</button>${r.target >= 20 ? '<button class="big" data-d="5">+5</button><button class="big" data-d="10">+10</button>' : ""}${r.target > 0 ? `<span class="rtarget">/ ${r.target}${r.unit === "sec" ? " s" : ""}</span>` : ""}</div>
           ${r.target > 0 ? `<div class="rbar${n > r.target ? " over" : ""}"><i style="width:${Math.min(100, Math.round(n / r.target * 100))}%"></i></div>` : ""}
           <div class="rmeta"></div>`;
-        el.querySelector(".rname").textContent = r.name;
+        const exk = exKeyFor(r);
+        if (exk) {
+          const nb = document.createElement("button"); nb.className = "rname ex"; nb.textContent = r.name;
+          nb.title = "How to do it"; nb.onclick = () => openGuide(exk, r);
+          el.querySelector(".rname").replaceWith(nb);
+        } else el.querySelector(".rname").textContent = r.name;
         const inp = el.querySelector(".rin"); inp.value = has ? v : "";
         inp.setAttribute("aria-label", `${r.name} count`);
         inp.addEventListener("change", () => setRep(r.id, b.id, inp.value === "" ? null : Number(inp.value)));
@@ -1001,6 +1148,176 @@ $("next").onclick = () => { const t = keyOf(new Date()); if (sel < t) { sel = sh
 $("today").onclick = () => { sel = keyOf(new Date()); render(); };
 setInterval(tickLive, 1000);
 setInterval(() => { if (!editing()) render(); }, 60000);
+
+/* ---------- exercise guide + guided workout ---------- */
+const EMBED_VIDEO = true;   // artifacts can't embed other sites; they link out instead
+const nameKey = t => String(t || "").toLowerCase().replace(/·.*$/, "").replace(/\(.*?\)/g, "").replace(/[^a-z]/g, "");
+function exKeyFor(r){
+  if (r.ex && EXERCISES[r.ex]) return r.ex;
+  const n = nameKey(r.name);
+  for (const k in EXERCISES) { const e = nameKey(EXERCISES[k].name); if (n === e || n.startsWith(e) || e.startsWith(n)) return k; }
+  return null;
+}
+const ytThumb = id => `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
+const fmtSec = s => `${Math.floor(s / 60)}:${pad(s % 60)}`;
+const restSecs = () => (settings.restSec > 0 ? settings.restSec : 20);
+
+function videoBox(e, autoplay){
+  const box = document.createElement("div"); box.className = "vid";
+  const load = () => {
+    if (!EMBED_VIDEO) { window.open(`https://www.youtube.com/watch?v=${e.video}`, "_blank", "noopener"); return; }
+    box.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${e.video}?autoplay=1&mute=1&loop=1&playlist=${e.video}&playsinline=1&rel=0&modestbranding=1" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="${e.name} demo"></iframe>`;
+  };
+  box.innerHTML = `<img alt="" src="${ytThumb(e.video)}"><button class="play" aria-label="Play demo">▶<span>${EMBED_VIDEO ? "Watch demo" : "Watch demo on YouTube"}</span></button>`;
+  box.querySelector(".play").onclick = load;
+  if (autoplay && EMBED_VIDEO) load();
+  return box;
+}
+function guideBlock(e){
+  const g = document.createElement("div"); g.className = "guide";
+  g.innerHTML = `<div class="chips">${e.muscles.map(m => `<span>${m}</span>`).join("")}</div><h3>How to do it</h3><ol></ol><h3>Avoid</h3><ul></ul>`;
+  e.steps.forEach(t => { const li = document.createElement("li"); li.textContent = t; g.querySelector("ol").appendChild(li); });
+  e.mistakes.forEach(t => { const li = document.createElement("li"); li.textContent = t; g.querySelector("ul").appendChild(li); });
+  return g;
+}
+const ovl = () => $("ovl");
+function closeOverlay(){ const o = ovl(); o.hidden = true; o.innerHTML = ""; document.body.style.overflow = ""; releaseWake(); clearInterval(player.tick); }
+function openOverlay(){ const o = ovl(); o.hidden = false; o.scrollTop = 0; document.body.style.overflow = "hidden"; return o; }
+
+function openGuide(k, r){
+  const e = EXERCISES[k], o = openOverlay();
+  o.innerHTML = `<div class="in"><div class="bar"><span class="prog">Exercise guide</span><button class="close">Close</button></div></div>`;
+  const inn = o.querySelector(".in");
+  o.querySelector(".close").onclick = closeOverlay;
+  inn.appendChild(videoBox(e, true));
+  const h = document.createElement("h2"); h.className = "exname"; h.textContent = r ? r.name : e.name; inn.appendChild(h);
+  if (r && r.target) { const t = document.createElement("div"); t.className = "prog"; t.textContent = r.unit === "sec" ? `Hold ${fmtSec(r.target)}` : `Target ${r.target} reps`; inn.appendChild(t); }
+  inn.appendChild(guideBlock(e));
+}
+
+// --- guided workout player
+const player = {items:[], i:0, phase:"work", left:0, running:false, count:0, started:0, log:{}, tick:null};
+let wakeLock = null;
+async function keepAwake(){ try { wakeLock = await navigator.wakeLock?.request("screen"); } catch(e){} }
+function releaseWake(){ try { wakeLock && wakeLock.release(); } catch(e){} wakeLock = null; }
+let actx = null;
+function beep(freq = 880, dur = .12, vol = .25){
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.frequency.value = freq; o.connect(g); g.connect(actx.destination);
+    g.gain.setValueAtTime(vol, actx.currentTime); g.gain.exponentialRampToValueAtTime(.001, actx.currentTime + dur);
+    o.start(); o.stop(actx.currentTime + dur);
+  } catch(e){}
+}
+function startWorkout(items){
+  Object.assign(player, {items: items.map(r => ({...r})), i: 0, phase: "work", running: false, count: 0, started: Date.now(), log: {}});
+  keepAwake(); beep(660, .1); beep(990, .15);
+  openOverlay(); showWork();
+}
+function logCurrent(value){
+  const r = player.items[player.i];
+  if (value > 0) player.log[r.id] = (player.log[r.id] || 0) + value;
+}
+function showWork(){
+  clearInterval(player.tick);
+  const r = player.items[player.i], k = exKeyFor(r), e = k ? EXERCISES[k] : null, o = ovl();
+  const timed = r.unit === "sec";
+  player.phase = "work"; player.count = timed ? 0 : r.target; player.left = timed ? r.target : 0; player.running = false;
+  o.innerHTML = `<div class="in">
+    <div class="bar"><span class="prog">${player.i + 1} of ${player.items.length} · ${fmtSec(Math.round((Date.now() - player.started) / 1000))} elapsed</span><button class="close">End</button></div>
+    <div class="pbar"><i style="width:${Math.round(player.i / player.items.length * 100)}%"></i></div>
+    <div class="vslot"></div>
+    <h2 class="exname"></h2>
+    <div class="big" id="pbig"></div>
+    <div class="ctrl" id="pctrl"></div>
+    <div class="ctrl"><button class="ghost" id="pprev">← Previous</button><button class="ghost" id="pskip">Skip →</button></div>
+    <div class="gslot"></div></div>`;
+  o.querySelector(".exname").textContent = r.name;
+  if (e) { o.querySelector(".vslot").appendChild(videoBox(e, true)); o.querySelector(".gslot").appendChild(guideBlock(e)); }
+  o.querySelector(".close").onclick = finishWorkout; o.scrollTop = 0;
+  o.querySelector("#pprev").onclick = () => { if (player.i > 0) { player.i--; showWork(); } };
+  o.querySelector("#pskip").onclick = () => nextExercise(false);
+  const big = o.querySelector("#pbig"), ctrl = o.querySelector("#pctrl");
+  if (timed) {
+    const paint = () => { big.innerHTML = `${fmtSec(player.left)}<small> / ${fmtSec(r.target)}</small>`; };
+    paint();
+    ctrl.innerHTML = `<button id="pminus">−10s</button><button class="go" id="pgo">Start hold</button><button id="pplus">+10s</button>`;
+    const go = ctrl.querySelector("#pgo");
+    ctrl.querySelector("#pminus").onclick = () => { player.left = Math.max(1, player.left - 10); paint(); };
+    ctrl.querySelector("#pplus").onclick = () => { player.left += 10; paint(); };
+    go.onclick = () => {
+      if (player.running) { player.running = false; clearInterval(player.tick); go.textContent = "Resume"; return; }
+      player.running = true; go.textContent = "Pause"; beep(990, .15);
+      player.tick = setInterval(() => {
+        player.left--; player.count++; paint();
+        if (player.left > 0 && player.left <= 3) beep(660, .08);
+        if (player.left <= 0) { clearInterval(player.tick); beep(1320, .3); logCurrent(player.count); nextExercise(true); }
+      }, 1000);
+    };
+  } else {
+    const paint = () => { big.innerHTML = `${player.count}<small> reps</small>`; };
+    paint();
+    ctrl.innerHTML = `<button id="pminus">−</button><button class="go" id="pgo">Done ✓</button><button id="pplus">+</button>`;
+    ctrl.querySelector("#pminus").onclick = () => { player.count = Math.max(0, player.count - 1); paint(); };
+    ctrl.querySelector("#pplus").onclick = () => { player.count++; paint(); };
+    ctrl.querySelector("#pgo").onclick = () => { beep(1320, .2); logCurrent(player.count); nextExercise(true); };
+  }
+}
+function nextExercise(didIt){
+  clearInterval(player.tick);
+  if (player.i >= player.items.length - 1) return finishWorkout();
+  player.i++;
+  if (!didIt) return showWork();
+  showRest();
+}
+function showRest(){
+  const r = player.items[player.i], k = exKeyFor(r), e = k ? EXERCISES[k] : null, o = ovl();
+  player.phase = "rest"; player.left = restSecs();
+  o.innerHTML = `<div class="in"><div class="bar"><span class="prog">${player.i} of ${player.items.length} done</span><button class="close">End</button></div>
+    <div class="pbar"><i style="width:${Math.round(player.i / player.items.length * 100)}%"></i></div>
+    <div class="rest"><div class="lbl">Rest</div><div class="big" id="rbig"></div>
+      <div class="ctrl"><button id="rplus">+20s</button><button class="go" id="rskip">Skip rest</button></div>
+      <div class="lbl">Rest between exercises</div><div class="restpick">${[10, 20, 30, 45, 60].map(v => `<button data-v="${v}" class="${v === restSecs() ? "on" : ""}">${v}s</button>`).join("")}</div>
+      <div class="lbl">Next up</div><div class="nextup">${e ? `<img alt="" src="${ytThumb(e.video)}">` : ""}<div><b></b><div class="prog"></div></div></div>
+    </div></div>`;
+  o.querySelector(".nextup b").textContent = r.name;
+  o.querySelector(".nextup .prog").textContent = r.unit === "sec" ? `Hold ${fmtSec(r.target)}` : `${r.target} reps`;
+  o.querySelector(".close").onclick = finishWorkout; o.scrollTop = 0;
+  const big = o.querySelector("#rbig"), paint = () => { big.textContent = fmtSec(Math.max(0, player.left)); };
+  paint();
+  o.querySelector("#rplus").onclick = () => { player.left += 20; paint(); };
+  o.querySelector("#rskip").onclick = () => { clearInterval(player.tick); showWork(); };
+  o.querySelectorAll(".restpick button").forEach(b => b.onclick = () => {
+    settings.restSec = Number(b.dataset.v); saveSettings();
+    o.querySelectorAll(".restpick button").forEach(x => x.classList.toggle("on", x === b));
+  });
+  player.tick = setInterval(() => {
+    player.left--; paint();
+    if (player.left > 0 && player.left <= 3) beep(660, .08);
+    if (player.left <= 0) { clearInterval(player.tick); beep(990, .15); showWork(); }
+  }, 1000);
+}
+function finishWorkout(){
+  clearInterval(player.tick);
+  const ids = Object.keys(player.log), mins = Math.max(1, Math.round((Date.now() - player.started) / 60000));
+  // log into today's tracker (adds to anything already logged)
+  const d = ensure(keyOf(new Date()));
+  d.reps = {...d.reps}; ids.forEach(id => { d.reps[id] = (d.reps[id] || 0) + player.log[id]; });
+  if (ids.length) {
+    d.mins = {...d.mins, train: (d.mins.train || 0) + mins};
+    if (ids.length >= Math.ceil(player.items.length * .8)) d.done = {...d.done, train: true};
+    saveDay(d, false);
+  }
+  releaseWake();
+  const o = ovl();
+  o.innerHTML = `<div class="in"><div class="bar"><span class="prog">Workout finished</span><button class="close">Close</button></div>
+    <h2 class="exname">${ids.length >= player.items.length ? "Full routine done." : ids.length ? "Logged what you did." : "Nothing logged."}</h2>
+    <div class="summary"><div><b>${ids.length}</b><span>of ${player.items.length} exercises</span></div><div><b>${mins}</b><span>minutes</span></div><div><b>${ids.reduce((t, id) => t + (player.items.find(x => x.id === id)?.unit === "sec" ? 0 : player.log[id]), 0)}</b><span>reps</span></div></div>
+    <p class="prog">${ids.length ? "Saved to today's TRAIN block" + (d.done.train ? " and ticked it." : ".") : "Tap Start workout whenever you're ready."}</p></div>`;
+  o.querySelector(".close").onclick = () => { closeOverlay(); render(); };
+  beep(660, .12); beep(880, .12); beep(1320, .25);
+}
 
 /* ---------- reminders (Web Push via the Cloudflare Worker) ---------- */
 const REMINDERS = true;
