@@ -1,0 +1,15 @@
+{
+  "name": "Builder Day Tracker",
+  "short_name": "Builder Day",
+  "description": "Daily tracker for the Full-Time Builder Day: schedule, reps, records, the Daily Five and a weekly grade.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0d1611",
+  "theme_color": "#123a26",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

@@ -1,11 +1,11 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "builder-day-tracker",
+  "main": "worker.js",
   "compatibility_date": "2026-10-01",
-  "observability": {
-    "enabled": true
-  },
-  "assets": {
-    "directory": "."
-  }
+  "observability": { "enabled": true },
+  "assets": { "directory": ".", "binding": "ASSETS" },
+  "kv_namespaces": [ { "binding": "SUBS", "id": "5612f10792334e2a884ca54675dc7886" } ],
+  // Every 15 minutes: send reminders for blocks starting now in each device's local time
+  "triggers": { "crons": ["*/15 * * * *"] }
 }

@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#123a26">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Builder Day">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="description" content="Daily tracker for the Full-Time Builder Day: wake time, time per block, reps, records, the Daily Five and a weekly grade.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23123a26'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11' stroke='%23e0ad55' stroke-width='3.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <title>Builder Day Tracker</title>
@@ -60,7 +65,7 @@ h1{font-family:var(--f-display);font-weight:800;font-size:clamp(26px,4vw,38px);l
 .now .left{font-family:var(--f-mono);font-size:13px;opacity:.85}
 
 .grid{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(0,1fr);gap:20px;align-items:start}
-@media (max-width:940px){.grid{display:flex;flex-direction:column}.grid > .side{display:contents}.p-five{order:1}.p-plan{order:2}.p-sched{order:3}.p-week{order:4}.p-heat{order:5}}
+@media (max-width:940px){.grid{display:flex;flex-direction:column}.grid > .side{display:contents}.p-five{order:1}.p-plan{order:2}.p-sched{order:3}.p-week{order:4}.p-heat{order:5}.p-remind{order:6}}
 
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:12px}
 .panel h2{font-family:var(--f-display);font-weight:700;font-size:17px;margin:0}
@@ -236,6 +241,15 @@ input.tx:focus{border-color:var(--accent);outline:none}
 @media (max-width:480px){.fivegrid{gap:5px;padding:14px 12px 6px}.fbtn .fn{font-size:10.5px}}
 @media (prefers-reduced-motion:no-preference){.fbtn,.chk,.row,.bar i{transition:background-color .15s,border-color .15s,width .3s}}
 [hidden]{display:none!important}
+.remind{padding:14px 18px 16px;display:grid;gap:12px}
+.remind p{margin:0;font-size:14px;color:var(--muted)}
+.remind .row2{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.rblocks{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px 12px}
+.rblocks label{display:flex;align-items:center;gap:8px;font-size:13.5px;cursor:pointer;min-width:0}
+.rblocks input{width:18px;height:18px;accent-color:var(--accent);flex:none}
+.rblocks .t{font-family:var(--f-mono);font-size:11.5px;color:var(--muted)}
+.remind .ok{color:var(--accent);font-weight:600}
+.remind .bad{color:var(--warn)}
 body{margin:0;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
 img{max-width:100%}
 .auth{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:13px;color:var(--muted)}
@@ -254,6 +268,7 @@ img{max-width:100%}
       <h1>Builder Day Tracker</h1>
       <div class="store-note" id="storeNote">Loading…</div>
       <div class="auth" id="auth"></div>
+      <button class="linkbtn" id="remindLink" hidden>Turn on reminders</button>
     </div>
     <div class="datenav">
       <button id="prev" aria-label="Previous day">←</button>
@@ -303,6 +318,10 @@ img{max-width:100%}
             <div><b id="stAvg">0</b><span>Avg Five / day (30d)</span></div>
           </div>
         </div>
+      </section>
+      <section class="panel p-remind" id="remindPanel" hidden>
+        <div class="phead"><h2>Reminders</h2><span class="meta">on this device</span></div>
+        <div class="remind" id="remind"></div>
       </section>
     </aside>
   </div>
@@ -982,6 +1001,114 @@ $("next").onclick = () => { const t = keyOf(new Date()); if (sel < t) { sel = sh
 $("today").onclick = () => { sel = keyOf(new Date()); render(); };
 setInterval(tickLive, 1000);
 setInterval(() => { if (!editing()) render(); }, 60000);
+
+/* ---------- reminders (Web Push via the Cloudflare Worker) ---------- */
+const REMINDERS = true;
+const VAPID_PUBLIC = "BNMbHPCzDjxThTtHX7eY2MTrtAf3vEYP08NEWrVxYOcnR_XsdNGejmcbzlyHrKBKqhJuB5pIpbeVDp1cJLuVM4k";
+const RB_KEY = "bd-remind-blocks";
+const remindBlocks = () => { try { const v = JSON.parse(localStorage.getItem(RB_KEY)); if (Array.isArray(v)) return v; } catch(e){} return BLOCKS.map(b => b.id); };
+const urlB64 = s => { const b = atob(s.replace(/-/g,"+").replace(/_/g,"/") + "===".slice((s.length+3)%4)); return Uint8Array.from(b, c => c.charCodeAt(0)); };
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+let swReg = null;
+
+async function postSub(sub){
+  const r = await fetch("/api/subscribe", {method:"POST", headers:{"content-type":"application/json"},
+    body: JSON.stringify({subscription: sub.toJSON(), timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, blocks: remindBlocks()})});
+  if (!r.ok) throw new Error("The reminder server didn't accept this device (" + r.status + ").");
+}
+async function currentSub(){ return swReg ? swReg.pushManager.getSubscription() : null; }
+
+async function renderReminders(msg, msgBad){
+  const box = $("remind"), link = $("remindLink");
+  $("remindPanel").hidden = false;
+  box.innerHTML = "";
+  const p = (txt, cls) => { const e = document.createElement("p"); if (cls) e.className = cls; e.textContent = txt; box.appendChild(e); return e; };
+  const btn = (txt, cls, fn) => { const b = document.createElement("button"); b.className = cls; b.textContent = txt; b.onclick = fn; return b; };
+  if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
+    link.hidden = true;
+    p(isIOS && !standalone
+      ? "On iPhone, add this site to your Home Screen first: tap Share, then Add to Home Screen. Open it from the new icon and turn reminders on here."
+      : "This browser can't receive notifications. Use Chrome on Android, or the Home Screen app on iPhone.");
+    return;
+  }
+  const sub = await currentSub();
+  if (Notification.permission === "denied") {
+    link.hidden = true;
+    p("Notifications are blocked for this site. Allow them in your browser's site settings, then reload.", "bad");
+    return;
+  }
+  if (!sub) {
+    link.hidden = false;
+    p("Get a notification on this device as each block starts, timed to this device's clock.");
+    const row = document.createElement("div"); row.className = "row2";
+    row.appendChild(btn("Turn on reminders", "btn-sm", turnOn));
+    box.appendChild(row);
+  } else {
+    link.hidden = true;
+    const on = p("Reminders are on for this device.", "ok");
+    const row = document.createElement("div"); row.className = "row2";
+    row.appendChild(btn("Send a test", "btn-sm", sendTest));
+    row.appendChild(btn("Turn off", "linkbtn", turnOff));
+    box.appendChild(row);
+    const fl = document.createElement("div"); fl.className = "fl"; fl.textContent = "Notify me for"; box.appendChild(fl);
+    const grid = document.createElement("div"); grid.className = "rblocks";
+    const chosen = new Set(remindBlocks());
+    BLOCKS.forEach(b => {
+      const l = document.createElement("label");
+      l.innerHTML = `<input type="checkbox"><span></span><span class="t">${b.s}</span>`;
+      l.children[1].textContent = b.name.split(" — ")[0];
+      const c = l.querySelector("input"); c.checked = chosen.has(b.id);
+      c.onchange = async () => {
+        const next = BLOCKS.map(x => x.id).filter(id => id === b.id ? c.checked : chosen.has(id));
+        try { localStorage.setItem(RB_KEY, JSON.stringify(next)); } catch(e){}
+        chosen.clear(); next.forEach(id => chosen.add(id));
+        try { await postSub(sub); } catch(e) { renderReminders(e.message, true); }
+      };
+      grid.appendChild(l);
+    });
+    box.appendChild(grid);
+  }
+  if (msg) p(msg, msgBad ? "bad" : "ok");
+}
+async function turnOn(){
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm !== "granted") return renderReminders("Notifications weren't allowed, so reminders stay off.", true);
+    swReg = swReg || await navigator.serviceWorker.ready;
+    const sub = await swReg.pushManager.subscribe({userVisibleOnly: true, applicationServerKey: urlB64(VAPID_PUBLIC)});
+    await postSub(sub);
+    renderReminders("Done. Tap \"Send a test\" to check it arrives.");
+  } catch(e) { renderReminders(e.message || "Couldn't turn reminders on.", true); }
+}
+async function turnOff(){
+  const sub = await currentSub();
+  if (sub) {
+    fetch("/api/unsubscribe", {method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({endpoint: sub.endpoint})}).catch(() => {});
+    await sub.unsubscribe().catch(() => {});
+  }
+  renderReminders("Reminders are off for this device.");
+}
+async function sendTest(){
+  const sub = await currentSub(); if (!sub) return renderReminders();
+  try {
+    const r = await fetch("/api/test", {method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({endpoint: sub.endpoint})});
+    const j = await r.json().catch(() => ({}));
+    if (r.status === 404) { await postSub(sub); return sendTest(); }
+    renderReminders(j.ok ? "Test sent. It should arrive in a few seconds." : "The test didn't go through" + (j.status ? ` (push service said ${j.status})` : "") + ".", !j.ok);
+  } catch(e) { renderReminders("Couldn't reach the reminder server.", true); }
+}
+if (REMINDERS) {
+  $("remindLink").onclick = () => $("remindPanel").scrollIntoView({behavior: "smooth", block: "start"});
+  (async () => {
+    if ("serviceWorker" in navigator) {
+      try { swReg = await navigator.serviceWorker.register("sw.js"); } catch(e) {}
+      // keep this device's time zone and block choices current on the server
+      const sub = await currentSub(); if (sub) postSub(sub).catch(() => {});
+    }
+    renderReminders();
+  })();
+}
 
 /* ---------- boot ---------- */
 lsLoad();
