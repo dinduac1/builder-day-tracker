@@ -1006,6 +1006,7 @@ function render(){
   if (y.gratitude) { const g = document.createElement("div"); g.className = "grat"; g.textContent = "Last night: " + y.gratitude; plan.appendChild(g); }
   // what you said you'd do differently: yesterday, last week, last month, last year
   const prev = prevPeriodIds(sel), commits = [];
+  if (y.proud) commits.push(["Yesterday's win", y.proud]);
   if (y.doDiff) commits.push(["Differently today", y.doDiff]);
   if (reflections[prev.week]?.diff) commits.push(["Differently this week", reflections[prev.week].diff]);
   if (reflections[prev.month]?.diff) commits.push(["Differently this month", reflections[prev.month].diff]);
@@ -1221,7 +1222,8 @@ function reflectionBlock(day){
   };
   // today
   const today = document.createElement("div"); today.className = "grp";
-  today.append(...field("One thing I did today I'm not proud of", day.notProud, v => { const d = ensure(sel); d.notProud = v; saveDay(d, true); }, "rf-dbad", false),
+  today.append(...field("One thing I did today I'm proud of", day.proud, v => { const d = ensure(sel); d.proud = v; saveDay(d, true); }, "rf-dgood", false),
+               ...field("One thing I did today I'm not proud of", day.notProud, v => { const d = ensure(sel); d.notProud = v; saveDay(d, true); }, "rf-dbad", false),
                ...field("What I'll do differently tomorrow", day.doDiff, v => { const d = ensure(sel); d.doDiff = v; saveDay(d, true); }, "rf-ddiff", false));
   wrap.appendChild(today);
 
@@ -1230,7 +1232,7 @@ function reflectionBlock(day){
   const lastOfMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate() === d.getDate();
   const due = {week: d.getDay() === 0, month: lastOfMonth, year: d.getMonth() === 11 && d.getDate() === 31};
   const det = document.createElement("details");
-  det.open = reflOpen[sel] ?? (due.week || due.month || due.year || ["week","month","year"].some(k => reflections[ids[k]] && (reflections[ids[k]].notProud || reflections[ids[k]].diff)));
+  det.open = reflOpen[sel] ?? (due.week || due.month || due.year || ["week","month","year"].some(k => reflections[ids[k]] && (reflections[ids[k]].proud || reflections[ids[k]].notProud || reflections[ids[k]].diff)));
   det.innerHTML = `<summary><span>Week · month · year review</span></summary><div class="body"></div>`;
   det.ontoggle = () => { reflOpen[sel] = det.open; };
   const body = det.querySelector(".body");
@@ -1243,7 +1245,8 @@ function reflectionBlock(day){
     g.appendChild(h);
     if (due[k]) { const t = document.createElement("div"); t.className = "due"; t.textContent = k === "week" ? "Sunday: weekly review" : k === "month" ? "Last day: monthly review" : "Last day: yearly review"; g.appendChild(t); }
     const r = reflections[ids[k]] || {};
-    g.append(...field(`What I'm not proud of this ${k}`, r.notProud, v => saveReflection(ids[k], {notProud: v, period: k, label}), `rf-${k}bad`, true),
+    g.append(...field(`What I'm proud of this ${k}`, r.proud, v => saveReflection(ids[k], {proud: v, period: k, label}), `rf-${k}good`, true),
+             ...field(`What I'm not proud of this ${k}`, r.notProud, v => saveReflection(ids[k], {notProud: v, period: k, label}), `rf-${k}bad`, true),
              ...field(`What I'd do differently (and will, ${next})`, r.diff, v => saveReflection(ids[k], {diff: v, period: k, label}), `rf-${k}diff`, true));
     body.appendChild(g);
   });
