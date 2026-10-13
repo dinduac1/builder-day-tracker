@@ -1272,9 +1272,23 @@ function renderReps(b, day, ex, prior7){
     if (items.length && wk !== "rest") {
       const go = document.createElement("button"); go.className = "startwk";
       const mins = Math.round(items.reduce((t, r) => t + (r.unit === "sec" ? r.target : r.target * 3) + restSecs(), 0) / 60);
-      go.innerHTML = `<span>▶ Start workout</span><small>${items.length} exercises · ~${mins} min</small>`;
-      go.onclick = () => startWorkout(items);
-      ex.appendChild(go);
+      const sess = sel === keyOf(new Date()) ? getDay(sel).session : null;
+      const ids = new Set(items.map(r => r.id));
+      const doneN = sess && !sess.finished ? Object.keys(sess.log || {}).filter(id => ids.has(id)).length : 0;
+      if (doneN) {
+        const next = items.find(r => !(r.id in sess.log));
+        go.innerHTML = `<span>▶ Continue workout</span><small>${doneN} of ${items.length} done${next ? " · next: " + next.name.replace(/[<>&]/g, "") : ""}</small>`;
+        go.onclick = () => beginWorkout(items, sess, false);
+        ex.appendChild(go);
+        const fresh = document.createElement("button"); fresh.className = "linkbtn";
+        fresh.textContent = `Start afresh instead (clears these ${doneN})`;
+        fresh.onclick = () => beginWorkout(items, sess, true);
+        ex.appendChild(fresh);
+      } else {
+        go.innerHTML = `<span>▶ Start workout</span><small>${items.length} exercises · ~${mins} min</small>`;
+        go.onclick = () => beginWorkout(items, null, false);
+        ex.appendChild(go);
+      }
     }
   }
   repGroups(b.id, sel).forEach(g => {
@@ -1447,27 +1461,12 @@ function beep(freq = 880, dur = .12, vol = .25){
     o.start(); o.stop(actx.currentTime + dur);
   } catch(e){}
 }
+/** Unfinished workout today: carry on where you stopped. Finished (or a new day): start afresh. */
 function startWorkout(items){
-  const today = keyOf(new Date()), sess = getDay(today).session;
+  const sess = getDay(keyOf(new Date())).session;
   const ids = new Set(items.map(r => r.id));
-  const doneIds = sess ? Object.keys(sess.log || {}).filter(id => ids.has(id)) : [];
-  if (!sess || !doneIds.length) return beginWorkout(items, null, false);
-
-  // there's a workout from earlier today: ask
-  const o = openOverlay();
-  const nextIdx = items.findIndex(r => !(r.id in sess.log));
-  const next = nextIdx >= 0 ? items[nextIdx] : null;
-  o.innerHTML = `<div class="in"><div class="bar"><span class="prog">Today's workout</span><button class="close">✕ Close</button></div>
-    <h2 class="exname">${sess.finished ? "You finished a workout today." : "You have a workout in progress."}</h2>
-    <p class="prog">${doneIds.length} of ${items.length} exercises done${next ? " · next: " + next.name.replace(/[<>&]/g, "") : ""}</p>
-    <div class="ctrl" style="flex-direction:column;align-items:stretch">
-      <button class="go" id="wcont">${sess.finished ? "Review today's workout" : "Continue workout"}</button>
-      <button id="wnew">${sess.finished ? "Start another round (adds to today)" : "Start afresh"}</button>
-    </div>
-    <p class="prog" id="wnote">${sess.finished ? "Your finished workout stays logged." : `Starting afresh clears the ${doneIds.length} exercise${doneIds.length > 1 ? "s" : ""} logged in this workout from today's TRAIN.`}</p></div>`;
-  o.querySelector(".close").onclick = () => closeOverlay();
-  o.querySelector("#wcont").onclick = () => beginWorkout(items, sess, false);
-  o.querySelector("#wnew").onclick = () => beginWorkout(items, sess, true);
+  const unfinished = sess && !sess.finished && Object.keys(sess.log || {}).some(id => ids.has(id));
+  beginWorkout(items, unfinished ? sess : null, false);
 }
 /** resume = today's saved session to pick up (or null); fresh = start over (clearing an unfinished session's logs). */
 function beginWorkout(items, resume, fresh){
