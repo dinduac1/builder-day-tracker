@@ -123,8 +123,8 @@ h1{font-family:var(--f-display);font-weight:800;font-size:clamp(26px,4vw,38px);l
 .wsel select{width:100%;min-width:0;font:inherit;font-size:14px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);max-width:100%}
 .btn-sm{white-space:nowrap;border:1px solid var(--accent);background:var(--accent);color:var(--surface);border-radius:7px;padding:5px 12px;cursor:pointer;font-size:13px;font-weight:600}
 label.fl{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-input.tx{width:100%;font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
-input.tx:focus{border-color:var(--accent);outline:none}
+input.tx,textarea.tx{width:100%;font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+input.tx:focus,textarea.tx:focus{border-color:var(--accent);outline:none}
 .top3in{display:grid;grid-template-columns:22px minmax(0,1fr);gap:6px 8px;align-items:center}
 .top3in span{font-family:var(--f-mono);font-size:12px;color:var(--muted);text-align:right}
 
@@ -253,6 +253,20 @@ input.tx:focus{border-color:var(--accent);outline:none}
 @media (max-width:480px){.fivegrid{gap:5px;padding:14px 12px 6px}.fbtn .fn{font-size:10.5px}}
 @media (prefers-reduced-motion:no-preference){.fbtn,.chk,.row,.bar i{transition:background-color .15s,border-color .15s,width .3s}}
 [hidden]{display:none!important}
+.refl{display:grid;gap:8px}
+.refl details{border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.refl summary{cursor:pointer;padding:10px 12px;font-weight:600;font-size:14px;list-style:none;display:flex;justify-content:space-between;gap:8px}
+.refl summary::-webkit-details-marker{display:none}
+.refl summary::after{content:"＋";color:var(--muted)}
+.refl details[open] summary::after{content:"−"}
+.refl .body{display:grid;gap:10px;padding:0 12px 12px}
+.refl .grp{display:grid;gap:6px}
+.refl .grp h4{margin:4px 0 0;font-family:var(--f-display);font-size:14px}
+.refl .due{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--brass)}
+textarea.tx{resize:vertical;min-height:58px;font:inherit;font-size:14px;line-height:1.4}
+.commit{margin-top:12px;display:grid;gap:6px;font-size:14px}
+.commit div{background:var(--bg);border-radius:8px;padding:8px 10px}
+.commit b{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:2px}
 /* exercise guide + guided workout */
 .rname.ex{border:0;background:none;padding:0;cursor:pointer;color:inherit;font:inherit;font-weight:600;font-size:14px;text-align:left;display:inline-flex;align-items:center;gap:6px}
 .rname.ex::after{content:"?";display:inline-grid;place-content:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--line);font-family:var(--f-mono);font-size:10px;color:var(--muted);flex:none}
@@ -617,12 +631,12 @@ let LS_KEY = "builder-day-v2";
 function lsRead(key){ try { return JSON.parse(localStorage.getItem(key) || "null"); } catch(e){ return null; } }
 function lsLoad(){
   const v2 = lsRead(LS_KEY);
-  if (v2) { days = v2.days || {}; settings = v2.settings || {dir:{}}; }
-  else { days = LS_KEY === "builder-day-v2" ? (lsRead("builder-day-v1") || {}) : {}; settings = {dir:{}}; }
+  if (v2) { days = v2.days || {}; settings = v2.settings || {dir:{}}; reflections = v2.reflections || {}; }
+  else { days = LS_KEY === "builder-day-v2" ? (lsRead("builder-day-v1") || {}) : {}; settings = {dir:{}}; reflections = {}; }
   for (const k in days) days[k] = norm(days[k]);
   if (migratePlan()) lsSave();
 }
-function lsSave(){ try { localStorage.setItem(LS_KEY, JSON.stringify({days, settings})); } catch(e){} }
+function lsSave(){ try { localStorage.setItem(LS_KEY, JSON.stringify({days, settings, reflections})); } catch(e){} }
 
 const busy = {};             // dateKey -> true while a debounced text edit is pending
 function makeDbStore(db, uid){
@@ -648,6 +662,7 @@ function makeDbStore(db, uid){
         snap.docs.forEach(d => {
           const v = d.data(); if (!v) return;
           if (d.id === "settings") { settings = Object.assign({dir:{}}, v); if (migratePlan()) store.put("settings", settings); }
+          else if (d.id.startsWith("reflect-")) { if (!busy[d.id]) reflections[d.id] = v; }
           else if (v.date && !busy[v.date]) days[v.date] = norm(v);
         });
         if (first) { first = false; onFirst && onFirst(snap); }
@@ -667,6 +682,20 @@ function saveDay(day, debounce){
     busy[day.date] = true;
     timers[day.date] = setTimeout(() => { busy[day.date] = false; store.put("day-" + day.date, day); }, 700);
   } else { busy[day.date] = false; store.put("day-" + day.date, day); }
+}
+let reflections = {};   // "reflect-W<monday>" | "reflect-M<yyyy-mm>" | "reflect-Y<yyyy>" -> {notProud, diff}
+const periodIds = k => ({week: "reflect-W" + weekStart(k), month: "reflect-M" + k.slice(0, 7), year: "reflect-Y" + k.slice(0, 4)});
+const prevPeriodIds = k => {
+  const lastMonth = fromKey(k.slice(0, 7) + "-01"); lastMonth.setDate(0);
+  return {week: "reflect-W" + shift(weekStart(k), -7), month: "reflect-M" + keyOf(lastMonth).slice(0, 7), year: "reflect-Y" + (Number(k.slice(0, 4)) - 1)};
+};
+function saveReflection(id, patch){
+  reflections[id] = {...(reflections[id] || {}), ...patch, id};
+  lsSave();
+  if (!store) return;
+  busy[id] = true;
+  clearTimeout(timers[id]);
+  timers[id] = setTimeout(() => { busy[id] = false; store.put(id, reflections[id]); }, 700);
 }
 function saveSettings(){ lsSave(); if (store) store.put("settings", settings); }
 const editing = () => { const a = document.activeElement; return a && ["tx","mins","rin","ed"].some(c => a.classList.contains(c)); };
@@ -872,6 +901,7 @@ function render(){
         <label class="fl" for="grat">One line of gratitude</label><input class="tx" id="grat" maxlength="200" placeholder="Today I'm grateful for…">`;
       [0,1,2].forEach(i => { const inp = rv.querySelector("#top-"+i); inp.value = day.top3[i]||""; inp.oninput = () => { const dd = ensure(sel); dd.top3 = [...dd.top3]; dd.top3[i] = inp.value; saveDay(dd,true); }; });
       const g = rv.querySelector("#grat"); g.value = day.gratitude||""; g.oninput = () => { const dd = ensure(sel); dd.gratitude = g.value; saveDay(dd,true); };
+      rv.appendChild(reflectionBlock(day));
     }
     if (!ex.childElementCount) ex.remove();
 
@@ -974,6 +1004,17 @@ function render(){
     plan.appendChild(p);
   }
   if (y.gratitude) { const g = document.createElement("div"); g.className = "grat"; g.textContent = "Last night: " + y.gratitude; plan.appendChild(g); }
+  // what you said you'd do differently: yesterday, last week, last month, last year
+  const prev = prevPeriodIds(sel), commits = [];
+  if (y.doDiff) commits.push(["Differently today", y.doDiff]);
+  if (reflections[prev.week]?.diff) commits.push(["Differently this week", reflections[prev.week].diff]);
+  if (reflections[prev.month]?.diff) commits.push(["Differently this month", reflections[prev.month].diff]);
+  if (reflections[prev.year]?.diff) commits.push(["Differently this year", reflections[prev.year].diff]);
+  if (commits.length) {
+    const c = document.createElement("div"); c.className = "commit";
+    commits.forEach(([t, v]) => { const e = document.createElement("div"); e.innerHTML = `<b></b><span></span>`; e.firstChild.textContent = t; e.lastChild.textContent = v; c.appendChild(e); });
+    plan.appendChild(c);
+  }
 
   renderHeat(today);
 }
@@ -1165,6 +1206,49 @@ function setRep(rid, blockId, n){
   const defs = repDefs(blockId).filter(r => r.target > 0);
   if (defs.length && defs.every(r => (d.reps[r.id] || 0) >= r.target)) d.done = {...d.done, [blockId]: true};
   saveDay(d,false); render();
+}
+
+/* ---------- evening reflection ---------- */
+const reflOpen = {};   // remembers if you opened/closed the week·month·year section, across re-renders
+function reflectionBlock(day){
+  const wrap = document.createElement("div"); wrap.className = "refl";
+  const field = (label, value, onInput, id, multi) => {
+    const l = document.createElement("label"); l.className = "fl"; l.textContent = label; l.htmlFor = id;
+    const t = document.createElement(multi ? "textarea" : "input"); t.className = "tx"; t.id = id; t.maxLength = 400;
+    if (!multi) t.type = "text";
+    t.value = value || ""; t.oninput = () => onInput(t.value);
+    return [l, t];
+  };
+  // today
+  const today = document.createElement("div"); today.className = "grp";
+  today.append(...field("One thing I did today I'm not proud of", day.notProud, v => { const d = ensure(sel); d.notProud = v; saveDay(d, true); }, "rf-dbad", false),
+               ...field("What I'll do differently tomorrow", day.doDiff, v => { const d = ensure(sel); d.doDiff = v; saveDay(d, true); }, "rf-ddiff", false));
+  wrap.appendChild(today);
+
+  // week / month / year: open on the day each review is due
+  const d = fromKey(sel), ids = periodIds(sel);
+  const lastOfMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate() === d.getDate();
+  const due = {week: d.getDay() === 0, month: lastOfMonth, year: d.getMonth() === 11 && d.getDate() === 31};
+  const det = document.createElement("details");
+  det.open = reflOpen[sel] ?? (due.week || due.month || due.year || ["week","month","year"].some(k => reflections[ids[k]] && (reflections[ids[k]].notProud || reflections[ids[k]].diff)));
+  det.innerHTML = `<summary><span>Week · month · year review</span></summary><div class="body"></div>`;
+  det.ontoggle = () => { reflOpen[sel] = det.open; };
+  const body = det.querySelector(".body");
+  const monthName = d.toLocaleDateString(undefined, {month: "long"});
+  [["week", "This week", `week of ${shortDate(weekStart(sel))}`, "next week"],
+   ["month", "This month", monthName, "next month"],
+   ["year", "This year", String(d.getFullYear()), "next year"]].forEach(([k, title, label, next]) => {
+    const g = document.createElement("div"); g.className = "grp";
+    const h = document.createElement("h4"); h.textContent = `${title} · ${label}`;
+    g.appendChild(h);
+    if (due[k]) { const t = document.createElement("div"); t.className = "due"; t.textContent = k === "week" ? "Sunday: weekly review" : k === "month" ? "Last day: monthly review" : "Last day: yearly review"; g.appendChild(t); }
+    const r = reflections[ids[k]] || {};
+    g.append(...field(`What I'm not proud of this ${k}`, r.notProud, v => saveReflection(ids[k], {notProud: v, period: k, label}), `rf-${k}bad`, true),
+             ...field(`What I'd do differently (and will, ${next})`, r.diff, v => saveReflection(ids[k], {diff: v, period: k, label}), `rf-${k}diff`, true));
+    body.appendChild(g);
+  });
+  wrap.appendChild(det);
+  return wrap;
 }
 
 /* ---------- rep counters ---------- */
