@@ -1412,28 +1412,14 @@ function openOverlay(){
 window.addEventListener("popstate", () => {
   if (ovl().hidden) return;
   ovlInHistory = false;
-  if (player.active && player.phase !== "done") {
-    // keep the workout open and ask first
-    try { history.pushState({bdOverlay: 1}, ""); ovlInHistory = true; } catch(e){}
-    askLeave();
-  } else {
-    if (player.active) saveWorkoutLog();   // e.g. Back from the review list after finishing
-    closeOverlay(true);
-  }
+  const wasWorkout = player.active;
+  if (wasWorkout) saveWorkoutLog();
+  closeOverlay(true);
+  if (wasWorkout) render();
 });
-function askLeave(){
-  const o = ovl(), inn = o.querySelector(".in");
-  if (!inn || inn.querySelector(".leave")) return;
-  const done = Object.keys(player.log).length;
-  const box = document.createElement("div"); box.className = "leave";
-  box.innerHTML = `<b>Leave the workout?</b><p>${done ? `The ${done} exercise${done > 1 ? "s" : ""} you've finished will be saved to today's TRAIN.` : "Nothing's been logged yet."}</p>
-    <div class="ctrl"><button class="go">Keep going</button><button>Save &amp; leave</button></div>`;
-  const [keep, leave] = box.querySelectorAll("button");
-  keep.onclick = () => box.remove();
-  leave.onclick = () => { saveWorkoutLog(); closeOverlay(); render(); };
-  inn.insertBefore(box, inn.children[1] || null);
-  o.scrollTop = 0;
-}
+// leaving the app mid-workout (home, a notification, the app closing): save where you are
+document.addEventListener("visibilitychange", () => { if (document.hidden && player.active) saveWorkoutLog(); });
+window.addEventListener("pagehide", () => { if (player.active) saveWorkoutLog(); });
 
 function openGuide(k, r){
   const e = EXERCISES[k], o = openOverlay();
@@ -1462,9 +1448,59 @@ function beep(freq = 880, dur = .12, vol = .25){
   } catch(e){}
 }
 function startWorkout(items){
-  Object.assign(player, {items: items.map(r => ({...r})), i: 0, phase: "work", running: false, count: 0, started: Date.now(), log: {}, active: true, savedLog: {}, savedMins: 0, autoDone: false, finished: false});
+  const today = keyOf(new Date()), sess = getDay(today).session;
+  const ids = new Set(items.map(r => r.id));
+  const doneIds = sess ? Object.keys(sess.log || {}).filter(id => ids.has(id)) : [];
+  if (!sess || !doneIds.length) return beginWorkout(items, null, false);
+
+  // there's a workout from earlier today: ask
+  const o = openOverlay();
+  const nextIdx = items.findIndex(r => !(r.id in sess.log));
+  const next = nextIdx >= 0 ? items[nextIdx] : null;
+  o.innerHTML = `<div class="in"><div class="bar"><span class="prog">Today's workout</span><button class="close">✕ Close</button></div>
+    <h2 class="exname">${sess.finished ? "You finished a workout today." : "You have a workout in progress."}</h2>
+    <p class="prog">${doneIds.length} of ${items.length} exercises done${next ? " · next: " + next.name.replace(/[<>&]/g, "") : ""}</p>
+    <div class="ctrl" style="flex-direction:column;align-items:stretch">
+      <button class="go" id="wcont">${sess.finished ? "Review today's workout" : "Continue workout"}</button>
+      <button id="wnew">${sess.finished ? "Start another round (adds to today)" : "Start afresh"}</button>
+    </div>
+    <p class="prog" id="wnote">${sess.finished ? "Your finished workout stays logged." : `Starting afresh clears the ${doneIds.length} exercise${doneIds.length > 1 ? "s" : ""} logged in this workout from today's TRAIN.`}</p></div>`;
+  o.querySelector(".close").onclick = () => closeOverlay();
+  o.querySelector("#wcont").onclick = () => beginWorkout(items, sess, false);
+  o.querySelector("#wnew").onclick = () => beginWorkout(items, sess, true);
+}
+/** resume = today's saved session to pick up (or null); fresh = start over (clearing an unfinished session's logs). */
+function beginWorkout(items, resume, fresh){
+  Object.assign(player, {items: items.map(r => ({...r})), i: 0, phase: "work", running: false, count: 0, log: {}, active: true,
+    savedLog: {}, savedMins: 0, activeMs: 0, segStart: Date.now(), autoDone: false, finished: false});
+  if (resume && !fresh) {
+    const ids = new Set(player.items.map(r => r.id));
+    player.log = Object.fromEntries(Object.entries(resume.log || {}).filter(([id]) => ids.has(id)));
+    player.savedLog = {...(resume.savedLog || resume.log || {})};
+    player.savedMins = resume.savedMins || 0;
+    player.activeMs = resume.activeMs || 0;
+    player.autoDone = !!resume.autoDone;
+    player.finished = !!resume.finished;
+    const nextIdx = player.items.findIndex(r => !(r.id in player.log));
+    player.i = resume.finished ? 0 : (nextIdx >= 0 ? nextIdx : Math.min(resume.i || 0, player.items.length - 1));
+  } else if (resume && fresh && !resume.finished) {
+    // take the unfinished workout's reps and minutes back out of today, then start clean
+    player.savedLog = {...(resume.savedLog || {})};
+    player.savedMins = resume.savedMins || 0;
+    player.autoDone = !!resume.autoDone;
+    player.log = {}; player.activeMs = 0;
+    saveWorkoutLog(true);
+    player.savedMins = 0; player.autoDone = false;
+  }
   keepAwake(); beep(660, .1); beep(990, .15);
-  openOverlay(); showWork();
+  openOverlay();
+  if (resume && !fresh && resume.finished) showList(); else showWork();
+  saveWorkoutLog();
+}
+function leaveWorkout(){
+  saveWorkoutLog();
+  closeOverlay();
+  render();
 }
 function logCurrent(value){
   const r = player.items[player.i];
@@ -1489,12 +1525,12 @@ function showWork(){
   if (player.log[r.id] != null) {
     const b = document.createElement("div"); b.className = "donebanner";
     b.innerHTML = `<span>✓ Done · ${timed ? fmtSec(player.log[r.id]) : player.log[r.id] + " reps"}</span><button>Unmark</button>`;
-    b.querySelector("button").onclick = () => { delete player.log[r.id]; showWork(); };
+    b.querySelector("button").onclick = () => { delete player.log[r.id]; saveWorkoutLog(); showWork(); };
     o.querySelector(".pbar").after(b);
   }
   if (e) { o.querySelector(".vslot").appendChild(videoBox(e, true)); o.querySelector(".gslot").appendChild(guideBlock(e)); }
-  o.querySelector(".bar .close:last-child").onclick = askLeave; o.scrollTop = 0;
-  o.querySelector("#pprev").onclick = () => { if (player.i > 0) { player.i--; showWork(); } };
+  o.querySelector(".bar .close:last-child").onclick = leaveWorkout; o.scrollTop = 0;
+  o.querySelector("#pprev").onclick = () => { if (player.i > 0) { player.i--; saveWorkoutLog(); showWork(); } };
   o.querySelector("#pskip").onclick = () => nextExercise(false);
   const big = o.querySelector("#pbig"), ctrl = o.querySelector("#pctrl");
   if (timed) {
@@ -1510,7 +1546,7 @@ function showWork(){
       player.tick = setInterval(() => {
         player.left--; player.count++; paint();
         if (player.left > 0 && player.left <= 3) beep(660, .08);
-        if (player.left <= 0) { clearInterval(player.tick); beep(1320, .3); logCurrent(player.count); nextExercise(true); }
+        if (player.left <= 0) { clearInterval(player.tick); beep(1320, .3); logCurrent(player.count); saveWorkoutLog(); nextExercise(true); }
       }, 1000);
     };
   } else {
@@ -1520,13 +1556,13 @@ function showWork(){
     ctrl.innerHTML = `<button id="pminus">−</button><button class="go" id="pgo">${player.log[r.id] != null ? "Update ✓" : "Done ✓"}</button><button id="pplus">+</button>`;
     ctrl.querySelector("#pminus").onclick = () => { player.count = Math.max(0, player.count - 1); paint(); };
     ctrl.querySelector("#pplus").onclick = () => { player.count++; paint(); };
-    ctrl.querySelector("#pgo").onclick = () => { beep(1320, .2); logCurrent(player.count); nextExercise(true); };
+    ctrl.querySelector("#pgo").onclick = () => { beep(1320, .2); logCurrent(player.count); saveWorkoutLog(); nextExercise(true); };
   }
 }
 function showList(){
   clearInterval(player.tick);
   const o = ovl(), doneN = Object.keys(player.log).length;
-  o.innerHTML = `<div class="in"><div class="bar"><span class="prog">${doneN} of ${player.items.length} done</span><span class="btns">${player.phase !== "done" ? `<button class="close" id="lback">Back to exercise</button>` : ""}${player.finished ? `<button class="close" id="lsave">Save &amp; close</button>` : ""}</span></div>
+  o.innerHTML = `<div class="in"><div class="bar"><span class="prog">${doneN} of ${player.items.length} done</span><span class="btns">${player.phase !== "done" ? `<button class="close" id="lback">Back to exercise</button>` : ""}<button class="close" id="lsave">✕ Close</button></span></div>
     <p class="prog">Tap an exercise to go back to it. Done ones can be unmarked there.</p><div class="exlist"></div></div>`;
   const list = o.querySelector(".exlist");
   player.items.forEach((r, idx) => {
@@ -1538,7 +1574,7 @@ function showList(){
     list.appendChild(b);
   });
   const back = o.querySelector("#lback"); if (back) back.onclick = showWork;
-  const sv = o.querySelector("#lsave"); if (sv) sv.onclick = () => { saveWorkoutLog(); closeOverlay(); render(); };
+  const sv = o.querySelector("#lsave"); if (sv) sv.onclick = leaveWorkout;
   o.scrollTop = 0;
 }
 function nextExercise(didIt){
@@ -1560,7 +1596,7 @@ function showRest(){
     </div></div>`;
   o.querySelector(".nextup b").textContent = r.name;
   o.querySelector(".nextup .prog").textContent = r.unit === "sec" ? `Hold ${fmtSec(r.target)}` : `${r.target} reps`;
-  o.querySelector(".bar .close:last-child").onclick = askLeave; o.scrollTop = 0;
+  o.querySelector(".bar .close:last-child").onclick = leaveWorkout; o.scrollTop = 0;
   const big = o.querySelector("#rbig"), paint = () => { big.textContent = fmtSec(Math.max(0, player.left)); };
   paint();
   o.querySelector("#rplus").onclick = () => { player.left += 20; paint(); };
@@ -1575,10 +1611,13 @@ function showRest(){
     if (player.left <= 0) { clearInterval(player.tick); beep(990, .15); showWork(); }
   }, 1000);
 }
-/** Brings today's tracker in line with this workout: adds what's new, takes back anything unmarked. */
-function saveWorkoutLog(){
-  clearInterval(player.tick);
-  const ids = Object.keys(player.log), mins = Math.max(1, Math.round((Date.now() - player.started) / 60000));
+/** Brings today's tracker in line with this workout (adds what's new, takes back anything unmarked) and saves the
+ *  session so it can be continued later. Called after every exercise, so nothing is lost if the app closes. */
+function saveWorkoutLog(dropSession){
+  const now = Date.now();
+  player.activeMs = (player.activeMs || 0) + Math.max(0, now - (player.segStart || now));
+  player.segStart = now;
+  const ids = Object.keys(player.log), mins = ids.length ? Math.max(1, Math.round(player.activeMs / 60000)) : 0;
   const d = ensure(keyOf(new Date()));
   const all = new Set([...ids, ...Object.keys(player.savedLog)]);
   let changed = false;
@@ -1588,26 +1627,31 @@ function saveWorkoutLog(){
     if (delta) { changed = true; d.reps[id] = Math.max(0, (d.reps[id] || 0) + delta); if (!d.reps[id]) delete d.reps[id]; }
   });
   player.savedLog = {...player.log};
-  if (ids.length && mins !== player.savedMins) {
+  if (mins !== player.savedMins) {
     d.mins = {...d.mins, train: Math.max(0, (d.mins.train || 0) - player.savedMins + mins)};
+    if (!d.mins.train) { const m = {...d.mins}; delete m.train; d.mins = m; }
     player.savedMins = mins; changed = true;
   }
   const enough = ids.length >= Math.ceil(player.items.length * .8);
   if (enough && !d.done.train) { d.done = {...d.done, train: true}; player.autoDone = true; changed = true; }
   else if (!enough && player.autoDone && d.done.train) { d.done = {...d.done, train: false}; player.autoDone = false; changed = true; }
+  const session = dropSession ? null : {log: {...player.log}, savedLog: {...player.savedLog}, savedMins: player.savedMins, activeMs: player.activeMs,
+    i: player.i, autoDone: player.autoDone, finished: player.finished, ids: player.items.map(r => r.id)};
+  if (JSON.stringify(session) !== JSON.stringify(d.session || null)) { d.session = session; changed = true; }
   if (changed) saveDay(d, false);
   return {ids, mins, d};
 }
 function finishWorkout(){
-  const {ids, mins, d} = saveWorkoutLog();
+  clearInterval(player.tick);
   player.phase = "done"; player.finished = true;
+  const {ids, mins, d} = saveWorkoutLog();
   releaseWake();
   const o = ovl();
   o.innerHTML = `<div class="in"><div class="bar"><span class="prog">Workout finished</span><button class="close">Close</button></div>
     <h2 class="exname">${ids.length >= player.items.length ? "Full routine done." : ids.length ? "Logged what you did." : "Nothing logged."}</h2>
     <div class="summary"><div><b>${ids.length}</b><span>of ${player.items.length} exercises</span></div><div><b>${mins}</b><span>minutes</span></div><div><b>${ids.reduce((t, id) => t + (player.items.find(x => x.id === id)?.unit === "sec" ? 0 : player.log[id]), 0)}</b><span>reps</span></div></div>
     <p class="prog">${ids.length ? "Saved to today's TRAIN block" + (d.done.train ? " and ticked it." : ".") : "Tap Start workout whenever you're ready."}</p></div>`;
-  o.querySelector(".close").onclick = () => { closeOverlay(); render(); };
+  o.querySelector(".close").onclick = leaveWorkout;
   const rv = document.createElement("button"); rv.className = "close"; rv.textContent = "Review exercises";
   rv.onclick = showList;
   o.querySelector(".in").appendChild(rv);
