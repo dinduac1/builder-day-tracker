@@ -88,4 +88,6 @@ save("s_review",  seq(("G5", .5, "bell"), ("E5", .5, "bell"), ("C5", 1.0, "bell"
 save("s_wind",    chord(["A3", "C4", "E4"], 1.8, "pad"))                                                                          # soft low swell
 save("s_sleep",   chord(["F3", "A3", "C4"], 2.2, "pad"))                                                                          # softest, lowest
 save("s_warn",    seq(("E6", .07, "beep", .8), ("rest", .07), ("E6", .07, "beep", .8), ("rest", .18), ("E6", .07, "beep", .8), ("rest", .07), ("E6", .07, "beep", .8)))  # tick-tick: time's nearly up
+save("s_nag",     seq(("B5", .09, "square", .9), ("rest", .04), ("E6", .09, "square", .9), ("rest", .04), ("B5", .09, "square", .9), ("rest", .04), ("E6", .09, "square", .9),
+                       ("rest", .25), ("B5", .09, "square", .9), ("rest", .04), ("E6", .09, "square", .9), ("rest", .04), ("B5", .09, "square", .9), ("rest", .04), ("E6", .2, "square", .9)), peak=0.95)  # urgent: get up
 print("sounds:", sorted(os.listdir(OUT)))

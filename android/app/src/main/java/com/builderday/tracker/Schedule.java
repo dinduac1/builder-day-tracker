@@ -56,6 +56,11 @@ final class Schedule {
         return BLOCKS[0];
     }
 
+    static int indexOf(String id) {
+        for (int i = 0; i < BLOCKS.length; i++) if (BLOCKS[i].id.equals(id)) return i;
+        return 0;
+    }
+
     static int toMin(String hm) {
         return Integer.parseInt(hm.substring(0, 2)) * 60 + Integer.parseInt(hm.substring(3, 5));
     }

@@ -219,5 +219,9 @@ public class TrackerActivity extends Activity {
             runOnUiThread(() -> Toast.makeText(TrackerActivity.this, s, Toast.LENGTH_SHORT).show());
         }
         @JavascriptInterface public String version() { return BuildConfigInfo.VERSION; }
+        /** The tracker says a block has begun (ticked, timed, reps logged, workout started): stop its nag. */
+        @JavascriptInterface public void blockStarted(String blockId) {
+            if (Nag.isFive(blockId)) Nag.markStarted(getApplicationContext(), blockId);
+        }
     }
 }
