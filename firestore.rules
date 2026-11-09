@@ -6,6 +6,24 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
+    // Admins: the founders, plus co-hosts the founders add (config/admins.emails). Keep FOUNDERS in index.html in step.
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email_verified == true && (
+        request.auth.token.email.lower() in ['dinduking1@gmail.com', 'chimdindu@empirewords.com'] ||
+        (exists(/databases/$(database)/documents/config/admins) &&
+         request.auth.token.email.lower() in get(/databases/$(database)/documents/config/admins).data.emails));
+    }
+
+    // Programs the hosts publish (e.g. 75 Hard): every signed-in member reads them; only admins write.
+    match /programs/{id} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+    match /config/admins {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+
     // Crews: anyone signed in can look up a crew by its code (to join) or create one.
     match /groups/{code} {
       allow get: if request.auth != null;

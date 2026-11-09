@@ -535,6 +535,62 @@ textarea.tx{resize:vertical;min-height:64px;line-height:1.45}
 .toast{background:var(--ink);color:var(--bg);border-radius:16px;padding:12px 16px;font-size:14px;box-shadow:0 12px 32px rgba(0,0,0,.35);display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;animation:tin .25s ease-out}
 .toast .tdot{width:10px;height:10px;border-radius:50%;background:var(--accent)}
 @keyframes tin{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
+.goal .gname .gnote{display:block;font-weight:400;font-size:12.5px;color:var(--muted);margin-top:2px}
+.goal .gacts{grid-column:2 / -1;display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center}
+.chips2{display:flex;flex-wrap:wrap;gap:8px}
+.chipbtn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 13px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.chipbtn:hover{border-color:var(--line-strong)}
+.chipbtn.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chipbtn.part{border-color:var(--accent);color:var(--accent)}
+.chipbtn:disabled{opacity:.45;cursor:default}
+.chipbtn small{font-family:var(--f-mono);font-weight:500;font-size:11px;opacity:.8;margin-left:4px}
+.tpls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.tpl{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:12px 14px;cursor:pointer;color:var(--ink);display:grid;gap:2px;font-family:inherit}
+.tpl b{font-size:14.5px}.tpl span{font-size:12px;color:var(--muted)}
+.tpl:hover{border-color:var(--accent)}
+.rlist{display:grid}
+.rrow{display:grid;grid-template-columns:96px 96px minmax(0,1fr) 38px 38px;gap:6px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.rrow .rn{grid-column:1 / 4;grid-row:1;font-weight:600}
+.rrow .star{grid-column:4;grid-row:1}.rrow .x{grid-column:5;grid-row:1}
+.rrow .rs{grid-column:1;grid-row:2}.rrow .re{grid-column:2;grid-row:2}.rrow .rd{grid-column:3 / 6;grid-row:2}
+.rrow input{font:inherit;font-size:13.5px;padding:8px 9px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);min-width:0;width:100%}
+.rrow .rn{font-size:15px}
+.rrow button{height:36px;border-radius:9px;border:1px solid var(--line);background:var(--bg);cursor:pointer;font-size:15px;color:var(--muted)}
+.rrow .star[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.rrow .x{color:var(--warn)}
+.libcat{display:grid;gap:8px;margin-bottom:6px}
+.libcat h4{margin:6px 0 0;font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.savebar{position:sticky;bottom:0;display:flex;gap:10px;padding:14px 0 calc(env(safe-area-inset-bottom,0px) + 6px);background:var(--bg);border-top:1px solid var(--line);z-index:2}
+.savebar .btn{flex:1}
+.wcard{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:14px 16px;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+.wcard b{font-size:16px}.wcard span{grid-column:1;font-size:12.5px;color:var(--muted)}
+.wcard .acts{grid-row:1 / span 2;grid-column:2;display:flex;gap:12px}
+.wweek{display:grid;gap:6px}
+.wday{display:grid;grid-template-columns:52px minmax(0,1fr);gap:10px;align-items:center;font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.wday select,.wname{font:inherit;font-size:14px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);width:100%;min-width:0}
+.wname{font-size:18px;font-weight:600;padding:12px 14px}
+.wex{display:grid;grid-template-columns:28px minmax(0,1fr) 64px 18px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.wex .rname{background:none;border:0;padding:0;text-align:left;color:var(--ink);font:inherit;font-size:14px;cursor:pointer}
+.wex input[type=number]{font:inherit;font-size:13px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:100%;min-width:0;text-align:right}
+.wex .u{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.wex.off .rname{color:var(--muted)}
+@media (max-width:560px){
+  .gedrow{grid-template-columns:minmax(0,1fr) 72px 64px 34px}
+  .gedrow .gn{grid-column:1 / -1}
+  .redhead[style*="108px"]{display:none!important}
+}
+.obphoto{width:112px;height:112px;border-radius:50%;border:1.5px dashed var(--line-strong);background:var(--surface);display:grid;place-content:center;cursor:pointer;overflow:hidden;justify-self:center;color:var(--muted);font-size:13px;text-align:center;padding:0}
+.obphoto img{width:100%;height:100%;object-fit:cover;display:block}
+.obform{display:grid;gap:10px}
+.obform .tx{font-size:17px;padding:13px 15px}
+.hostnote{grid-column:1 / -1;font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+.admrow{display:grid;grid-template-columns:minmax(0,1fr) 104px 72px 64px 34px;gap:6px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.admrow .an,.admrow .ao{grid-column:1 / -1}
+.admrow input,.admrow select{font:inherit;font-size:13.5px;padding:8px 9px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);min-width:0;width:100%}
+.admrow .an{font-weight:600;font-size:15px}
+.admrow .x{height:34px;border-radius:9px;border:1px solid var(--line);background:var(--bg);cursor:pointer;color:var(--warn)}
+.admrow .lk{grid-column:1 / -1;font-family:var(--f-mono);font-size:11px;color:var(--accent)}
+.member .ms .city{color:var(--ink)}
 </style>
 </head>
 <body>
@@ -575,6 +631,7 @@ textarea.tx{resize:vertical;min-height:64px;line-height:1.45}
       <section class="panel p-sched">
         <div class="phead"><h2>Schedule</h2><span class="meta" id="blockMeta">0 / 14 blocks</span></div>
         <ul class="tl" id="tl"></ul>
+        <div class="redfoot" style="padding-top:14px"><button class="linkbtn" id="editRoutine">Edit your routine</button><button class="linkbtn" id="editWorkouts">Workout sets</button></div>
       </section>
       <section class="panel p-review" id="reviewPanel">
         <div class="phead"><h2>Evening review</h2><span class="meta">tonight</span></div>
@@ -583,7 +640,7 @@ textarea.tx{resize:vertical;min-height:64px;line-height:1.45}
     </div>
     <aside class="side">
       <section class="panel p-five">
-        <div class="phead"><h2>The Five</h2><span class="meta">never miss twice</span></div>
+        <div class="phead"><h2 id="fiveTitle">The Five</h2><span class="meta">never miss twice</span></div>
         <div class="fivegrid" id="fivegrid"></div>
         <div class="score">
           <div class="big" id="fiveScore">0<small>/5</small></div>
@@ -638,7 +695,7 @@ textarea.tx{resize:vertical;min-height:64px;line-height:1.45}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script>
-const BLOCKS = [
+const DEFAULT_BLOCKS = [
   {id:"wake",    s:"05:00", e:"05:30", name:"Wake", desc:"Water, light, no phone. Read tonight's plan from last night.", clock:true},
   {id:"train",   s:"05:30", e:"06:45", name:"TRAIN", desc:"Gym. Log the session.", five:true},
   {id:"study",   s:"06:45", e:"07:15", name:"Study", desc:"30 min reading in the craft (sales, marketing, AI, psychology of teaching)."},
@@ -654,8 +711,8 @@ const BLOCKS = [
   {id:"wind",    s:"21:00", e:"22:00", name:"Wind down", desc:"No screens after 21:30."},
   {id:"sleep",   s:"22:00", e:"05:00", name:"Sleep", desc:"Excellence is a sleep-powered game. 7+ hours, non-negotiable."},
 ];
-const FIVE = ["train","build","publish","connect","review"];
-const SHORT = {train:"TRAIN",build:"BUILD",publish:"PUBLISH",connect:"CONNECT",review:"REVIEW"};
+const BLOCKS = DEFAULT_BLOCKS.map(b => ({...b}));   // the person's own routine (settings.blocks), kept in step by syncRoutine()
+const FIVE = DEFAULT_BLOCKS.filter(b => b.five).map(b => b.id);   // their starred core blocks
 // Default record direction: "lower" = finishing faster beats your record, "higher" = more time beats it.
 const DEFAULT_DIR = {sleep:"higher", life:"higher"};
 // Starter rep counters (editable on the page). Targets are the plan's minimums; going over is the point.
@@ -842,6 +899,8 @@ const DEFAULT_WORKOUTS = {
   rest: {name:"Rest", focus:"Walk · mobility · recover", items:[
     {id:"mobility", name:"Mobility / stretching (minutes)", target:20},
     {id:"steps",    name:"Walk (thousand steps)",   target:8}]},
+};
+const OLD_GYM_WORKOUTS = {   // the old gym split; only shown to people who still have it saved
   push: {name:"Push", focus:"Chest · shoulders · triceps", items:[
     {id:"bench",    name:"Bench press",             target:32, hint:"4 × 6–10"},
     {id:"ohp",      name:"Overhead press",          target:30, hint:"3 × 8–10"},
@@ -859,7 +918,6 @@ const DEFAULT_WORKOUTS = {
     {id:"lunges",   name:"Lunges",                  target:30, hint:"3 × 10"},
     {id:"calves",   name:"Calf raises",             target:60, hint:"3 × 20"}]},
 };
-const SPLIT_KEYS = ["full","rest","push","pull","legs"];
 const DEFAULT_SPLIT = ["full","full","full","full","full","full","rest"];   // Mon → Sun
 const PLAN_VERSION = 4;
 const DOW = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
@@ -1002,6 +1060,16 @@ const dirOf = id => (settings.dir && settings.dir[id]) || DEFAULT_DIR[id] || "lo
 const better = (id, a, b) => dirOf(id) === "higher" ? a > b : a < b;
 // Wake logs the clock time you got up (minutes after midnight, in day.clock); every other block logs minutes taken.
 const CLOCK = new Set(BLOCKS.filter(b => b.clock).map(b => b.id));
+function syncRoutine(){
+  const src = Array.isArray(settings.blocks) && settings.blocks.length ? settings.blocks : DEFAULT_BLOCKS;
+  BLOCKS.splice(0, BLOCKS.length, ...src.map(b => ({...b})));
+  FIVE.splice(0, FIVE.length, ...BLOCKS.filter(b => b.five).map(b => b.id));
+  CLOCK.clear(); BLOCKS.filter(b => b.clock).forEach(b => CLOCK.add(b.id));
+}
+const NUMW = ["None","The One","The Two","The Three","The Four","The Five","The Six","The Seven","The Eight","The Nine","The Ten"];
+const fiveName = () => NUMW[FIVE.length] || "The Core";
+const shortOf = id => ((BLOCKS.find(b => b.id === id) || DEFAULT_BLOCKS.find(b => b.id === id) || {name: id}).name.split(/ — | · | - /)[0].toUpperCase().slice(0, 16));
+const fullFive = d => FIVE.length > 0 && fiveCount(d) === FIVE.length;
 const minsOf = (k, id) => {
   const d = days[k]; if (!d) return null;
   if (CLOCK.has(id)) { const v = d.clock && d.clock[id]; return v == null ? null : v; }
@@ -1010,9 +1078,11 @@ const minsOf = (k, id) => {
 const clockFmt = m => { m = ((Math.round(m) % 1440) + 1440) % 1440; return `${pad(Math.floor(m/60))}:${pad(m%60)}`; };
 const hasData = d => d && (Object.values(d.goals || {}).some(v => v) || doneCount(d) > 0 || Object.values(d.mins || {}).some(v => v > 0) || Object.keys(d.clock || {}).length > 0 || Object.values(d.reps || {}).some(v => v > 0));
 const workouts = () => Object.assign({}, DEFAULT_WORKOUTS, settings.workouts || {});
+const setKeys = () => { const W = workouts(); return Object.keys(W).filter(k => k !== "core" && k !== "rest" && W[k] && W[k].items).concat("rest"); };
+const estMin = items => Math.round(items.reduce((t, r) => t + (r.unit === "sec" ? r.target : r.target * 3) + restSecs(), 0) / 60);
 const split = () => (settings.split && settings.split.length === 7) ? settings.split : DEFAULT_SPLIT;
 const defaultWorkoutFor = k => split()[(fromKey(k).getDay() + 6) % 7];
-const workoutKeyFor = k => (days[k] && days[k].workout) || defaultWorkoutFor(k);
+const workoutKeyFor = k => { const w = (days[k] && days[k].workout) || defaultWorkoutFor(k); return workouts()[w] ? w : "full"; };
 function repGroups(blockId, k){
   if (blockId === "train") {
     const wk = workoutKeyFor(k), W = workouts();
@@ -1042,7 +1112,7 @@ function repAvg(rid, keys){ const vs = keys.map(k => repOf(k, rid)).filter(v => 
 const repSum = (rid, keys) => keys.reduce((s,k) => s + (repOf(k, rid) || 0), 0);
 let editingReps = null;   // key of the counter group being edited
 function firstKey(){ const ks = Object.keys(days).filter(k => hasData(days[k])).sort(); return ks[0] || null; }
-function streakEnding(k){ let n = 0; while (fiveCount(getDay(k)) === 5) { n++; k = shift(k,-1); } return n; }
+function streakEnding(k){ let n = 0; while (fullFive(getDay(k))) { n++; k = shift(k,-1); } return n; }
 function habitStreak(f, k){ let n = 0; while (getDay(k).done[f]) { n++; k = shift(k,-1); } return n; }
 
 // Personal best for a block across every day except `skip`
@@ -1082,7 +1152,7 @@ function scoreDay(k){
     const score = Math.round(g.frac * 100);
     return {score, grade: gradeOf(score), parts, live: k === today};
   }
-  const five = fiveCount(d) / 5;
+  const five = FIVE.length ? fiveCount(d) / FIVE.length : null;
   const sched = doneCount(d) / BLOCKS.length;
   let repFrac = null, hits = 0;
   const defs = allRepDefs(k).filter(r => r.target > 0);
@@ -1097,11 +1167,11 @@ function scoreDay(k){
   const y = shift(k, -1);
   const doubles = fk && y >= fk ? FIVE.filter(f => !d.done[f] && !getDay(y).done[f]).length : 0;
   const parts = [
-    {label:"Daily Five done", max:50, frac:five, note:`${fiveCount(d)}/5`},
+    {label:`${fiveName()} done`, max:50, frac:five, note:`${fiveCount(d)}/${FIVE.length}`},
     {label:"Schedule blocks done", max:15, frac:sched, note:`${doneCount(d)}/${BLOCKS.length}`},
     {label:"Rep targets hit", max:10, frac:repFrac, note:defs.length ? `${hits}/${defs.length}` : "no rep counters"},
     {label:"Beat your 7-day average times", max:15, frac:compared ? improved / compared : null, note:compared ? `${improved}/${compared} blocks` : "log times to score this"},
-    {label:"Never missed twice", max:10, frac:1 - doubles / 5, note:doubles ? `${doubles} missed two days running` : "clean"},
+    {label:"Never missed twice", max:10, frac:FIVE.length ? 1 - doubles / FIVE.length : null, note:doubles ? `${doubles} missed two days running` : "clean"},
   ];
   if (G.length) { const g = goalProgress(k); parts.unshift({label:"Goals done", max:40, frac:g.frac, note:`${g.done}/${g.total}`}); }
   const live = parts.filter(p => p.frac != null);
@@ -1123,7 +1193,7 @@ function scoreWeek(ws, withRecords){
       parts: [{label:"Goals done", max:100, frac:goalFrac, note:`${full}/${scorable.length} full days`}]};
   }
   const n = scorable.length;
-  const five = scorable.reduce((s,k) => s + fiveCount(getDay(k)), 0) / (5*n);
+  const five = FIVE.length ? scorable.reduce((s,k) => s + fiveCount(getDay(k)), 0) / (FIVE.length*n) : null;
   const sched = scorable.reduce((s,k) => s + doneCount(getDay(k)), 0) / (BLOCKS.length*n);
   const prevKeys = keys.map(k => shift(k,-7));
   let compared = 0, improved = 0;
@@ -1134,11 +1204,11 @@ function scoreWeek(ws, withRecords){
   scorable.forEach(k => allRepDefs(k).filter(r => r.target > 0).forEach(r => { const v = repOf(k, r.id) || 0; rs += Math.min(v / r.target, 1); slots++; if (v >= r.target) hits++; }));
   if (slots) repFrac = rs / slots;
   const parts = [
-    {label:"Daily Five done", max:50, frac:five, note:`${Math.round(five*5*n)}/${5*n}`},
+    {label:`${fiveName()} done`, max:50, frac:five, note:`${Math.round((five || 0)*FIVE.length*n)}/${FIVE.length*n}`},
     {label:"Schedule blocks done", max:15, frac:sched, note:`${Math.round(sched*BLOCKS.length*n)}/${BLOCKS.length*n}`},
     {label:"Rep targets hit", max:10, frac:repFrac, note:slots ? `${hits}/${slots}` : "no rep counters"},
     {label:"Beat last week's times", max:15, frac:compared ? improved/compared : null, note:compared ? `${improved}/${compared} blocks` : "needs 2 weeks of times"},
-    {label:"Never missed twice", max:10, frac:Math.max(0, 1 - doubles/5), note:doubles ? `${doubles} double miss${doubles>1?"es":""}` : "clean"},
+    {label:"Never missed twice", max:10, frac:FIVE.length ? Math.max(0, 1 - doubles/FIVE.length) : null, note:doubles ? `${doubles} double miss${doubles>1?"es":""}` : "clean"},
   ];
   if (goalFrac != null) parts.unshift({label:"Goals done", max:40, frac:goalFrac, note:`${Math.round(goalFrac * 100)}% average`});
   const live = parts.filter(p => p.frac != null);
@@ -1160,15 +1230,19 @@ function scoreWeek(ws, withRecords){
 }
 
 /* ---------- render ---------- */
+const safe = fn => { try { fn(); } catch(e) { console.error(e); } };   // one broken panel must never blank the rest
 function render(){
+  migrateProfile();
+  syncRoutine();
   const today = keyOf(new Date());
   const day = getDay(sel);
   const d = fromKey(sel);
   applyLayout();
-  renderHero(today);
-  renderGoals(today);
-  if (!useSchedule()) { const rv = $("review"); if (!editing() || !rv.contains(document.activeElement)) { rv.innerHTML = ""; rv.appendChild(reviewBlock(day)); } }
-  pushCrew(); renderCrew();
+  safe(() => renderHero(today));
+  safe(() => renderGoals(today));
+  if (!useSchedule()) safe(() => { const rv = $("review"); if (!editing() || !rv.contains(document.activeElement)) { rv.innerHTML = ""; rv.appendChild(reviewBlock(day)); } });
+  safe(() => { pushCrew(); renderCrew(); });
+  $("fiveTitle").textContent = fiveName();
   $("dlabel").textContent = d.toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short"});
   $("today").disabled = sel === today;
   $("next").disabled = sel >= today;
@@ -1283,13 +1357,13 @@ function render(){
     const btn = document.createElement("button");
     btn.className = "fbtn" + (on ? " on" : "");
     btn.setAttribute("aria-pressed", on);
-    btn.innerHTML = `<span class="dot"></span><span class="fn">${SHORT[f]}</span><span class="fs">${st}d</span>`;
+    btn.innerHTML = `<span class="dot"></span><span class="fn">${shortOf(f)}</span><span class="fs">${st}d</span>`;
     btn.onclick = () => toggle(f, !on);
     fg.appendChild(btn);
   });
   const fc = fiveCount(day);
-  $("fiveScore").innerHTML = `${fc}<small>/5</small>`;
-  const sk = fc === 5 ? streakEnding(sel) : streakEnding(shift(sel,-1));
+  $("fiveScore").innerHTML = `${fc}<small>/${FIVE.length}</small>`;
+  const sk = fullFive(day) ? streakEnding(sel) : streakEnding(shift(sel,-1));
   $("streak").textContent = sk + (sk === 1 ? " day" : " days");
 
   // never miss twice
@@ -1297,13 +1371,13 @@ function render(){
   const yk = shift(sel,-1), y = getDay(yk), hasY = hasData(days[yk]);
   const add = (txt, ok) => { const p = document.createElement("div"); p.className = "alert" + (ok?" ok":""); p.textContent = txt; al.appendChild(p); };
   const missedY = hasY ? FIVE.filter(f => !y.done[f] && !day.done[f]) : [];
-  if (missedY.length && sel === today) add(`Missed yesterday: ${missedY.map(f=>SHORT[f]).join(", ")}. Don't miss twice. Do it today.`);
-  if (missedY.length && sel !== today) add(`Missed twice in a row: ${missedY.map(f=>SHORT[f]).join(", ")}.`);
-  if (fc === 5) add("All Five done. The day is won.", true);
+  if (missedY.length && sel === today) add(`Missed yesterday: ${missedY.map(f=>shortOf(f)).join(", ")}. Don't miss twice. Do it today.`);
+  if (missedY.length && sel !== today) add(`Missed twice in a row: ${missedY.map(f=>shortOf(f)).join(", ")}.`);
+  if (fullFive(day)) add(`All of ${fiveName()} done. The day is won.`, true);
 
-  renderDayScore(today);
-  renderAcct(today);
-  renderWeek(today);
+  safe(() => renderDayScore(today));
+  safe(() => renderAcct(today));
+  safe(() => renderWeek(today));
 
   // plan from last night
   const items = (y.top3||[]).filter(s => s && s.trim());
@@ -1331,7 +1405,7 @@ function render(){
     plan.appendChild(c);
   }
 
-  renderHeat(today);
+  safe(() => renderHeat(today));
 }
 
 function renderDayScore(today){
@@ -1462,15 +1536,15 @@ function renderHeat(today){
   for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
     const k = keyOf(d), b = document.createElement("button");
     const fc = days[k] ? fiveCount(days[k]) : 0;
-    b.style.background = `var(--heat${fc})`;
-    b.title = `${fromKey(k).toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short"})}: ${fc}/5`;
+    b.style.background = `var(--heat${FIVE.length ? Math.round(fc / FIVE.length * 5) : 0})`;
+    b.title = `${fromKey(k).toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short"})}: ${fc}/${FIVE.length}`;
     b.setAttribute("aria-label", b.title);
     if (k > today) { b.className = "future"; b.disabled = true; }
     else b.onclick = () => { sel = k; render(); };
     if (k === sel) b.classList.add("sel");
     heat.appendChild(b);
   }
-  const keys = Object.keys(days).filter(k => fiveCount(days[k]) === 5).sort();
+  const keys = Object.keys(days).filter(k => fullFive(days[k])).sort();
   let best = 0, run = 0, last = null;
   keys.forEach(k => { run = (last && shift(last,1) === k) ? run+1 : 1; best = Math.max(best, run); last = k; });
   $("stBest").textContent = best;
@@ -1504,7 +1578,13 @@ function stopTimer(){ const d = ensure(keyOf(new Date())); finishTimer(d); saveD
 
 /* ---------- actions ---------- */
 function blockStarted(id){ try { if (NATIVE && NATIVE.blockStarted && sel === keyOf(new Date())) NATIVE.blockStarted(id); } catch(e){} }
-function toggle(id, on){ if (on) blockStarted(id); const d = ensure(sel); d.done = {...d.done, [id]: on}; saveDay(d,false); render(); }
+function toggle(id, on){
+  if (on) blockStarted(id);
+  const before = goalsDoneSet(sel), wasAll = goalProgress(sel).frac >= 1;
+  const d = ensure(sel); d.done = {...d.done, [id]: on}; saveDay(d,false);
+  announceGoals(before, wasAll);
+  render();
+}
 function setMins(id, raw){
   const n = Math.round(Number(raw));
   const d = ensure(sel); d.mins = {...d.mins};
@@ -1537,7 +1617,7 @@ function stakeReasons(k){
   if (sc && sc.score < gradeMin(a.bar)) out.push(`Grade ${sc.grade} (${sc.score}), below your ${a.bar} bar`);
   if (useSchedule()) {
     const twice = FIVE.filter(f => !d.done[f] && !y.done[f] && (hasData(days[shift(k, -1)]) || k > a.start));
-    if (twice.length) out.push(`Missed twice: ${twice.map(f => SHORT[f]).join(", ")}`);
+    if (twice.length) out.push(`Missed twice: ${twice.map(f => shortOf(f)).join(", ")}`);
   }
   const c = settings.challenge;
   if (c && c.start && k >= c.start && goalsList().length && goalProgress(k).frac < 1) out.push(`Missed a ${c.name} goal`);
@@ -1625,7 +1705,7 @@ function reportText(k, style = "plain"){
   if (G.length) {
     const g = goalProgress(k);
     const rows = G.map(goal => {
-      const v = (d.goals || {})[goal.id];
+      const v = goalVal(k, goal);
       const ok = goalDone(goal, v);
       const amt = goal.type === "check" ? "" : `  ${fmtGoal(goal, v || 0)}/${fmtGoal(goal, goal.target)}${goal.unit ? " " + goal.unit : ""}`;
       return `${tick(ok)} ${goal.name}${style === "sms" ? "" : amt}`;
@@ -1633,7 +1713,7 @@ function reportText(k, style = "plain"){
     out.push(`${B("GOALS")}  ${g.done}/${g.total}\n` + rows.join("\n"));
   }
   if (useSchedule()) {
-    out.push(`${B("THE FIVE")}  ${fiveCount(d)}/5\n` + FIVE.map(f => `${tick(d.done[f])} ${SHORT[f]}`).join("   "));
+    if (FIVE.length) out.push(`${B(fiveName().toUpperCase())}  ${fiveCount(d)}/${FIVE.length}\n` + FIVE.map(f => `${tick(d.done[f])} ${shortOf(f)}`).join("   "));
     if (style !== "sms") {
       const trainReps = repDefs("train", k).filter(r => r.unit !== "sec").reduce((t, r) => t + (repOf(k, r.id) || 0), 0);
       const trainMin = minsOf(k, "train");
@@ -1754,16 +1834,18 @@ function renderReps(b, day, ex, prior7){
   if (b.id === "train") {
     const wk = workoutKeyFor(sel), W = workouts();
     const bar = document.createElement("div"); bar.className = "wsel";
-    bar.innerHTML = `<label class="fl" for="wsel">Workout</label><select id="wsel" class="ed">${SPLIT_KEYS.map(k => `<option value="${k}">${W[k].name} · ${W[k].focus}</option>`).join("")}</select>`;
+    bar.innerHTML = `<label class="fl" for="wsel">Workout</label><select id="wsel" class="ed">${setKeys().map(k => `<option value="${k}">${esc(W[k].name)} · ${esc(W[k].focus || "")}</option>`).join("")}</select>`;
     const se = bar.querySelector("select"); se.value = wk;
     se.onchange = () => { const d = ensure(sel); d.workout = se.value === defaultWorkoutFor(sel) ? null : se.value; saveDay(d,false); render(); };
     const sp = document.createElement("div"); sp.className = "rmeta";
-    sp.textContent = "Week: " + DOW.map((n,i) => `${n} ${W[split()[i]].name}`).join(" · ");
-    ex.append(bar, sp);
+    sp.textContent = "Week: " + DOW.map((n,i) => `${n} ${(W[split()[i]] || W.full).name}`).join(" · ");
+    const wl = document.createElement("button"); wl.className = "linkbtn"; wl.textContent = "Build workout sets · plan your week";
+    wl.onclick = () => openWorkouts();
+    ex.append(bar, sp, wl);
     const items = repDefs("train", sel);
     if (items.length && wk !== "rest") {
       const go = document.createElement("button"); go.className = "startwk";
-      const mins = Math.round(items.reduce((t, r) => t + (r.unit === "sec" ? r.target : r.target * 3) + restSecs(), 0) / 60);
+      const mins = estMin(items);
       const sess = sel === keyOf(new Date()) ? getDay(sel).session : null;
       const ids = new Set(items.map(r => r.id));
       const doneN = sess && !sess.finished ? Object.keys(sess.log || {}).filter(id => ids.has(id)).length : 0;
@@ -1938,6 +2020,11 @@ function openGuide(k, r){
   const h = document.createElement("h2"); h.className = "exname"; h.textContent = r ? r.name : e.name; inn.appendChild(h);
   if (r && r.target) { const t = document.createElement("div"); t.className = "prog"; t.textContent = r.unit === "sec" ? `Hold ${fmtSec(r.target)}` : `Target ${r.target} reps`; inn.appendChild(t); }
   inn.appendChild(guideBlock(e));
+}
+/** The guide, opened from inside another screen: its close button goes back there. */
+function openGuideFrom(k, r, back){
+  openGuide(k, r);
+  const c = ovl().querySelector(".close"); c.textContent = "← Back"; c.onclick = back;
 }
 
 // --- guided workout player
@@ -2137,7 +2224,8 @@ function saveWorkoutLog(dropSession){
   const session = dropSession ? null : {log: {...player.log}, savedLog: {...player.savedLog}, savedMins: player.savedMins, activeMs: player.activeMs,
     i: player.i, autoDone: player.autoDone, finished: player.finished, ids: player.items.map(r => r.id)};
   if (JSON.stringify(session) !== JSON.stringify(d.session || null)) { d.session = session; changed = true; }
-  if (player.goalId && mins > 0) {
+  const pg = player.goalId && goalsList().find(g => g.id === player.goalId);
+  if (pg && pg.type === "time" && mins > 0) {
     const cur = (d.goals || {})[player.goalId] || 0;
     if (mins > cur) { d.goals = {...(d.goals || {}), [player.goalId]: mins}; changed = true; }
   }
@@ -2174,7 +2262,8 @@ let swReg = null;
 
 async function postSub(sub){
   const r = await fetch("/api/subscribe", {method:"POST", headers:{"content-type":"application/json"},
-    body: JSON.stringify({subscription: sub.toJSON(), timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, blocks: remindBlocks()})});
+    body: JSON.stringify({subscription: sub.toJSON(), timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, blocks: remindBlocks(),
+      routine: BLOCKS.map(b => ({id: b.id, s: b.s, name: b.name, desc: b.desc || ""}))})});
   if (!r.ok) throw new Error("The reminder server didn't accept this device (" + r.status + ").");
 }
 async function currentSub(){ return swReg ? swReg.pushManager.getSubscription() : null; }
@@ -2276,35 +2365,66 @@ if (REMINDERS && !NATIVE) {
 const BRAND_SVG = '<svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="15" fill="#0C0D11"/><circle cx="32" cy="32" r="17.5" fill="none" stroke="#F3F1EC" stroke-width="6.6" stroke-linecap="round" stroke-dasharray="74 200" stroke-dashoffset="-27" transform="rotate(-90 32 32)"/><circle cx="32" cy="32" r="17.5" fill="none" stroke="#F3F1EC" stroke-width="6.6" stroke-linecap="round" stroke-dasharray="0 200" transform="rotate(-90 32 32)"/><path d="M38.4 15.7a17.5 17.5 0 0 1 9.6 9.9" fill="none" stroke="#7C8BFF" stroke-width="6.6" stroke-linecap="round"/><path d="M48.8 33.4A17.5 17.5 0 1 1 30.6 14.6" fill="none" stroke="#F3F1EC" stroke-width="6.6" stroke-linecap="round"/></svg>';
 const profile = () => settings.profile || {name: "", schedule: true};
 const useSchedule = () => profile().schedule !== false;
-const goalsList = () => settings.goals || [];
+const goalsList = () => { const h = hostedProgram(); return h && Array.isArray(h.goals) ? h.goals : (settings.goals || []); };
+// Goals people can add. The five "h_" goals are linked to the matching routine block: ticking either ticks both.
+const GOAL_LIB = [
+  {id:"h_train", block:"train", icon:"dumbbell", short:"Workout", name:"Complete your workout", note:"Your guided workout set for today.", type:"check", workout:true},
+  {id:"h_build", block:"build", icon:"focus", short:"Deep work", name:"Deep work", note:"Your most valuable work, phone in another room.", type:"check"},
+  {id:"h_publish", block:"publish", icon:"publish", short:"Publish", name:"Create & publish content", note:"Make it and ship it today.", type:"check"},
+  {id:"h_connect", block:"connect", icon:"outreach", short:"Outreach", name:"Outreach", note:"Chase (cold DMs, emails, calls) or attract (ads, offers).", type:"check"},
+  {id:"h_review", block:"review", icon:"review", short:"Review", name:"Evening review", note:"Score the day. Set tomorrow's top 3.", type:"check"},
+  {id:"water", icon:"glass", short:"Water", name:"Drink your water minimum", type:"count", target:3, unit:"L", step:0.25},
+  {id:"photo", icon:"camera", short:"Photo", name:"Take a progress photo", type:"check"},
+  {id:"read", icon:"book", short:"Read", name:"Read 10 pages", type:"count", target:10, unit:"pages", step:1},
+  {id:"study", icon:"book", short:"Study", name:"Study your craft", type:"time", target:30, unit:"min", step:5},
+  {id:"steps", icon:"count", short:"Steps", name:"Walk 10,000 steps", type:"count", target:10, unit:"k steps", step:1},
+  {id:"sleep7", icon:"clock", short:"Sleep", name:"Sleep 7+ hours", type:"check"},
+  {id:"meditate", icon:"clock", short:"Pray", name:"Pray or meditate", type:"time", target:10, unit:"min", step:5},
+  {id:"journal", icon:"book", short:"Journal", name:"Journal", type:"check"},
+  {id:"nofeeds", icon:"check", short:"No feeds", name:"No social feeds before noon", type:"check"},
+];
+const libGoal = id => ({...GOAL_LIB.find(g => g.id === id)});
 const PROGRAMS = {
-  "75hard": {name:"75 Hard", tag:"Strict", sub:"Two 45-minute workouts (one outdoors), a healthy diet, a gallon of water, no alcohol or cheat meals, 10 pages and a progress photo. Every day for 75 days. Miss one and you're back to Day 1.",
+  "75hard": {name:"75 Hard", tag:"Strict · with your crew", sub:"The Five every day (workout, deep work, create & publish, outreach, review), your water minimum and a progress photo. 75 days. Miss one and you're back to Day 1.",
     challenge:{name:"75 Hard", length:75, strict:true},
-    goals:[
-      {id:"w_out", icon:"tree", short:"Outdoor", name:"45-min outdoor workout", type:"time", target:45, unit:"min", step:5, workout:true},
-      {id:"w_in", icon:"dumbbell", short:"Indoor", name:"45-min indoor workout", type:"time", target:45, unit:"min", step:5, workout:true},
-      {id:"diet", icon:"plate", short:"Diet", name:"Follow a healthy diet plan", type:"check"},
-      {id:"water", icon:"glass", short:"Water", name:"Drink a gallon of water", type:"count", target:3.8, unit:"L", step:0.25},
-      {id:"alcohol", icon:"nobottle", short:"No alcohol", name:"No alcohol or cheat meals", type:"check"},
-      {id:"read", icon:"book", short:"Read", name:"Read 10 pages of self-help", type:"count", target:10, unit:"pages", step:1},
-      {id:"photo", icon:"camera", short:"Photo", name:"Take a progress photo", type:"check"},
-    ]},
-  "75soft": {name:"75 Soft", tag:"Forgiving", sub:"One 45-minute workout, eat well (drink only socially), 3 litres of water and 10 pages, for 75 days. A missed day doesn't reset you.",
-    challenge:{name:"75 Soft", length:75, strict:false},
-    goals:[
-      {id:"w1", icon:"dumbbell", short:"Workout", name:"45-min workout", type:"time", target:45, unit:"min", step:5, workout:true},
-      {id:"eat", icon:"plate", short:"Eat well", name:"Eat well. Drink only socially", type:"check"},
-      {id:"water", icon:"glass", short:"Water", name:"Drink 3 litres of water", type:"count", target:3, unit:"L", step:0.25},
-      {id:"read", icon:"book", short:"Read", name:"Read 10 pages", type:"count", target:10, unit:"pages", step:1},
-    ]},
-  "builder": {name:"Builder Day", tag:"Timed schedule", sub:"A full-time builder's day in 14 timed blocks: the Daily Five, rep counters, records and a guided full-body workout.", schedule:true, goals:[]},
-  "custom": {name:"Your own goals", tag:"Blank", sub:"Start empty and set the daily goals you want to hit.", goals:[]},
+    goals:["h_train","h_build","h_publish","h_connect","h_review","water","photo"].map(libGoal)},
+  "builder": {name:"Build your day", tag:"Timed routine", sub:"Your own timed routine: start from the Builder Day or another template, add blocks from the library, star your core. Times, reps, records and alarms.", schedule:true, goals:[]},
+  "custom": {name:"Your own goals", tag:"Blank", sub:"Pick daily goals from the library or write your own.", goals:[]},
 };
+/** A goal's value for a day. Linked goals read their routine block's tick. */
+function goalVal(k, g){
+  const d = getDay(k);
+  if (g.block && d.done && d.done[g.block]) return g.type === "check" ? true : Math.max(Number((d.goals || {})[g.id]) || 0, Number(g.target) || 0);
+  return (d.goals || {})[g.id];
+}
+const goalsDoneSet = k => new Set(goalsList().filter(g => goalDone(g, goalVal(k, g))).map(g => g.id));
+/** After a change on the selected day: tell the crew about goals that just got done. */
+function announceGoals(before, wasAll){
+  if (sel !== keyOf(new Date())) return;
+  const newly = goalsList().filter(g => !before.has(g.id) && goalDone(g, goalVal(sel, g)));
+  if (!newly.length) return;
+  const cs = challengeState(sel);
+  if (!wasAll && goalProgress(sel).frac >= 1) crewEvent(cs ? `completed Day ${cs.dayN} of ${cs.name}. Every rule done.` : "finished every goal today.");
+  else newly.forEach(g => crewEvent(`finished “${g.name}”${cs ? ` · Day ${cs.dayN}` : ""}.`));
+}
+/** Older saved setups: the first 75 Hard rules and 75 Soft. */
+function migrateProfile(){
+  const p = settings.profile; if (!p) return;
+  let ch = false;
+  if (p.program === "75hard" && goalsList().some(g => g.id === "w_out")) {
+    settings.goals = PROGRAMS["75hard"].goals.map(g => ({...g}));
+    // picking 75 Hard used to switch the timed schedule off; give it back to anyone who was using it
+    if (p.schedule === false && Object.values(days).some(d => doneCount(d) > 0)) settings.profile = {...p, schedule: true};
+    ch = true;
+  }
+  if (p.program === "75soft") { settings.profile = {...settings.profile, program: "custom"}; ch = true; }
+  if (ch) saveSettings();
+}
 const goalDone = (g, v) => g.type === "check" ? !!v : (Number(v) || 0) >= (Number(g.target) || 0) && (Number(g.target) || 0) > 0;
 const fmtGoal = (g, v) => g.type === "time" ? String(Math.round(v)) : (Math.round(v * 100) / 100).toString();
 function goalProgress(k){
   const G = goalsList(), gv = getDay(k).goals || {};
-  const done = G.filter(g => goalDone(g, gv[g.id])).length;
+  const done = G.filter(g => goalDone(g, goalVal(k, g))).length;
   return {done, total: G.length, frac: G.length ? done / G.length : 0};
 }
 const daysBetween = (a, b) => Math.round((fromKey(b) - fromKey(a)) / 864e5);
@@ -2319,21 +2439,20 @@ function challengeState(today){
     finished: kept >= (c.length || 75), kept, todayDone: goalProgress(today).frac >= 1};
 }
 function setGoal(id, v){
-  const d = ensure(sel), g = goalsList().find(x => x.id === id), wasDone = g && goalDone(g, (d.goals || {})[id]), wasAll = goalProgress(sel).frac >= 1;
+  const g = goalsList().find(x => x.id === id), before = goalsDoneSet(sel), wasAll = goalProgress(sel).frac >= 1;
+  const d = ensure(sel);
   d.goals = {...(d.goals || {})};
   if (v === null || v === false || v === 0) delete d.goals[id]; else d.goals[id] = v;
+  if (g && g.block && g.type === "check") { d.done = {...d.done, [g.block]: !!v}; delete d.goals[id]; if (v) blockStarted(g.block); }
   saveDay(d, false);
-  if (sel === keyOf(new Date()) && g && !wasDone && goalDone(g, d.goals[id])) {
-    const cs = challengeState(sel);
-    if (!wasAll && goalProgress(sel).frac >= 1) crewEvent(cs ? `completed Day ${cs.dayN} of ${cs.name}. Every rule done.` : "finished every goal today.");
-    else crewEvent(`finished “${g.name}”${cs ? ` · Day ${cs.dayN}` : ""}.`);
-  }
+  announceGoals(before, wasAll);
   render();
 }
 function applyProgram(key, startToday){
-  const P = PROGRAMS[key];
-  settings.profile = {...profile(), program: key, schedule: !!P.schedule || (key === "builder")};
-  if (key === "builder") settings.profile.schedule = true;
+  const P = programDef(key);
+  editingGoals = false;
+  settings.profile = {...profile(), program: key};   // a challenge never switches your timed routine off
+  if (P.schedule) settings.profile.schedule = true;
   settings.goals = P.goals.map(g => ({...g}));
   settings.challenge = P.challenge ? {...P.challenge, start: startToday ? keyOf(new Date()) : (settings.challenge || {}).start || keyOf(new Date())} : null;
   saveSettings();
@@ -2355,7 +2474,7 @@ function renderHero(today){
   const cs = challengeState(today);
   if (cs) chip(cs.finished ? `<b>${cs.name}</b> complete` : `${cs.name} <b>Day ${cs.dayN}</b> / ${cs.length}`, cs.restarts && cs.dayN === 1 ? "warn" : "accent");
   if (goalsList().length) { const g = goalProgress(sel); chip(`Goals <b>${g.done}/${g.total}</b>`); }
-  if (useSchedule()) chip(`The Five <b>${fiveCount(getDay(sel))}/5</b>`);
+  if (useSchedule() && FIVE.length) chip(`${fiveName()} <b>${fiveCount(getDay(sel))}/${FIVE.length}</b>`);
   const L = acct().start ? stakeLedger(today) : null;
   if (L && L.owed) chip(`Owed <b>${naira(L.owed)}</b>`, "warn");
   const sc = scoreDay(sel);
@@ -2373,8 +2492,8 @@ function renderGoals(today){
     $("goalsMeta").textContent = "";
     const p = document.createElement("div"); p.className = "gedit";
     p.innerHTML = `<p class="beat">Track the goals that matter to you every day, or take on a challenge with your crew.</p><div class="progs"></div>`;
-    ["75hard", "75soft", "custom"].forEach(k => {
-      const P = PROGRAMS[k], c = document.createElement("button"); c.className = "prog-card";
+    programKeys(false).forEach(k => {
+      const P = programDef(k), c = document.createElement("button"); c.className = "prog-card";
       c.innerHTML = `<b></b><span></span><i></i>`; c.querySelector("b").textContent = P.name; c.querySelector("span").textContent = P.sub; c.querySelector("i").textContent = P.tag;
       c.onclick = () => { if (k === "custom") { goalDraft = [newGoal()]; editingGoals = true; settings.profile = {...profile(), program: "custom"}; } else applyProgram(k, true); render(); };
       p.querySelector(".progs").appendChild(c);
@@ -2403,7 +2522,7 @@ function renderGoals(today){
     box.appendChild(ch);
   }
   G.forEach((g, i) => {
-    const v = gv[g.id], done = goalDone(g, v);
+    const v = goalVal(sel, g), done = goalDone(g, v);
     const row = document.createElement("div"); row.className = "goal" + (done ? " done" : "");
     if (g.type === "check") {
       row.innerHTML = `<input type="checkbox" class="chk" id="goal-${i}"><label class="gname" for="goal-${i}"></label><span></span>`;
@@ -2418,19 +2537,35 @@ function renderGoals(today){
       const [minus, plus] = row.querySelectorAll(".gctl button");
       minus.onclick = () => setGoal(g.id, Math.max(0, Math.round((n - step) * 100) / 100) || null);
       plus.onclick = () => setGoal(g.id, Math.round((n + step) * 100) / 100);
-      if (g.workout && sel === today) {
-        const w = document.createElement("button"); w.className = "linkbtn gwork"; w.textContent = "▶ Guided workout · logs the minutes here";
-        w.onclick = () => { pendingGoalId = g.id; startWorkout(repDefs("train", today)); };
-        row.appendChild(w);
-      }
     }
-    row.querySelector(".gname").textContent = g.name;
+    const gn = row.querySelector(".gname"); gn.textContent = g.name;
+    if (g.note) { const nt = document.createElement("small"); nt.className = "gnote"; nt.textContent = g.note; gn.appendChild(nt); }
+    if (g.workout) {
+      const acts = document.createElement("div"); acts.className = "gacts";
+      const W = workouts()[workoutKeyFor(sel)], items = repDefs("train", sel);
+      if (sel === today && items.length && workoutKeyFor(sel) !== "rest") {
+        const w = document.createElement("button"); w.className = "linkbtn gwork";
+        w.textContent = `▶ ${W.name} · ${items.length} exercises · ~${estMin(items)} min`;
+        w.onclick = () => { pendingGoalId = g.id; startWorkout(items); };
+        acts.appendChild(w);
+      }
+      const cw = document.createElement("button"); cw.className = "linkbtn"; cw.textContent = "Workout sets";
+      cw.onclick = () => openWorkouts();
+      acts.appendChild(cw);
+      row.appendChild(acts);
+    }
     box.appendChild(row);
   });
   const foot = document.createElement("div"); foot.className = "redfoot"; foot.style.paddingTop = "12px";
-  const ed = document.createElement("button"); ed.className = "linkbtn"; ed.textContent = "Edit goals";
-  ed.onclick = () => { goalDraft = goalsList().map(g => ({...g})); editingGoals = true; render(); };
-  foot.appendChild(ed);
+  if (hostedProgram()) {
+    const hn = document.createElement("span"); hn.className = "hostnote"; hn.textContent = "Rules set by the hosts. Same for everyone.";
+    foot.appendChild(hn);
+    if (isAdmin()) { const ae = document.createElement("button"); ae.className = "linkbtn"; ae.textContent = "Edit these rules (admin)"; ae.onclick = () => openAdmin(profile().program); foot.appendChild(ae); }
+  } else {
+    const ed = document.createElement("button"); ed.className = "linkbtn"; ed.textContent = "Edit goals";
+    ed.onclick = () => { goalDraft = goalsList().map(g => ({...g})); editingGoals = true; render(); };
+    foot.appendChild(ed);
+  }
   box.appendChild(foot);
 }
 const newGoal = () => ({id: "g" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: "", type: "check", target: 1, unit: ""});
@@ -2442,7 +2577,7 @@ function renderGoalEditor(box){
     const r = document.createElement("div"); r.className = "gedrow";
     r.innerHTML = `<input class="ed gn" maxlength="60" placeholder="e.g. Read 10 pages"><select class="ed gt"><option value="check">Done / not</option><option value="count">Count</option><option value="time">Minutes</option></select>
       <input class="ed gtar" type="number" min="0" step="any" inputmode="decimal"><input class="ed gu" maxlength="10" placeholder="unit"><button class="x" aria-label="Remove">✕</button>`;
-    const [nm, , tg, un] = r.querySelectorAll("input"), ty = r.querySelector("select");
+    const [nm, tg, un] = r.querySelectorAll("input"), ty = r.querySelector("select");
     nm.value = g.name; ty.value = g.type; tg.value = g.type === "check" ? "" : g.target; un.value = g.unit || (g.type === "time" ? "min" : "");
     tg.disabled = un.disabled = g.type === "check";
     nm.oninput = () => { g.name = nm.value; };
@@ -2459,8 +2594,17 @@ function renderGoalEditor(box){
   add.onclick = () => { goalDraft.push(newGoal()); render(); };
   cancel.onclick = () => { editingGoals = false; render(); };
   w.appendChild(f);
+  const lib = document.createElement("div"); lib.className = "libcat";
+  lib.innerHTML = `<h4>Quick add</h4><div class="chips2"></div>`;
+  GOAL_LIB.forEach(t => {
+    const c = document.createElement("button"), have = goalDraft.some(g => g.id === t.id);
+    c.className = "chipbtn"; c.textContent = (have ? "✓ " : "+ ") + t.name; c.disabled = have;
+    c.onclick = () => { goalDraft = goalDraft.filter(g => g.name.trim()); goalDraft.push({...t}); render(); };
+    lib.querySelector(".chips2").appendChild(c);
+  });
+  w.appendChild(lib);
   const hint = document.createElement("p"); hint.className = "beat";
-  hint.textContent = "Change your challenge, or start one, in Settings (the sliders at the top).";
+  hint.textContent = "Workout, deep work, publish, outreach and review are linked to the same blocks in your routine: tick either one. Start or change a challenge in Settings.";
   w.appendChild(hint);
   box.appendChild(w);
 }
@@ -2478,13 +2622,19 @@ function reviewBlock(day){
 }
 
 /* ---------- layout by program ---------- */
-let lastNativeSchedule = null;
+let lastNativeSchedule = null, lastRoutineSig = null;
 function applyLayout(){
   const sch = useSchedule();
   document.querySelectorAll(".p-sched,.p-five,.p-heat").forEach(e => e.hidden = !sch);
   $("reviewPanel").hidden = sch;
   $("goalsPanel").hidden = sch && !goalsList().length && profile().program === undefined && !!settings.profile === false ? false : false;
   if (NATIVE && NATIVE.setScheduleEnabled && lastNativeSchedule !== sch) { try { NATIVE.setScheduleEnabled(sch); lastNativeSchedule = sch; } catch(e){} }
+  const sig = JSON.stringify(BLOCKS.map(b => [b.id, b.s, b.e, b.name, b.desc, !!b.five]));
+  if (sig !== lastRoutineSig) {
+    lastRoutineSig = sig;
+    if (NATIVE && NATIVE.setRoutine) { try { NATIVE.setRoutine(JSON.stringify(BLOCKS.map(b => ({id: b.id, s: b.s, e: b.e, name: b.name, desc: b.desc || "", five: !!b.five})))); } catch(e){} }
+    else if (typeof swReg !== "undefined" && swReg) currentSub().then(sub => sub && postSub(sub)).catch(() => {});
+  }
 }
 
 /* =========================================================== crew */
@@ -2492,7 +2642,8 @@ const crewState = {members: [], code: null, unsub: null, last: ""};
 const crewFS = () => window.__ordo && window.__ordo.db && window.__ordo.uid ? window.__ordo : null;
 function crewSummary(today){
   const cs = challengeState(today), sc = scoreDay(today), g = goalProgress(today), me = crewFS();
-  return {name: (profile().name || (me && me.user.displayName) || "Member").slice(0, 40), photo: (me && me.user.photoURL) || "",
+  return {name: (profile().name || (me && me.user.displayName) || "Member").slice(0, 40), photo: profile().photo || (me && me.user.photoURL) || "",
+    city: (profile().city || "").slice(0, 40), headline: (profile().headline || "").slice(0, 80),
     challenge: cs ? {name: cs.name, day: cs.dayN, length: cs.length, restarts: cs.restarts, done: cs.todayDone} : null,
     today: {date: today, done: g.done, total: g.total, five: useSchedule() ? fiveCount(getDay(today)) : null},
     grade: sc ? sc.grade : null, score: sc ? sc.score : null};
@@ -2591,7 +2742,8 @@ function renderCrew(){
     if (m.photo) { const im = document.createElement("img"); im.src = m.photo; im.alt = ""; im.referrerPolicy = "no-referrer"; pic.appendChild(im); }
     else pic.textContent = (m.name || "?").trim().charAt(0).toUpperCase();
     row.querySelector(".mn").textContent = (m.name || "Member") + (m.uid === fs.uid ? " (you)" : "");
-    row.querySelector(".ms").textContent = fresh ? `Today ${m.today.done}/${m.today.total}${m.grade ? " · " + m.grade : ""}` : "Not updated today";
+    row.querySelector(".ms").textContent = (m.city ? m.city + " · " : "") + (fresh ? `Today ${m.today.done}/${m.today.total}${m.grade ? " · " + m.grade : ""}` : "Not updated today");
+    if (m.headline) row.querySelector(".mn").title = m.headline;
     row.querySelector(".md b").textContent = m.challenge ? m.challenge.day : "—";
     row.querySelector(".md span").textContent = m.challenge ? `day / ${m.challenge.length}` : "no challenge";
     box.appendChild(row);
@@ -2631,6 +2783,10 @@ const ICONS = {
   nobottle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3h4v4l2 3v10a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V10l2-3z"/><circle cx="12" cy="13" r="9.5"/><path d="M5.5 6.5l13 13"/></svg>',
   book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 6c-2-1.5-5-2-8-1.5v14c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5v-14c-3-.5-6 0-8 1.5z"/><path d="M12 6v14"/></svg>',
   camera: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M3 8h4l2-3h6l2 3h4v12H3z"/><circle cx="12" cy="13.5" r="3.8"/></svg>',
+  focus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg>',
+  publish: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg>',
+  outreach: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3 10 14"/><path d="M21 3l-7 18-4-7-7-4z"/></svg>',
+  review: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2.5h6V4"/><path d="M9 12.5l2 2 4-4"/></svg>',
   check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 10"/></svg>',
   clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
   count: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M5 9h14M5 15h14M10 4l-2 16M16 4l-2 16"/></svg>',
@@ -2661,7 +2817,7 @@ function openBoard(){
       const row = document.createElement("div"); row.className = "brow" + (k === today ? " today" : "") + (past && !full ? " failed" : "");
       row.style.gridTemplateColumns = cols;
       row.innerHTML = `<span class="bn">${i + 1}.</span>` + G.map(g => {
-        const ok = goalDone(g, gv[g.id]);
+        const ok = goalDone(g, goalVal(k, g));
         return `<span class="bc${ok ? " on" : past ? " miss" : k > today ? " future" : ""}"></span>`;
       }).join("");
       row.title = fromKey(k).toLocaleDateString(undefined, {weekday: "short", day: "numeric", month: "short"});
@@ -2743,27 +2899,30 @@ function onboarding(step, ctx = {}){
   const b = o.querySelector(".obbody");
   if (step === "welcome") {
     b.innerHTML = `<h2>Discipline, kept.</h2><p class="lead">Daily goals, challenges like 75 Hard, guided workouts, an honest grade every day, and a crew that sees whether you showed up.</p>
-      <div style="display:grid;gap:10px"><button class="btn primary block" id="obSign"><span>Sign in with Google</span></button><button class="btn block" id="obLocal">Continue without an account</button></div>
+      <div style="display:grid;gap:10px"><button class="btn primary block" id="obSign">${G_ICON_SM}<span>Continue with Google</span></button><button class="btn block" id="obLocal">Continue without an account</button></div>
       <p class="beat">Signing in keeps your progress on every device and lets you join a crew.</p>`;
     b.querySelector("#obSign").onclick = () => { window.__ordoSignIn && window.__ordoSignIn(); };
     b.querySelector("#obLocal").onclick = () => { try { sessionStorage.setItem("ordo-local", "1"); } catch(e){} onboarding("name"); };
-  } else if (step === "name") {
-    const me = crewFS();
-    b.innerHTML = `<h2>What should we call you?</h2><input class="tx" id="obName" maxlength="40" placeholder="First name" style="font-size:20px;padding:14px 16px"><button class="btn primary block" id="obNext">Continue</button>`;
-    b.querySelector("#obName").value = profile().name || (me && me.user.displayName ? me.user.displayName.split(" ")[0] : "");
-    b.querySelector("#obNext").onclick = () => { settings.profile = {...profile(), name: b.querySelector("#obName").value.trim()}; saveSettings(); onboarding("program"); };
+  } else if (step === "name" || step === "profile") {
+    b.innerHTML = `<h2>Your profile.</h2><p class="lead">This is how your crew and the leaderboard see you.</p><div class="pf"></div>`;
+    profileForm(b.querySelector(".pf"), "Continue", () => onboarding("program"));
   } else if (step === "program") {
     b.innerHTML = `<h2>Pick your program.</h2><p class="lead">You can change it any time in Settings.</p><div class="progs"></div>`;
-    ["75hard", "75soft", "builder", "custom"].forEach(k => {
-      const P = PROGRAMS[k], c = document.createElement("button"); c.className = "prog-card";
+    programKeys(true).forEach(k => {
+      const P = programDef(k), c = document.createElement("button"); c.className = "prog-card";
       c.innerHTML = `<b></b><span></span><i></i>`; c.querySelector("b").textContent = P.name; c.querySelector("span").textContent = P.sub; c.querySelector("i").textContent = P.tag;
       c.onclick = () => {
-        if (k === "builder") { settings.profile = {...profile(), program: "builder", schedule: true}; settings.goals = []; settings.challenge = null; saveSettings(); onboarding("crew"); }
+        if (k === "builder") { settings.profile = {...profile(), program: "builder", schedule: true}; settings.goals = []; settings.challenge = null; saveSettings(); openRoutine(() => onboarding("crew")); }
         else if (k === "custom") { settings.profile = {...profile(), program: "custom", schedule: false}; settings.goals = []; settings.challenge = null; saveSettings(); onboarding("crew"); }
-        else { settings.profile = {...profile(), schedule: false}; applyProgram(k, true); onboarding("crew"); }
+        else { settings.profile = {...profile(), schedule: false}; applyProgram(k, true); onboarding("workout"); }
       };
       b.querySelector(".progs").appendChild(c);
     });
+  } else if (step === "workout") {
+    b.innerHTML = `<h2>Your workout.</h2><p class="lead">The ORDO workout trains every area: upper body, legs and glutes, core, back, then a stretch. Use all of it, or build your own sets from the areas you want.</p>
+      <div style="display:grid;gap:10px"><button class="btn primary block" id="obAll">Use the full ORDO workout</button><button class="btn block" id="obBuild">Build my own sets</button></div>`;
+    b.querySelector("#obAll").onclick = () => onboarding("crew");
+    b.querySelector("#obBuild").onclick = () => openWorkouts(null, () => onboarding("crew"));
   } else if (step === "crew") {
     const fs = crewFS();
     b.innerHTML = `<h2>Bring your crew.</h2><p class="lead">${fs ? "Join a friend's crew with their code, or start one from the Crew panel and invite them." : "Sign in to do this with friends. You can do it later from the Crew panel."}</p>
@@ -2780,30 +2939,38 @@ function openSettings(){
   const o = openOverlay(), fs = crewFS(), p = profile(), c = settings.challenge;
   o.innerHTML = `<div class="in"><div class="bar"><span class="prog">Settings</span><button class="close">✕ Close</button></div>
     <h2 class="exname">Settings</h2>
-    <div class="setgrp"><h3>You</h3><label class="fl" for="stName">Name</label><input class="tx" id="stName" maxlength="40">
-      <div class="beat" id="stWho"></div></div>
-    <div class="setgrp"><h3>Program</h3><div class="progs" id="stProgs"></div>
-      <label class="toggle"><span>Timed daily schedule (Builder Day blocks, the Five, alarms)</span><input type="checkbox" id="stSched"></label></div>
+    <div class="setgrp"><h3>You</h3><div id="stProfile"></div><div class="beat" id="stWho"></div></div>
+    <div class="setgrp" id="stAdminGrp" hidden><h3>Admin</h3><p class="beat">You host programs. What you set here is what every member on that program tracks.</p>
+      <div class="redfoot"><button class="btn-sm" id="stAdmin">Programs &amp; admins</button></div></div>
+    <div class="setgrp"><h3>Goals</h3><div class="progs" id="stProgs"></div></div>
+    <div class="setgrp"><h3>Routine</h3>
+      <label class="toggle"><span>Timed daily routine (your blocks, starred core, alarms)</span><input type="checkbox" id="stSched"></label>
+      <div class="redfoot"><button class="btn-sm" id="stRoutine">Build / edit your routine</button><button class="linkbtn" id="stWorkouts">Workout sets</button></div></div>
     <div class="setgrp"><h3>Challenge</h3><div id="stChal"></div></div>
+    <div class="setgrp" id="stLockGrp" hidden><h3>App lock</h3>
+      <label class="toggle"><span>Lock ORDO with your fingerprint, face or phone PIN</span><input type="checkbox" id="stLock"></label>
+      <div class="beat" id="stLockNote"></div></div>
     <div class="setgrp"><h3>Appearance</h3><div class="seg" id="stTheme"><button data-t="system">System</button><button data-t="dark">Dark</button><button data-t="light">Light</button></div></div>
     <div class="setgrp"><h3>Account</h3><div id="stAcct"></div></div></div>`;
   o.querySelector(".close").onclick = () => { closeOverlay(); render(); };
-  const nm = o.querySelector("#stName"); nm.value = p.name || "";
-  nm.onchange = () => { settings.profile = {...profile(), name: nm.value.trim()}; saveSettings(); };
+  profileForm(o.querySelector("#stProfile"), "Save profile", () => toast("Profile saved."));
+  if (isAdmin()) { o.querySelector("#stAdminGrp").hidden = false; o.querySelector("#stAdmin").onclick = () => openAdmin(); }
   o.querySelector("#stWho").textContent = fs ? `Signed in as ${fs.user.email || fs.user.displayName}` : "Not signed in. Your data stays on this device.";
   const progs = o.querySelector("#stProgs");
-  ["75hard", "75soft", "custom"].forEach(k => {
-    const P = PROGRAMS[k], card = document.createElement("button"); card.className = "prog-card" + (p.program === k ? " on" : "");
+  programKeys(false).forEach(k => {
+    const P = programDef(k), card = document.createElement("button"); card.className = "prog-card" + (p.program === k ? " on" : "");
     card.innerHTML = `<b></b><span></span><i></i>`; card.querySelector("b").textContent = P.name; card.querySelector("span").textContent = P.sub; card.querySelector("i").textContent = p.program === k ? "Current" : "Switch";
     card.onclick = () => {
       if (p.program === k) return;
       card.querySelector("i").textContent = "Tap again to confirm"; card.classList.add("on");
-      card.onclick = () => { if (k === "custom") { settings.profile = {...profile(), program: "custom"}; settings.goals = []; settings.challenge = null; saveSettings(); } else applyProgram(k, true); openSettings(); };
+      card.onclick = () => { if (k === "custom") { settings.profile = {...profile(), program: "custom"}; settings.challenge = null; editingGoals = true; goalDraft = goalsList().map(g => ({...g})); if (!goalDraft.length) goalDraft.push(newGoal()); saveSettings(); closeOverlay(); render(); $("goalsPanel").scrollIntoView({behavior: "smooth"}); } else { applyProgram(k, true); openSettings(); } };
     };
     progs.appendChild(card);
   });
   const sch = o.querySelector("#stSched"); sch.checked = useSchedule();
-  sch.onchange = () => { settings.profile = {...profile(), schedule: sch.checked}; saveSettings(); };
+  sch.onchange = () => { settings.profile = {...profile(), schedule: sch.checked}; saveSettings(); if (sch.checked && !settings.blocks && profile().program !== "builder" && !Object.values(days).some(d => doneCount(d) > 0)) openRoutine(); };
+  o.querySelector("#stRoutine").onclick = () => openRoutine();
+  o.querySelector("#stWorkouts").onclick = () => openWorkouts();
   const chal = o.querySelector("#stChal");
   if (c && c.start) {
     const cs = challengeState(keyOf(new Date()));
@@ -2820,6 +2987,18 @@ function openSettings(){
     chal.querySelector("#stStartC").onclick = () => { settings.challenge = {name: "75 Days", length: 75, strict: true, start: keyOf(new Date())}; saveSettings(); openSettings(); };
     if (!goalsList().length) chal.querySelector("#stStartC").disabled = true;
   }
+  if (NATIVE && NATIVE.appLockState) {
+    const grp = o.querySelector("#stLockGrp"), lk = o.querySelector("#stLock"), note = o.querySelector("#stLockNote");
+    const show = st => {
+      lk.checked = st === "on"; lk.disabled = st === "unavailable";
+      note.textContent = st === "unavailable" ? "Set a screen lock (fingerprint, PIN or pattern) in your phone's settings first."
+        : st === "on" ? "Asks when you open ORDO, and again after 30 seconds away. Turning it off needs your fingerprint."
+        : "Off. Anyone holding your unlocked phone can open ORDO.";
+    };
+    grp.hidden = false; show(NATIVE.appLockState());
+    window.__ordoLockChanged = show;
+    lk.onchange = () => { const want = lk.checked; lk.checked = !want; NATIVE.setAppLock(want); };
+  }
   const th = (() => { try { return localStorage.getItem("ordo-theme") || "system"; } catch(e) { return "system"; } })();
   o.querySelectorAll("#stTheme button").forEach(btn => {
     btn.classList.toggle("on", btn.dataset.t === th);
@@ -2834,8 +3013,410 @@ function openSettings(){
   else if (window.__ordoSignIn) { const inb = document.createElement("button"); inb.className = "btn primary"; inb.textContent = "Sign in with Google"; inb.onclick = () => { closeOverlay(); window.__ordoSignIn(); }; ac.appendChild(inb); }
 }
 
+/* =========================================================== routine builder */
+const esc = t => String(t == null ? "" : t).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+// Blocks people can add. Taken from the Builder Day, plus more. Ids that match the Builder Day keep its sounds and links.
+const ROUTINE_LIB = [
+  {cat:"Morning", items:[
+    {id:"wake", name:"Wake", min:30, clock:true, desc:"Water, light, no phone. Read tonight's plan from last night."},
+    {id:"pray", name:"Prayer / meditation", min:15, desc:"Quiet first. Gratitude, scripture or breath work."},
+    {id:"journal", name:"Journal", min:10, desc:"Three lines: how I feel, what matters today, the win I'm chasing."},
+    {id:"plan", name:"Plan the day", min:10, desc:"Check today's top 3. Give each one a time."},
+    {id:"coldshower", name:"Cold shower", min:10, desc:"Two minutes cold at the end. Done before the excuses start."}]},
+  {cat:"Body", items:[
+    {id:"train", name:"TRAIN", min:75, five:true, desc:"Your guided workout. Log the session."},
+    {id:"walk", name:"Walk", min:30, desc:"Outside, no calls. 3–4k steps."},
+    {id:"run", name:"Run", min:40, desc:"An easy pace you could talk at. Build the base."},
+    {id:"mobility", name:"Stretch & mobility", min:15, desc:"Hips, hamstrings, shoulders. Slow breathing."},
+    {id:"mealprep", name:"Meal prep", min:45, desc:"Cook for the next two days. Protein first."}]},
+  {cat:"Work", items:[
+    {id:"build", name:"BUILD — Deep Work", min:120, five:true, desc:"Client delivery / product building / the money-making work. Phone in another room."},
+    {id:"publish", name:"PUBLISH — Create & ship", min:90, five:true, desc:"Create + ship today's content. One long-form or one video, repurposed into 2–3 short pieces."},
+    {id:"connect", name:"CONNECT — Outreach", min:45, five:true, desc:"Chase: cold DMs, emails, calls. Attract: ads and offers that pull leads in. Follow-ups first."},
+    {id:"ads", name:"Ads & attraction", min:45, desc:"Launch, check or improve one ad or offer. Read the numbers."},
+    {id:"sales", name:"Sales calls", min:60, desc:"Booked calls and follow-ups. Ask for the decision."},
+    {id:"exec", name:"Execution block", min:180, desc:"More client work, sales calls, building systems, editing."},
+    {id:"lunch", name:"Lunch + admin", min:60, desc:"Emails, invoices, small tasks batched here — never in deep work."},
+    {id:"job", name:"Day job", min:480, desc:"Do it well. Use the lunch break for one core task."}]},
+  {cat:"Mind", items:[
+    {id:"study", name:"Study", min:30, desc:"30 min reading in the craft (sales, marketing, AI, psychology of teaching)."},
+    {id:"drills", name:"Learning/skill drills", min:60, desc:"Deliberate practice on the weakest part of your craft."},
+    {id:"read", name:"Read", min:20, desc:"10+ pages of a book that makes you better."},
+    {id:"classes", name:"Classes / course", min:240, desc:"Be present. Take notes you'll actually use."},
+    {id:"language", name:"Language practice", min:20, desc:"Speak it out loud. Small daily reps."}]},
+  {cat:"Life", items:[
+    {id:"break", name:"Break", min:30, desc:"Food. Walk. No feeds."},
+    {id:"life", name:"Life", min:180, desc:"People, food, family, faith, community. You are building loyalty here too."},
+    {id:"family", name:"Call family / a friend", min:20, desc:"One real conversation. Ask, then listen."},
+    {id:"chores", name:"Chores & errands", min:45, desc:"Clean space, clear head. Batch them."},
+    {id:"church", name:"Faith / church", min:90, desc:"Show up and serve."}]},
+  {cat:"Evening", items:[
+    {id:"review", name:"REVIEW", min:15, five:true, desc:"Scorecard (did I do the core?), write tomorrow's top 3, one line of gratitude."},
+    {id:"wind", name:"Wind down", min:60, desc:"No screens after 21:30."},
+    {id:"sleep", name:"Sleep", min:420, desc:"Excellence is a sleep-powered game. 7+ hours, non-negotiable."}]},
+];
+const libItem = id => { for (const c of ROUTINE_LIB) { const x = c.items.find(i => i.id === id); if (x) return x; } return null; };
+const tb = (id, s, e, extra) => { const L = libItem(id); return {id, s, e, name: L.name, desc: L.desc, ...(L.five ? {five: true} : {}), ...(L.clock ? {clock: true} : {}), ...(extra || {})}; };
+const DAY_TEMPLATES = {
+  builder: {name: "Builder Day", sub: "14 blocks · the Five", blocks: () => DEFAULT_BLOCKS.map(b => ({...b}))},
+  ninefive: {name: "9-to-5 builder", sub: "Job by day, build at night", blocks: () => [
+    tb("wake", "05:30", "06:00"), tb("train", "06:00", "07:00"), tb("job", "08:00", "17:00"), tb("connect", "12:30", "13:00"),
+    tb("life", "17:30", "18:30"), tb("build", "18:30", "20:00"), tb("publish", "20:00", "21:00"), tb("review", "21:15", "21:30"),
+    tb("wind", "21:30", "22:30"), tb("sleep", "22:30", "05:30")]},
+  student: {name: "Student", sub: "Classes, study, a side build", blocks: () => [
+    tb("wake", "06:00", "06:30"), tb("train", "06:30", "07:30"), tb("classes", "08:00", "14:00"), tb("break", "14:00", "15:00"),
+    tb("study", "15:00", "17:00", {five: true, desc: "Two focused hours on today's classes. Phone away."}), tb("build", "17:30", "19:00"),
+    tb("life", "19:00", "21:00"), tb("review", "21:00", "21:15"), tb("wind", "21:30", "22:30"), tb("sleep", "22:30", "06:00")]},
+  blank: {name: "Blank", sub: "Just wake and sleep", blocks: () => [tb("wake", "06:00", "06:30"), tb("sleep", "22:30", "06:00")]},
+};
+const addMins = (t, m) => clockFmt(mins(t) + m);
+function sortRoutine(list){
+  const w = list.find(b => b.id === "wake"), base = w ? mins(w.s) : 240;
+  return list.slice().sort((a, b) => ((mins(a.s) - base + 1440) % 1440) - ((mins(b.s) - base + 1440) % 1440));
+}
+let rDraft = [], rAfter = null;
+function openRoutine(after){
+  rDraft = sortRoutine((Array.isArray(settings.blocks) && settings.blocks.length ? settings.blocks : DEFAULT_BLOCKS).map(b => ({...b})));
+  rAfter = after || null;
+  openOverlay(); drawRoutine();
+}
+function drawRoutine(){
+  const o = ovl(), core = rDraft.filter(b => b.five).length;
+  o.innerHTML = `<div class="in"><div class="bar"><span class="prog">Your routine</span><button class="close">✕ Close</button></div>
+    <h2 class="exname">Build your day</h2>
+    <p class="beat">Start from a template, then add blocks from the library or create your own. Star ★ the blocks that make your core: they're your daily non-negotiables, scored, streaked and nagged.</p>
+    <div class="rgtitle">Start from</div><div class="tpls"></div>
+    <div class="rgtitle">Your day · ${rDraft.length} blocks · ${core ? `${NUMW[core] || core + " core"} starred` : "none starred"}</div><div class="rlist"></div>
+    <button class="btn block" id="rNew">+ Create your own block</button>
+    <div class="rgtitle">Library · tap to add</div><div class="lib"></div>
+    <div class="savebar"><button class="btn primary" id="rSave">Save routine</button><button class="btn" id="rCancel">Cancel</button></div></div>`;
+  o.querySelector(".close").onclick = o.querySelector("#rCancel").onclick = () => { closeOverlay(); render(); };
+  const tp = o.querySelector(".tpls");
+  Object.entries(DAY_TEMPLATES).forEach(([k, T]) => {
+    const c = document.createElement("button"); c.className = "tpl"; c.innerHTML = `<b>${esc(T.name)}</b><span>${esc(T.sub)}</span>`;
+    c.onclick = () => { rDraft = sortRoutine(T.blocks()); drawRoutine(); toast(`${T.name} loaded. Change anything, then Save.`); };
+    tp.appendChild(c);
+  });
+  const list = o.querySelector(".rlist");
+  rDraft.forEach((b, i) => {
+    const r = document.createElement("div"); r.className = "rrow";
+    r.innerHTML = `<input class="rn" maxlength="40" placeholder="Block name" aria-label="Block name"><button class="star" aria-label="Core block">★</button><button class="x" aria-label="Remove">✕</button>
+      <input class="rs" type="time" aria-label="Starts"><input class="re" type="time" aria-label="Ends"><input class="rd" maxlength="160" placeholder="What happens in this block" aria-label="Description">`;
+    const [rn, rs, re, rd] = ["rn", "rs", "re", "rd"].map(c => r.querySelector("." + c));
+    rn.value = b.name; rs.value = b.s; re.value = b.e; rd.value = b.desc || "";
+    rn.oninput = () => { b.name = rn.value; }; rd.oninput = () => { b.desc = rd.value; };
+    rs.onchange = () => { if (rs.value) { const len = slotLen(b); b.s = rs.value; b.e = addMins(rs.value, len); rDraft = sortRoutine(rDraft); drawRoutine(); } };
+    re.onchange = () => { if (re.value) b.e = re.value; };
+    const st = r.querySelector(".star"); st.setAttribute("aria-pressed", !!b.five); st.title = b.five ? "Core block (scored and nagged)" : "Make this a core block";
+    st.onclick = () => { b.five = !b.five; if (!b.five) delete b.five; drawRoutine(); };
+    r.querySelector(".x").onclick = () => { rDraft.splice(i, 1); drawRoutine(); };
+    list.appendChild(r);
+  });
+  const nextStart = () => { const awake = rDraft.filter(b => b.id !== "sleep"); return awake.length ? awake[awake.length - 1].e : "07:00"; };
+  o.querySelector("#rNew").onclick = () => {
+    const s0 = nextStart(); rDraft.push({id: "b" + Date.now().toString(36), s: s0, e: addMins(s0, 60), name: "", desc: ""});
+    rDraft = sortRoutine(rDraft); drawRoutine();
+    const empty = [...ovl().querySelectorAll(".rn")].find(x => !x.value); if (empty) { empty.focus(); empty.scrollIntoView({block: "center"}); }
+  };
+  const lib = o.querySelector(".lib");
+  ROUTINE_LIB.forEach(c => {
+    const box = document.createElement("div"); box.className = "libcat"; box.innerHTML = `<h4>${c.cat}</h4><div class="chips2"></div>`;
+    c.items.forEach(it => {
+      const have = rDraft.some(b => b.id === it.id), btn = document.createElement("button");
+      btn.className = "chipbtn"; btn.disabled = have;
+      btn.innerHTML = `${have ? "✓" : "+"} ${esc(it.name)}${it.five ? " ★" : ""}<small>${fmt(it.min)}</small>`;
+      btn.onclick = () => { const s0 = it.id === "wake" ? "05:00" : it.id === "sleep" ? "22:00" : nextStart(); rDraft.push(tb(it.id, s0, addMins(s0, it.min))); rDraft = sortRoutine(rDraft); drawRoutine(); toast(`Added ${it.name} at ${s0}. Adjust the time if you need to.`); };
+      box.querySelector(".chips2").appendChild(btn);
+    });
+    lib.appendChild(box);
+  });
+  o.querySelector("#rSave").onclick = () => {
+    const ok = rDraft.filter(b => (b.name || "").trim() && /^\d\d:\d\d$/.test(b.s) && /^\d\d:\d\d$/.test(b.e));
+    if (!ok.length) return toast("Add at least one block with a name and times.");
+    settings.blocks = sortRoutine(ok.map(b => ({...b, name: b.name.trim(), desc: (b.desc || "").trim()})));
+    settings.profile = {...profile(), schedule: true};
+    saveSettings(); closeOverlay(); render();
+    toast("Routine saved."); if (rAfter) { const f = rAfter; rAfter = null; f(); }
+  };
+}
+
+/* =========================================================== workout sets */
+const AREAS = ["Upper body", "Legs & glutes", "Core", "Back", "Stretch", "Your own"];
+function exLibrary(){
+  const full = ((settings.workouts || {}).full || {}).items || [];
+  const lib = ROUTINE.map(r => { const o = full.find(x => x.id === r.id); return {...r, target: o ? o.target : r.target}; });
+  Object.values(settings.workouts || {}).forEach(w => (w.items || []).forEach(r => {
+    if (!lib.some(x => x.id === r.id) && !["mobility", "steps"].includes(r.id)) lib.push({...r, sec: r.sec || (/stretch/i.test(r.name) ? "Stretch" : "Your own")});
+  }));
+  return lib.sort((a, b) => AREAS.indexOf(a.sec) - AREAS.indexOf(b.sec));
+}
+let wDraft = null, wAfter = null;
+function openWorkouts(editKey, after){
+  if (after) wAfter = after;
+  openOverlay();
+  if (editKey !== undefined && editKey !== null) return drawWorkoutEditor(editKey);
+  drawWorkouts();
+}
+function finishWorkouts(){ closeOverlay(); render(); if (wAfter) { const f = wAfter; wAfter = null; f(); } }
+function drawWorkouts(){
+  const o = ovl(), W = workouts();
+  o.innerHTML = `<div class="in"><div class="bar"><span class="prog">Workouts</span><button class="close">✕ Done</button></div>
+    <h2 class="exname">Your workouts</h2>
+    <p class="beat">The full ORDO workout trains every area. Build your own sets from the areas you want, then choose what you train each day.</p>
+    <div class="progs" id="wsets"></div><button class="btn block" id="wNew">+ Build a new workout set</button>
+    <div class="rgtitle">Your week</div><div class="wweek"></div></div>`;
+  o.querySelector(".close").onclick = finishWorkouts;
+  const box = o.querySelector("#wsets");
+  setKeys().filter(k => k !== "rest").forEach(k => {
+    const w = W[k], items = w.items || [], areas = AREAS.filter(a => items.some(r => r.sec === a));
+    const c = document.createElement("div"); c.className = "wcard";
+    c.innerHTML = `<b></b><span></span><div class="acts"><button class="linkbtn" data-a="edit">Edit</button>${k !== "full" ? '<button class="linkbtn" data-a="del" style="color:var(--warn)">Delete</button>' : ""}</div>`;
+    c.querySelector("b").textContent = w.name;
+    c.querySelector("span").textContent = `${items.length} exercises · ~${estMin(items)} min${areas.length ? " · " + areas.join(", ") : ""}`;
+    c.querySelector("[data-a=edit]").onclick = () => drawWorkoutEditor(k);
+    const del = c.querySelector("[data-a=del]");
+    if (del) del.onclick = () => {
+      if (del.dataset.sure) { const ws = {...settings.workouts}; delete ws[k]; settings.workouts = ws; settings.split = split().map(x => x === k ? "full" : x); saveSettings(); drawWorkouts(); }
+      else { del.dataset.sure = "1"; del.textContent = "Tap to confirm"; }
+    };
+    box.appendChild(c);
+  });
+  o.querySelector("#wNew").onclick = () => drawWorkoutEditor(null);
+  const wk = o.querySelector(".wweek"), keys = setKeys();
+  DOW.forEach((dn, i) => {
+    const r = document.createElement("label"); r.className = "wday";
+    r.innerHTML = `<span>${dn}</span><select>${keys.map(k => `<option value="${k}">${esc(W[k].name)}</option>`).join("")}</select>`;
+    const se = r.querySelector("select"); se.value = W[split()[i]] ? split()[i] : "full";
+    se.onchange = () => { const sp = [...split()]; sp[i] = se.value; settings.split = sp; saveSettings(); };
+    wk.appendChild(r);
+  });
+}
+function drawWorkoutEditor(key){
+  const lib = exLibrary(), W = workouts();
+  if (!wDraft || wDraft.key !== key) {
+    const cur = key && W[key] ? W[key].items : [];
+    wDraft = {key, name: key && W[key] ? W[key].name : "", on: new Set(key ? cur.map(r => r.id) : []), target: Object.fromEntries(lib.map(r => [r.id, (cur.find(x => x.id === r.id) || r).target]))};
+  }
+  const o = ovl(), D = wDraft;
+  const sel = lib.filter(r => D.on.has(r.id));
+  o.innerHTML = `<div class="in"><div class="bar"><span class="prog">${key ? "Edit workout set" : "New workout set"}</span><button class="close">← Back</button></div>
+    <input class="wname" maxlength="40" placeholder="Name it (e.g. Legs & core)">
+    <div class="rgtitle">Areas · tap to add or remove a whole area</div><div class="chips2" id="wAreas"></div>
+    <div class="chips2"><button class="chipbtn" id="wAll">Everything</button><button class="chipbtn" id="wNone">Clear</button></div>
+    <div class="rgtitle">${sel.length} exercises · ~${estMin(sel.map(r => ({...r, target: D.target[r.id]})))} min</div><div id="wList"></div>
+    <div class="savebar"><button class="btn primary" id="wSave">Save set</button><button class="btn" id="wCancel">Cancel</button></div></div>`;
+  const back = () => { wDraft = null; drawWorkouts(); };
+  o.querySelector(".close").onclick = o.querySelector("#wCancel").onclick = back;
+  const nm = o.querySelector(".wname"); nm.value = D.name; nm.oninput = () => { D.name = nm.value; };
+  const ar = o.querySelector("#wAreas");
+  AREAS.forEach(a => {
+    const inA = lib.filter(r => r.sec === a); if (!inA.length) return;
+    const n = inA.filter(r => D.on.has(r.id)).length, b = document.createElement("button");
+    b.className = "chipbtn" + (n === inA.length ? " on" : n ? " part" : "");
+    b.innerHTML = `${esc(a)}<small>${n}/${inA.length}</small>`;
+    b.onclick = () => { const all = n === inA.length; inA.forEach(r => all ? D.on.delete(r.id) : D.on.add(r.id)); drawWorkoutEditor(key); };
+    ar.appendChild(b);
+  });
+  o.querySelector("#wAll").onclick = () => { lib.forEach(r => D.on.add(r.id)); drawWorkoutEditor(key); };
+  o.querySelector("#wNone").onclick = () => { D.on.clear(); drawWorkoutEditor(key); };
+  const list = o.querySelector("#wList"); let last = null;
+  lib.forEach(r => {
+    if (r.sec !== last) { last = r.sec; const h = document.createElement("div"); h.className = "rsec"; h.textContent = r.sec; list.appendChild(h); }
+    const on = D.on.has(r.id), row = document.createElement("div"); row.className = "wex" + (on ? "" : " off");
+    row.innerHTML = `<input type="checkbox" class="chk" aria-label="Include"><button class="rname"></button><input type="number" min="0" inputmode="numeric" aria-label="Target"><span class="u">${r.unit === "sec" ? "s" : "×"}</span>`;
+    const c = row.querySelector(".chk"); c.checked = on;
+    c.onchange = () => { c.checked ? D.on.add(r.id) : D.on.delete(r.id); drawWorkoutEditor(key); };
+    const nb = row.querySelector(".rname"); nb.textContent = r.name;
+    const exk = exKeyFor(r); if (exk) nb.onclick = () => openGuideFrom(exk, r, () => { openOverlay(); drawWorkoutEditor(key); }); else nb.onclick = () => { c.checked = !c.checked; c.onchange(); };
+    const t = row.querySelector("input[type=number]"); t.value = D.target[r.id]; t.oninput = () => { D.target[r.id] = Math.max(0, Math.round(Number(t.value) || 0)); };
+    list.appendChild(row);
+  });
+  o.querySelector("#wSave").onclick = () => {
+    const items = lib.filter(r => D.on.has(r.id)).map(r => ({...r, target: D.target[r.id]}));
+    if (!items.length) return toast("Pick at least one exercise.");
+    const k = key || "w" + Date.now().toString(36);
+    const areas = AREAS.filter(a => items.some(r => r.sec === a));
+    const name = (D.name || "").trim() || (areas.length === 1 ? areas[0] : areas.slice(0, 3).join(" + "));
+    settings.workouts = {...(settings.workouts || {}), [k]: {name, focus: areas.join(" · "), items}};
+    saveSettings(); wDraft = null; drawWorkouts(); toast(`${name} saved. Choose it for any day in Your week.`);
+  };
+}
+
+/* =========================================================== profile */
+const G_ICON_SM = '<svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
+/** Shrink a chosen photo to a 256px square JPEG (about 20 KB), so it can live in the profile itself. */
+function squarePhoto(file){
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => {
+      const S = 256, c = document.createElement("canvas"); c.width = c.height = S;
+      const k = Math.max(S / img.width, S / img.height), w = img.width * k, h = img.height * k;
+      c.getContext("2d").drawImage(img, (S - w) / 2, (S - h) / 2, w, h);
+      URL.revokeObjectURL(img.src); res(c.toDataURL("image/jpeg", .82));
+    };
+    img.onerror = () => rej(new Error("That file isn't a photo we can read."));
+    img.src = URL.createObjectURL(file);
+  });
+}
+function profileForm(box, label, done){
+  const p = profile(), me = crewFS();
+  let photo = p.photo || (me && me.user.photoURL) || "";
+  box.innerHTML = `<div class="obform"><button class="obphoto" type="button" aria-label="Choose a profile photo"></button><input type="file" accept="image/*" hidden>
+    <label class="fl" for="pfName">Name</label><input class="tx" id="pfName" maxlength="40" placeholder="First name" autocomplete="given-name">
+    <label class="fl" for="pfCity">City</label><input class="tx" id="pfCity" maxlength="40" placeholder="e.g. Enugu" autocomplete="address-level2">
+    <label class="fl" for="pfHead">What are you building?</label><input class="tx" id="pfHead" maxlength="80" placeholder="e.g. A design agency, a stronger body">
+    <button class="btn primary block" id="pfSave"></button><p class="beat" id="pfMsg"></p></div>`;
+  const pb = box.querySelector(".obphoto"), file = box.querySelector("input[type=file]");
+  const showPhoto = () => { pb.innerHTML = photo ? `<img alt="" referrerpolicy="no-referrer">` : "Add a<br>photo"; if (photo) pb.querySelector("img").src = photo; };
+  showPhoto();
+  pb.onclick = () => file.click();
+  file.onchange = async () => { const f = file.files && file.files[0]; if (!f) return; try { photo = await squarePhoto(f); showPhoto(); } catch(e) { box.querySelector("#pfMsg").textContent = e.message; } };
+  const nm = box.querySelector("#pfName"), ct = box.querySelector("#pfCity"), hd = box.querySelector("#pfHead");
+  nm.value = p.name || (me && me.user.displayName ? me.user.displayName.split(" ")[0] : ""); ct.value = p.city || ""; hd.value = p.headline || "";
+  const sv = box.querySelector("#pfSave"); sv.textContent = label;
+  sv.onclick = () => {
+    if (!nm.value.trim()) { box.querySelector("#pfMsg").textContent = "Add your name so your crew knows who you are."; nm.focus(); return; }
+    settings.profile = {...profile(), name: nm.value.trim(), city: ct.value.trim(), headline: hd.value.trim(), photo};
+    saveSettings(); crewState.last = ""; pushCrew(); done && done();
+  };
+}
+
+/* =========================================================== hosted programs (admins) */
+// Founders are always admins; they can add co-hosts in Settings → Admin. firestore.rules holds the same list.
+const FOUNDERS = ["dinduking1@gmail.com", "chimdindu@empirewords.com"];
+const hosted = {programs: {}, admins: [], unsub: null, unsubA: null};
+const myEmail = () => { const fs = crewFS(); return fs && fs.user.email ? fs.user.email.toLowerCase() : ""; };
+const isAdmin = () => !!myEmail() && (FOUNDERS.includes(myEmail()) || hosted.admins.includes(myEmail()));
+const hostedProgram = () => { const k = (settings.profile || {}).program; return k && hosted.programs[k] && hosted.programs[k].goals ? hosted.programs[k] : null; };
+const programDef = k => hosted.programs[k] ? {...(PROGRAMS[k] || {}), ...hosted.programs[k], challenge: {name: hosted.programs[k].name, length: hosted.programs[k].length || 75, strict: hosted.programs[k].strict !== false}} : PROGRAMS[k];
+const programKeys = withBuilder => [...new Set(["75hard", ...Object.keys(hosted.programs).filter(k => !hosted.programs[k].hidden)])].concat(withBuilder ? ["builder", "custom"] : ["custom"]);
+function watchHosted(){
+  const fs = crewFS(); if (!fs || hosted.unsub) return;
+  hosted.unsub = fs.db.collection("programs").onSnapshot(snap => {
+    hosted.programs = Object.fromEntries(snap.docs.map(d => [d.id, d.data()]));
+    syncHostedChallenge(); render();
+  }, () => {});
+  hosted.unsubA = fs.db.collection("config").doc("admins").onSnapshot(d => {
+    hosted.admins = ((d.exists && d.data().emails) || []).map(e => String(e).toLowerCase()); render();
+  }, () => {});
+}
+function unwatchHosted(){ if (hosted.unsub) hosted.unsub(); if (hosted.unsubA) hosted.unsubA(); hosted.unsub = hosted.unsubA = null; hosted.programs = {}; hosted.admins = []; }
+/** Keep my copy of a hosted program (name, length, rules) in step with what the hosts publish. */
+function syncHostedChallenge(){
+  const h = hostedProgram(); if (!h) return;
+  const c = settings.challenge || {}, want = {name: h.name, length: h.length || 75, strict: h.strict !== false};
+  const goalsSig = JSON.stringify(h.goals), changed = c.name !== want.name || c.length !== want.length || c.strict !== want.strict || JSON.stringify(settings.goals) !== goalsSig;
+  if (!changed) return;
+  settings.challenge = {...c, ...want, start: c.start || keyOf(new Date())};
+  settings.goals = h.goals.map(g => ({...g}));   // offline copy
+  saveSettings();
+}
+const slug = t => String(t || "").toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 24) || "p" + Date.now().toString(36);
+let admDraft = null;
+function openAdmin(editKey){
+  if (!isAdmin()) return;
+  openOverlay();
+  if (editKey) return drawProgramEditor(editKey);
+  drawAdmin();
+}
+function drawAdmin(){
+  const o = ovl(), fs = crewFS();
+  o.innerHTML = `<div class="in"><div class="bar"><span class="prog">Admin</span><button class="close">✕ Close</button></div>
+    <h2 class="exname">Programs</h2><p class="beat">Programs you publish appear for every member when they pick a program. Members on a program track exactly your rules; change them here and everyone updates.</p>
+    <div class="progs" id="admList"></div><button class="btn block" id="admNew">+ Create a program</button>
+    <div class="rgtitle">Admins</div><div id="admAdmins"></div></div>`;
+  o.querySelector(".close").onclick = () => { closeOverlay(); render(); };
+  const list = o.querySelector("#admList");
+  const keys = [...new Set(["75hard", ...Object.keys(hosted.programs)])];
+  keys.forEach(k => {
+    const h = hosted.programs[k], P = programDef(k), c = document.createElement("div"); c.className = "wcard";
+    c.innerHTML = `<b></b><span></span><div class="acts"><button class="linkbtn">Edit</button></div>`;
+    c.querySelector("b").textContent = P.name;
+    c.querySelector("span").textContent = h ? `${(h.goals || []).length} rules · ${h.length || 75} days · ${h.strict !== false ? "strict" : "forgiving"}${h.hidden ? " · hidden" : " · live"}` : "Built-in default. Edit it to publish your own version.";
+    c.querySelector("button").onclick = () => drawProgramEditor(k);
+    list.appendChild(c);
+  });
+  o.querySelector("#admNew").onclick = () => drawProgramEditor(null);
+  const ab = o.querySelector("#admAdmins");
+  const all = [...FOUNDERS.map(e => [e, true]), ...hosted.admins.filter(e => !FOUNDERS.includes(e)).map(e => [e, false])];
+  all.forEach(([e, founder]) => {
+    const r = document.createElement("div"); r.className = "fev"; r.innerHTML = `<span></span><span></span>`;
+    r.firstChild.textContent = e;
+    if (founder) r.lastChild.textContent = "founder";
+    else { const x = document.createElement("button"); x.className = "linkbtn"; x.style.color = "var(--warn)"; x.textContent = "Remove"; x.onclick = () => saveAdmins(hosted.admins.filter(a => a !== e)); r.lastChild.appendChild(x); }
+    ab.appendChild(r);
+  });
+  const add = document.createElement("div"); add.className = "crewjoin";
+  add.innerHTML = `<input class="tx ed" type="email" placeholder="Co-host's Google email" autocomplete="off"><button class="btn">Add</button>`;
+  add.querySelector("button").onclick = () => { const e = add.querySelector("input").value.trim().toLowerCase(); if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) saveAdmins([...new Set([...hosted.admins, e])]); else toast("Enter their Google email."); };
+  ab.appendChild(add);
+  function saveAdmins(emails){
+    fs.db.collection("config").doc("admins").set({emails, updated: firebase.firestore.FieldValue.serverTimestamp()})
+      .then(() => { hosted.admins = emails; drawAdmin(); toast("Admins updated."); }).catch(e => toast("Couldn't save: " + e.message));
+  }
+}
+function drawProgramEditor(key){
+  const P = key ? programDef(key) : null;
+  if (!admDraft || admDraft.key !== key) admDraft = {key, name: P ? P.name : "", sub: P ? P.sub || "" : "", length: P ? (P.length || (P.challenge || {}).length || 75) : 75,
+    strict: P ? (P.strict !== undefined ? P.strict !== false : !!(P.challenge || {}).strict) : true, hidden: P ? !!P.hidden : false, goals: P ? (P.goals || []).map(g => ({...g})) : []};
+  const D = admDraft, o = ovl();
+  o.innerHTML = `<div class="in"><div class="bar"><span class="prog">${key ? "Edit program" : "New program"}</span><button class="close">← Back</button></div>
+    <input class="wname" id="apName" maxlength="40" placeholder="Program name, e.g. 75 Hard">
+    <label class="fl" for="apSub">What it is (members see this when they choose)</label><input class="tx" id="apSub" maxlength="240">
+    <div class="setgrp"><label class="toggle"><span>Strict: a missed rule sends them back to Day 1</span><input type="checkbox" id="apStrict"></label>
+      <label class="toggle"><span>Hidden from members (draft)</span><input type="checkbox" id="apHidden"></label>
+      <label class="fl" for="apLen">Length in days</label><input class="tx" id="apLen" type="number" min="1" max="365" inputmode="numeric" style="max-width:120px"></div>
+    <div class="rgtitle">Daily rules · ${D.goals.length}</div><div id="apRules"></div>
+    <button class="btn block" id="apAdd">+ Write a rule</button>
+    <div class="libcat"><h4>Quick add</h4><div class="chips2" id="apLib"></div></div>
+    <div class="savebar"><button class="btn primary" id="apSave">Publish</button><button class="btn" id="apCancel">Cancel</button></div></div>`;
+  const back = () => { admDraft = null; drawAdmin(); };
+  o.querySelector(".close").onclick = o.querySelector("#apCancel").onclick = back;
+  const f = (id, prop, num) => { const e = o.querySelector(id); e.value = D[prop]; e.oninput = () => { D[prop] = num ? Number(e.value) || 0 : e.value; }; };
+  f("#apName", "name"); f("#apSub", "sub"); f("#apLen", "length", true);
+  const st = o.querySelector("#apStrict"); st.checked = D.strict; st.onchange = () => { D.strict = st.checked; };
+  const hd = o.querySelector("#apHidden"); hd.checked = D.hidden; hd.onchange = () => { D.hidden = hd.checked; };
+  const rules = o.querySelector("#apRules");
+  D.goals.forEach((g, i) => {
+    const r = document.createElement("div"); r.className = "admrow";
+    r.innerHTML = `<input class="an" maxlength="60" placeholder="Rule, e.g. Deep work"><input class="ao" maxlength="120" placeholder="Short explanation (optional)">
+      <select><option value="check">Done / not</option><option value="count">Count</option><option value="time">Minutes</option></select>
+      <input class="at" type="number" min="0" step="any" inputmode="decimal" placeholder="target"><input class="au" maxlength="10" placeholder="unit"><button class="x" aria-label="Remove">✕</button>
+      ${g.block ? `<span class="lk">Linked to the ${esc(shortOf(g.block))} block${g.workout ? " · opens the guided workout" : ""}</span>` : ""}`;
+    const [an, ao, at, au] = ["an", "ao", "at", "au"].map(c => r.querySelector("." + c)), ty = r.querySelector("select");
+    an.value = g.name || ""; ao.value = g.note || ""; ty.value = g.type || "check"; at.value = g.type === "check" ? "" : (g.target ?? ""); au.value = g.unit || "";
+    at.disabled = au.disabled = ty.value === "check";
+    an.oninput = () => { g.name = an.value; }; ao.oninput = () => { g.note = ao.value; };
+    ty.onchange = () => { g.type = ty.value; if (g.type === "time") { g.unit = "min"; g.step = 5; } if (g.type !== "check" && !(g.target > 0)) g.target = g.type === "time" ? 30 : 1; drawProgramEditor(key); };
+    at.oninput = () => { g.target = Number(at.value) || 0; }; au.oninput = () => { g.unit = au.value; };
+    r.querySelector(".x").onclick = () => { D.goals.splice(i, 1); drawProgramEditor(key); };
+    rules.appendChild(r);
+  });
+  o.querySelector("#apAdd").onclick = () => { D.goals.push(newGoal()); drawProgramEditor(key); };
+  const lib = o.querySelector("#apLib");
+  GOAL_LIB.forEach(t => {
+    const have = D.goals.some(g => g.id === t.id), c = document.createElement("button");
+    c.className = "chipbtn"; c.disabled = have; c.textContent = (have ? "✓ " : "+ ") + t.name;
+    c.onclick = () => { D.goals.push({...t}); drawProgramEditor(key); };
+    lib.appendChild(c);
+  });
+  o.querySelector("#apSave").onclick = () => {
+    const goals = D.goals.filter(g => (g.name || "").trim()).map(g => ({...g, name: g.name.trim(), note: (g.note || "").trim()}));
+    if (!D.name.trim()) return toast("Give the program a name.");
+    if (!goals.length) return toast("Add at least one rule.");
+    const k = key || slug(D.name), fs = crewFS();
+    const doc = {name: D.name.trim(), sub: D.sub.trim(), tag: D.strict ? "Strict · hosted" : "Hosted", length: Math.max(1, Math.min(365, Math.round(D.length) || 75)),
+      strict: D.strict, hidden: D.hidden, goals, by: myEmail(), updated: firebase.firestore.FieldValue.serverTimestamp()};
+    fs.db.collection("programs").doc(k).set(doc)
+      .then(() => { admDraft = null; drawAdmin(); toast(`${doc.name} published. Members on it update now.`); })
+      .catch(e => toast("Couldn't publish: " + e.message));
+  };
+}
+
 /* ---------- boot ---------- */
 $("brandMark").innerHTML = BRAND_SVG;
+$("editRoutine").onclick = () => openRoutine();
+$("editWorkouts").onclick = () => openWorkouts();
 $("settingsBtn").onclick = openSettings;
 lsLoad();
 render();
@@ -2874,9 +3455,10 @@ const G_ICON = '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107"
     store = null;
     window.__ordo = u ? {db, uid: u.uid, user: u} : null;
     if (crewState.unsub) { crewState.unsub(); crewState.unsub = null; crewState.code = null; }
+    unwatchHosted();
     if (!u) {
       LS_KEY = "builder-day-v2"; lsLoad(); render();
-      if (!Object.keys(days).length && !settings.profile && !sessionStorage.getItem("ordo-local")) onboarding("welcome");
+      if (!sessionStorage.getItem("ordo-local")) onboarding("welcome");
       $("storeNote").textContent = "Saved in this browser only. Sign in to sync across your devices.";
       const b = document.createElement("button"); b.className = "btn-g"; b.innerHTML = G_ICON + "<span>Sign in with Google</span>";
       b.onclick = signIn;
@@ -2894,9 +3476,9 @@ const G_ICON = '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107"
       // a brand-new account goes through setup; an existing one (with days already logged) keeps its schedule
       if (!settings.profile) {
         if (Object.keys(days).length || (local && local.days && Object.keys(local.days).length)) { settings.profile = {name: (u.displayName || "").split(" ")[0], schedule: true, program: "builder"}; saveSettings(); }
-        else setTimeout(() => onboarding("name"), 50);
+        else setTimeout(() => onboarding("profile"), 50);
       }
-      watchCrew(); watchFeed(); renderCrew(); registerCrewDevice();
+      watchCrew(); watchFeed(); renderCrew(); registerCrewDevice(); watchHosted();
       // First sign-in on a device that was used signed-out: carry those days into an empty account
       if (snap.empty && local && local.days && Object.keys(local.days).length) {
         for (const k in local.days) { days[k] = norm(local.days[k]); store.put("day-" + k, days[k]); }

@@ -179,6 +179,7 @@ public class StartActivity extends Activity {
 
     private void unlock() {
         if (unlocking || unlocked) return;
+        if (!AppLock.enabled(this)) { onUnlocked(); return; }   // app lock switched off in Settings
         android.app.KeyguardManager km = getSystemService(android.app.KeyguardManager.class);
         if (km == null || !km.isDeviceSecure()) {
             // No fingerprint, PIN, pattern or password on this phone, so there's nothing to check against

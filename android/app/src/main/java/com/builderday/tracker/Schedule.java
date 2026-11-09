@@ -1,21 +1,28 @@
 package com.builderday.tracker;
 
+import android.content.Context;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-/** The Full-Time Builder Day. Keep in step with BLOCKS in index.html and worker.js. */
+/** The person's timed routine. Defaults to the Full-Time Builder Day; the web app sends its own via setRoutine. */
 final class Schedule {
     static final class Block {
         final String id, start, end, name, desc;
-        Block(String id, String start, String end, String name, String desc) {
-            this.id = id; this.start = start; this.end = end; this.name = name; this.desc = desc;
+        final boolean five;
+        Block(String id, String start, String end, String name, String desc) { this(id, start, end, name, desc, Nag.DEFAULT_FIVE.contains(id)); }
+        Block(String id, String start, String end, String name, String desc, boolean five) {
+            this.id = id; this.start = start; this.end = end; this.name = name; this.desc = desc; this.five = five;
         }
         int startMin() { return toMin(start); }
         int endMin() { return toMin(end); }
     }
 
-    static final Block[] BLOCKS = {
+    static final Block[] DEFAULTS = {
         new Block("wake",    "05:00", "05:30", "Wake", "Water, light, no phone. Read tonight's plan from last night."),
         new Block("train",   "05:30", "06:45", "TRAIN", "Full body + core. Log your reps."),
         new Block("study",   "06:45", "07:15", "Study", "30 min reading in the craft."),
@@ -32,6 +39,37 @@ final class Schedule {
         new Block("sleep",   "22:00", "05:00", "Sleep", "7+ hours, non-negotiable."),
     };
 
+    static volatile Block[] BLOCKS = DEFAULTS;
+
+    /** Load the routine the web app saved (falls back to the default day). Called from App.onCreate. */
+    static void load(Context ctx) {
+        String j = ctx.getSharedPreferences("schedule", Context.MODE_PRIVATE).getString("routine", null);
+        if (j == null) { BLOCKS = DEFAULTS; return; }
+        try {
+            JSONArray a = new JSONArray(j);
+            List<Block> l = new ArrayList<>();
+            for (int i = 0; i < a.length(); i++) {
+                JSONObject o = a.getJSONObject(i);
+                String s = o.getString("s"), e = o.getString("e");
+                if (!s.matches("\\d\\d:\\d\\d") || !e.matches("\\d\\d:\\d\\d")) continue;
+                l.add(new Block(o.getString("id"), s, e, o.optString("name", ""), o.optString("desc", ""), o.optBoolean("five", false)));
+            }
+            BLOCKS = l.isEmpty() ? DEFAULTS : l.toArray(new Block[0]);
+        } catch (Exception ex) { BLOCKS = DEFAULTS; }
+    }
+
+    static void save(Context ctx, String json) {
+        ctx.getSharedPreferences("schedule", Context.MODE_PRIVATE).edit().putString("routine", json).apply();
+        load(ctx);
+    }
+
+    /** The block with this id, or null if the routine no longer has it. */
+    static Block find(String id) {
+        if (id == null) return null;
+        for (Block b : BLOCKS) if (b.id.equals(id)) return b;
+        return null;
+    }
+
     static final int WARN_MINUTES = 5;
 
     /** One thing that happens at a time of day. */
@@ -45,6 +83,7 @@ final class Schedule {
     static List<Event> dailyEvents() {
         List<Event> out = new ArrayList<>();
         for (Block b : BLOCKS) {
+            if (b.startMin() == b.endMin()) continue;
             if (!b.id.equals("wake")) out.add(new Event(b.startMin(), Event.START, b));
             if (!b.id.equals("sleep")) out.add(new Event(b.endMin() - WARN_MINUTES, Event.ENDING, b));
         }
@@ -52,8 +91,8 @@ final class Schedule {
     }
 
     static Block byId(String id) {
-        for (Block b : BLOCKS) if (b.id.equals(id)) return b;
-        return BLOCKS[0];
+        Block b = find(id);
+        return b != null ? b : BLOCKS[0];
     }
 
     static int indexOf(String id) {

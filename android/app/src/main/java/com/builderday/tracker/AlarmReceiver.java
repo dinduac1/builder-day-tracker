@@ -17,12 +17,14 @@ public class AlarmReceiver extends BroadcastReceiver {
         if (!Scheduler.enabled(ctx) && !Nag.KIND_ACK.equals(kind)) return;   // timed schedule switched off
 
         if (Scheduler.KIND_WAKE.equals(kind)) {
+            if (Schedule.find("wake") == null) return;   // the routine has no wake-up any more
             if (fresh) ctx.startForegroundService(new Intent(ctx, WakeService.class));
             Scheduler.scheduleWake(ctx, Schedule.nextAt(System.currentTimeMillis(), Schedule.byId("wake").startMin()));
             return;
         }
 
-        Schedule.Block b = Schedule.byId(intent.getStringExtra(Scheduler.EXTRA_BLOCK));
+        Schedule.Block b = Schedule.find(intent.getStringExtra(Scheduler.EXTRA_BLOCK));
+        if (b == null) { Scheduler.scheduleNextReminder(ctx); return; }   // block was removed from the routine
 
         if (Nag.KIND_ACK.equals(kind)) {            // "Starting now" tapped
             Nag.markStarted(ctx, b.id);
@@ -46,14 +48,14 @@ public class AlarmReceiver extends BroadcastReceiver {
                         Schedule.WARN_MINUTES + " min left: " + b.name,
                         "Ends at " + b.end + ". Log it in the tracker before you move on.");
             } else if (b.id.equals("train") && Schedule.isSunday(at)) {
-                Notifs.post(ctx, 1000 + idx, Notifs.channelFor(b.id), "Rest day · " + b.start,
+                Notifs.post(ctx, 1000 + idx, Notifs.channelFor(ctx, b.id), "Rest day · " + b.start,
                         "Mobility and a walk. Recover for Monday.");
             } else if (Nag.isFive(b.id)) {
                 // a Five block: show it with "Starting now", and book the first follow-up
-                Notifs.postWithStart(ctx, 1000 + idx, Notifs.channelFor(b.id), b.name + " · " + b.start, b.desc, b.id);
+                Notifs.postWithStart(ctx, 1000 + idx, Notifs.channelFor(ctx, b.id), b.name + " · " + b.start, b.desc, b.id);
                 if (!Nag.started(ctx, b.id)) Nag.schedule(ctx, b.id, 1, at + Nag.EVERY_MIN * 60_000L);
             } else {
-                Notifs.post(ctx, 1000 + idx, Notifs.channelFor(b.id), b.name + " · " + b.start, b.desc);
+                Notifs.post(ctx, 1000 + idx, Notifs.channelFor(ctx, b.id), b.name + " · " + b.start, b.desc);
             }
         }
         Scheduler.scheduleNextReminder(ctx);

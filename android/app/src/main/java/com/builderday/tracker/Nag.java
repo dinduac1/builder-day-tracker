@@ -17,14 +17,14 @@ import java.util.Locale;
  * each follow-up re-notifies with an urgent sound, up to MAX_NAGS times, and never after the block ends.
  */
 final class Nag {
-    static final String[] FIVE = {"train", "build", "publish", "connect", "review"};
+    static final java.util.List<String> DEFAULT_FIVE = java.util.Arrays.asList("train", "build", "publish", "connect", "review");
     static final int EVERY_MIN = 10, MAX_NAGS = 3;
     static final String KIND_NAG = "nag", KIND_ACK = "ack", EXTRA_COUNT = "count";
     private static final int RC_NAG = 3;
 
     static boolean isFive(String id) {
-        for (String f : FIVE) if (f.equals(id)) return true;
-        return false;
+        Schedule.Block b = Schedule.find(id);
+        return b != null && b.five;
     }
 
     private static String today() { return new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date()); }

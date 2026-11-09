@@ -18,16 +18,26 @@ final class Notifs {
     static final String CH_VERSION = "v1";
     static final String CH_WARN = "warn_" + CH_VERSION, CH_WAKE = "wake_" + CH_VERSION, CH_NAG = "nag_" + CH_VERSION, CH_CREW = "crew_" + CH_VERSION;
 
-    static String channelFor(String blockId) { return "block_" + blockId + "_" + CH_VERSION; }
+    static final String CH_OTHER = "block_other_" + CH_VERSION;
+    /** Blocks from the original day have their own sound; blocks people create share one channel. */
+    static boolean hasSound(Context ctx, String blockId) {
+        return ctx.getResources().getIdentifier("s_" + blockId, "raw", ctx.getPackageName()) != 0;
+    }
+    static String channelFor(Context ctx, String blockId) { return hasSound(ctx, blockId) ? "block_" + blockId + "_" + CH_VERSION : CH_OTHER; }
 
     static void createChannels(Context ctx) {
         NotificationManager nm = ctx.getSystemService(NotificationManager.class);
         AudioAttributes notif = new AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build();
+        NotificationChannel other = new NotificationChannel(CH_OTHER, "Your routine blocks", NotificationManager.IMPORTANCE_HIGH);
+        other.setDescription("Blocks you added to your routine");
+        other.setSound(sound(ctx, "s_exec"), notif);
+        other.enableVibration(true);
+        nm.createNotificationChannel(other);
         for (Schedule.Block b : Schedule.BLOCKS) {
-            if (b.id.equals("wake")) continue;
-            NotificationChannel ch = new NotificationChannel(channelFor(b.id), b.name.split(" — ")[0], NotificationManager.IMPORTANCE_HIGH);
+            if (b.id.equals("wake") || !hasSound(ctx, b.id)) continue;
+            NotificationChannel ch = new NotificationChannel(channelFor(ctx, b.id), b.name.split(" — ")[0], NotificationManager.IMPORTANCE_HIGH);
             ch.setDescription("Starts at " + b.start);
             ch.setSound(sound(ctx, "s_" + b.id), notif);
             ch.enableVibration(true);

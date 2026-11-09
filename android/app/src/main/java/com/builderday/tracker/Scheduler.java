@@ -34,7 +34,9 @@ final class Scheduler {
     static void scheduleAll(Context ctx) {
         if (!enabled(ctx)) return;
         scheduleNextReminder(ctx);
-        scheduleWake(ctx, Schedule.nextAt(System.currentTimeMillis(), Schedule.byId("wake").startMin()));
+        Schedule.Block w = Schedule.find("wake");
+        if (w != null) scheduleWake(ctx, Schedule.nextAt(System.currentTimeMillis(), w.startMin()));
+        else ctx.getSystemService(AlarmManager.class).cancel(PendingIntent.getBroadcast(ctx, RC_WAKE, new Intent(ctx, AlarmReceiver.class), PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE));
     }
 
     static void scheduleNextReminder(Context ctx) {

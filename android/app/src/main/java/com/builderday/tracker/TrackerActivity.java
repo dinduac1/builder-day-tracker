@@ -56,6 +56,9 @@ public class TrackerActivity extends Activity {
     private View fullscreenView;
     private WebChromeClient.CustomViewCallback fullscreenCallback;
     private long backgroundSince = 0;
+    private static final int RC_PICK = 7;
+    private android.webkit.ValueCallback<Uri[]> pickCallback;   // profile photo picker
+    private boolean picking = false;                           // the picker isn't "leaving the app": no relock
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -100,6 +103,14 @@ public class TrackerActivity extends Activity {
                 view.setBackgroundColor(Color.BLACK);
             }
             @Override public void onHideCustomView() { exitFullscreen(); }
+            // <input type="file">: profile photos
+            @Override public boolean onShowFileChooser(WebView v, android.webkit.ValueCallback<Uri[]> cb, FileChooserParams params) {
+                if (pickCallback != null) pickCallback.onReceiveValue(null);
+                pickCallback = cb;
+                try { picking = true; startActivityForResult(params.createIntent(), RC_PICK); }
+                catch (Exception e) { picking = false; pickCallback = null; cb.onReceiveValue(null); return false; }
+                return true;
+            }
         });
 
         // push token for crew alerts (stored for the page to register with the crew)
@@ -120,6 +131,14 @@ public class TrackerActivity extends Activity {
         fullscreenView = null;
         if (fullscreenCallback != null) fullscreenCallback.onCustomViewHidden();
         fullscreenCallback = null;
+    }
+
+    @Override
+    protected void onActivityResult(int req, int res, Intent data) {
+        super.onActivityResult(req, res, data);
+        if (req != RC_PICK || pickCallback == null) return;
+        pickCallback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(res, data));
+        pickCallback = null;
     }
 
     @Override
@@ -146,7 +165,8 @@ public class TrackerActivity extends Activity {
     @Override
     protected void onRestart() {
         super.onRestart();
-        if (backgroundSince > 0 && SystemClock.elapsedRealtime() - backgroundSince > RELOCK_AFTER_MS && AppLock.isAvailable(this)) {
+        if (picking) { picking = false; backgroundSince = 0; return; }
+        if (backgroundSince > 0 && SystemClock.elapsedRealtime() - backgroundSince > RELOCK_AFTER_MS && AppLock.enabled(this) && AppLock.isAvailable(this)) {
             root.setVisibility(View.INVISIBLE);   // nothing readable behind the prompt
             AppLock.prompt(this, ok -> {
                 if (ok) root.setVisibility(View.VISIBLE);
@@ -237,6 +257,24 @@ public class TrackerActivity extends Activity {
             Notifs.postCrew(getApplicationContext(), Math.abs(body.hashCode()) % 100000 + 10000, title, body);
         }
         @JavascriptInterface public void setScheduleEnabled(boolean on) { Scheduler.setEnabled(getApplicationContext(), on); }
+        /** "on", "off", or "unavailable" (no screen lock set on the phone). */
+        @JavascriptInterface public String appLockState() {
+            if (!AppLock.isAvailable(TrackerActivity.this)) return "unavailable";
+            return AppLock.enabled(TrackerActivity.this) ? "on" : "off";
+        }
+        /** Switching the lock off needs the fingerprint / screen lock first; the page hears back via __ordoLockChanged. */
+        @JavascriptInterface public void setAppLock(boolean on) {
+            runOnUiThread(() -> {
+                if (on) { AppLock.setEnabled(TrackerActivity.this, true); reportLock(); return; }
+                AppLock.prompt(TrackerActivity.this, ok -> { if (ok) AppLock.setEnabled(TrackerActivity.this, false); reportLock(); });
+            });
+        }
+        @JavascriptInterface public void setRoutine(String json) {
+            android.content.Context c = getApplicationContext();
+            Schedule.save(c, json);
+            Notifs.createChannels(c);
+            Scheduler.scheduleAll(c);
+        }
         @JavascriptInterface public String fcmToken() {
             return getSharedPreferences(CrewMessagingService.PREFS, MODE_PRIVATE).getString(CrewMessagingService.KEY_TOKEN, "");
         }
@@ -244,5 +282,10 @@ public class TrackerActivity extends Activity {
         @JavascriptInterface public void blockStarted(String blockId) {
             if (Nag.isFive(blockId)) Nag.markStarted(getApplicationContext(), blockId);
         }
+    }
+
+    private void reportLock() {
+        String st = !AppLock.isAvailable(this) ? "unavailable" : AppLock.enabled(this) ? "on" : "off";
+        web.evaluateJavascript("window.__ordoLockChanged && window.__ordoLockChanged('" + st + "')", null);
     }
 }

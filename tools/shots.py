@@ -42,6 +42,11 @@ SCEN = {
   "program":     ("dark", "blank", 1100, "onboarding('program')"),
   "settings":    ("dark", "friend", 1500, "openSettings()"),
   "workout":     ("dark", "friend", 1300, "startWorkout(repDefs('train', keyOf(new Date())))"),
+  "routine":     ("dark", "me", 3000, "openRoutine()"),
+  "workouts":    ("dark", "me", 1500, "openWorkouts()"),
+  "wedit":       ("dark", "me", 2400, "openWorkouts(null)"),
+  "goaledit":    ("dark", "friend", 1700, "editingGoals=true;goalDraft=goalsList().map(g=>({...g}));render()"),
+  "program2":    ("light", "blank", 1100, "onboarding('program')"),
 }
 
 def shoot(name):

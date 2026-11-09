@@ -12,6 +12,14 @@ import android.os.CancellationSignal;
 final class AppLock {
     interface Result { void done(boolean unlocked); }
 
+    /** The person's choice in ORDO settings. On by default. */
+    static boolean enabled(Context ctx) {
+        return ctx.getSharedPreferences("lock", Context.MODE_PRIVATE).getBoolean("on", true);
+    }
+    static void setEnabled(Context ctx, boolean on) {
+        ctx.getSharedPreferences("lock", Context.MODE_PRIVATE).edit().putBoolean("on", on).apply();
+    }
+
     /** True when the phone has a screen lock to check against (and Android can show the prompt). */
     static boolean isAvailable(Context ctx) {
         KeyguardManager km = ctx.getSystemService(KeyguardManager.class);

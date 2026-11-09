@@ -7,13 +7,13 @@ const SITE = "https://builder-day-tracker.dinduking1.workers.dev";
 const VAPID_PUBLIC = "BNMbHPCzDjxThTtHX7eY2MTrtAf3vEYP08NEWrVxYOcnR_XsdNGejmcbzlyHrKBKqhJuB5pIpbeVDp1cJLuVM4k";
 
 // Android app (android/) signing certificate. Must match android/builderday.jks.
-const ASSET_LINKS = [{
+const CERT = ["FA:B1:C5:CA:65:A1:77:4F:35:E5:63:FF:B8:C5:2E:F3:B8:92:4A:12:C4:C7:BA:B3:38:61:9C:DF:46:12:33:B1"];
+const ASSET_LINKS = ["com.ordo.app", "com.builderday.tracker"].map(package_name => ({
   relation: ["delegate_permission/common.handle_all_urls"],
-  target: {namespace: "android_app", package_name: "com.builderday.tracker",
-    sha256_cert_fingerprints: ["FA:B1:C5:CA:65:A1:77:4F:35:E5:63:FF:B8:C5:2E:F3:B8:92:4A:12:C4:C7:BA:B3:38:61:9C:DF:46:12:33:B1"]},
-}];
+  target: {namespace: "android_app", package_name, sha256_cert_fingerprints: CERT},
+}));
 
-// Keep in step with BLOCKS in index.html
+// The default day. Devices send their own routine when they subscribe; this is the fallback.
 const BLOCKS = [
   {id:"wake",    s:"05:00", e:"05:30", name:"Wake", desc:"Water, light, no phone. Read tonight's plan from last night."},
   {id:"train",   s:"05:30", e:"06:45", name:"TRAIN", desc:"Gym. Log the session."},
@@ -59,8 +59,10 @@ async function api(req, env, url) {
     const sub = body.subscription;
     if (!sub || typeof sub.endpoint !== "string" || !sub.endpoint.startsWith("https://") || !sub.keys || !sub.keys.p256dh || !sub.keys.auth)
       return json({error: "Invalid subscription"}, 400);
-    const ids = new Set(BLOCKS.map(b => b.id));
+    const routine = cleanRoutine(body.routine);
+    const ids = new Set((routine || BLOCKS).map(b => b.id));
     const rec = {
+      routine,
       subscription: {endpoint: sub.endpoint, keys: {p256dh: sub.keys.p256dh, auth: sub.keys.auth}},
       timeZone: validTz(body.timeZone) ? body.timeZone : "Africa/Lagos",
       blocks: Array.isArray(body.blocks) ? body.blocks.filter(b => ids.has(b)) : [...ids],
@@ -183,6 +185,13 @@ function localParts(now, tz) {
   const p = Object.fromEntries(f.formatToParts(now).map(x => [x.type, x.value]));
   return {hm: `${p.hour}:${p.minute}`, dow: p.weekday};
 }
+function cleanRoutine(r) {
+  if (!Array.isArray(r) || !r.length) return null;
+  const out = r.slice(0, 40).filter(b => b && /^[a-z0-9_]{1,24}$/i.test(b.id) && /^\d\d:\d\d$/.test(b.s))
+    .map(b => ({id: b.id, s: b.s, name: String(b.name || "").slice(0, 60), desc: String(b.desc || "").slice(0, 200)}));
+  return out.length ? out : null;
+}
+const toMin = hm => Number(hm.slice(0, 2)) * 60 + Number(hm.slice(3, 5));
 function messageFor(b, dow) {
   if (b.id === "train" && dow === "Sun") return {title: "Rest day", body: "Mobility and a walk. Recover for Monday."};
   return {title: `${b.name} · ${b.s}`, body: b.desc};
@@ -196,7 +205,9 @@ async function tick(env, now) {
       const rec = await env.SUBS.get(k.name, "json");
       if (!rec) continue;
       const {hm, dow} = localParts(now, rec.timeZone);
-      const due = BLOCKS.filter(b => b.s === hm && rec.blocks.includes(b.id));
+      // the cron runs every 15 minutes: send every block that started since the last run
+      const now = toMin(hm);
+      const due = (rec.routine || BLOCKS).filter(b => rec.blocks.includes(b.id) && (now - toMin(b.s) + 1440) % 1440 < 15);
       for (const b of due) {
         const m = messageFor(b, dow);
         const r = await sendPush(env, rec.subscription, {...m, tag: "block-" + b.id});
