@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Builder Day</string>
+    <string name="app_name">ORDO</string>
     <string name="site_url">https://builder-day-tracker.dinduking1.workers.dev/</string>
     <string name="asset_statements" translatable="false">
         [{

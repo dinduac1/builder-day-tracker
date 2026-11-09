@@ -5,3 +5,4 @@ local.properties
 keystore.properties
 *.jks
 *.apk
+app/google-services.json

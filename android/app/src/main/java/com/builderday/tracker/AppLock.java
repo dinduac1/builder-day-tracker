@@ -21,7 +21,7 @@ final class AppLock {
     static void prompt(Activity a, Result result) {
         if (!isAvailable(a)) { result.done(true); return; }
         BiometricPrompt.Builder b = new BiometricPrompt.Builder(a)
-                .setTitle("Unlock Builder Day")
+                .setTitle("Unlock ORDO")
                 .setSubtitle("Fingerprint, face, or your phone's PIN, pattern or password");
         if (Build.VERSION.SDK_INT >= 30) {
             b.setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_WEAK | BiometricManager.Authenticators.DEVICE_CREDENTIAL);

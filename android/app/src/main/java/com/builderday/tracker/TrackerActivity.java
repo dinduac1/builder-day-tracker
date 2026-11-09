@@ -61,13 +61,13 @@ public class TrackerActivity extends Activity {
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
-        getWindow().setStatusBarColor(0xFF123A26);
-        getWindow().setNavigationBarColor(0xFF0D1611);
+        getWindow().setStatusBarColor(0xFF08090C);
+        getWindow().setNavigationBarColor(0xFF08090C);
 
         root = new FrameLayout(this);
-        root.setBackgroundColor(0xFF0D1611);
+        root.setBackgroundColor(0xFF08090C);
         web = new WebView(this);
-        web.setBackgroundColor(0xFF0D1611);
+        web.setBackgroundColor(0xFF08090C);
         root.addView(web, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         setContentView(root);
 
@@ -101,6 +101,12 @@ public class TrackerActivity extends Activity {
             }
             @Override public void onHideCustomView() { exitFullscreen(); }
         });
+
+        // push token for crew alerts (stored for the page to register with the crew)
+        try {
+            com.google.firebase.messaging.FirebaseMessaging.getInstance().getToken().addOnSuccessListener(t ->
+                    getSharedPreferences(CrewMessagingService.PREFS, MODE_PRIVATE).edit().putString(CrewMessagingService.KEY_TOKEN, t).apply());
+        } catch (Throwable t) { Log.w(TAG, "push token unavailable", t); }
 
         if (state != null) web.restoreState(state);
         else web.loadUrl(getString(R.string.site_url));
@@ -219,6 +225,21 @@ public class TrackerActivity extends Activity {
             runOnUiThread(() -> Toast.makeText(TrackerActivity.this, s, Toast.LENGTH_SHORT).show());
         }
         @JavascriptInterface public String version() { return BuildConfigInfo.VERSION; }
+        /** Android's own share sheet: any app on the phone. */
+        @JavascriptInterface public void share(String text, String subject) {
+            runOnUiThread(() -> {
+                Intent i = new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text).putExtra(Intent.EXTRA_SUBJECT, subject);
+                startActivity(Intent.createChooser(i, "Send your report"));
+            });
+        }
+        @JavascriptInterface public void notify(String title, String body) {
+            Notifs.createChannels(getApplicationContext());
+            Notifs.postCrew(getApplicationContext(), Math.abs(body.hashCode()) % 100000 + 10000, title, body);
+        }
+        @JavascriptInterface public void setScheduleEnabled(boolean on) { Scheduler.setEnabled(getApplicationContext(), on); }
+        @JavascriptInterface public String fcmToken() {
+            return getSharedPreferences(CrewMessagingService.PREFS, MODE_PRIVATE).getString(CrewMessagingService.KEY_TOKEN, "");
+        }
         /** The tracker says a block has begun (ticked, timed, reps logged, workout started): stop its nag. */
         @JavascriptInterface public void blockStarted(String blockId) {
             if (Nag.isFive(blockId)) Nag.markStarted(getApplicationContext(), blockId);

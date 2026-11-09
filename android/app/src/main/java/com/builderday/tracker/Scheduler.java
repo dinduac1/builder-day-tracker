@@ -17,7 +17,22 @@ final class Scheduler {
     static final String KIND_WAKE = "wake";
     private static final int RC_NEXT = 1, RC_WAKE = 2;
 
+    static boolean enabled(Context ctx) {
+        return ctx.getSharedPreferences("schedule", Context.MODE_PRIVATE).getBoolean("on", true);
+    }
+
+    static void setEnabled(Context ctx, boolean on) {
+        ctx.getSharedPreferences("schedule", Context.MODE_PRIVATE).edit().putBoolean("on", on).apply();
+        if (on) scheduleAll(ctx);
+        else {
+            AlarmManager am = ctx.getSystemService(AlarmManager.class);
+            am.cancel(PendingIntent.getBroadcast(ctx, RC_NEXT, new Intent(ctx, AlarmReceiver.class), PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE));
+            am.cancel(PendingIntent.getBroadcast(ctx, RC_WAKE, new Intent(ctx, AlarmReceiver.class), PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE));
+        }
+    }
+
     static void scheduleAll(Context ctx) {
+        if (!enabled(ctx)) return;
         scheduleNextReminder(ctx);
         scheduleWake(ctx, Schedule.nextAt(System.currentTimeMillis(), Schedule.byId("wake").startMin()));
     }

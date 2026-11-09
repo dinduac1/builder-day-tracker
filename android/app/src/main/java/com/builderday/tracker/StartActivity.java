@@ -135,7 +135,7 @@ public class StartActivity extends Activity {
         android.widget.LinearLayout root = new android.widget.LinearLayout(this);
         root.setOrientation(android.widget.LinearLayout.VERTICAL);
         root.setGravity(android.view.Gravity.CENTER);
-        root.setBackgroundColor(0xFF0D1611);
+        root.setBackgroundColor(0xFF08090C);
         int pad = (int) (32 * dp);
         root.setPadding(pad, pad, pad, pad);
 
@@ -144,9 +144,9 @@ public class StartActivity extends Activity {
         root.addView(icon, new android.widget.LinearLayout.LayoutParams((int) (88 * dp), (int) (88 * dp)));
 
         android.widget.TextView name = new android.widget.TextView(this);
-        name.setText("Builder Day");
+        name.setText("ORDO");
         name.setTextSize(26);
-        name.setTextColor(0xFFE4ECE6);
+        name.setTextColor(0xFFF3F1EC);
         name.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
         name.setGravity(android.view.Gravity.CENTER);
         name.setPadding(0, (int) (18 * dp), 0, (int) (6 * dp));
@@ -155,7 +155,7 @@ public class StartActivity extends Activity {
         android.widget.TextView sub = new android.widget.TextView(this);
         sub.setText("Locked · use your fingerprint or screen lock");
         sub.setTextSize(15);
-        sub.setTextColor(0xFF93A598);
+        sub.setTextColor(0xFF8D93A2);
         sub.setGravity(android.view.Gravity.CENTER);
         root.addView(sub);
 
@@ -163,10 +163,10 @@ public class StartActivity extends Activity {
         unlockButton.setText("Unlock");
         unlockButton.setAllCaps(false);
         unlockButton.setTextSize(17);
-        unlockButton.setTextColor(0xFF1B1408);
+        unlockButton.setTextColor(0xFF0A0C16);
         unlockButton.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
         android.graphics.drawable.GradientDrawable bg = new android.graphics.drawable.GradientDrawable();
-        bg.setColor(0xFFE0AD55);
+        bg.setColor(0xFF7C8BFF);
         bg.setCornerRadius(14 * dp);
         unlockButton.setBackground(bg);
         unlockButton.setVisibility(android.view.View.INVISIBLE);   // shown if the prompt is dismissed
@@ -190,7 +190,7 @@ public class StartActivity extends Activity {
         if (unlockButton != null) unlockButton.setVisibility(android.view.View.INVISIBLE);
         if (Build.VERSION.SDK_INT >= 30) {
             android.hardware.biometrics.BiometricPrompt prompt = new android.hardware.biometrics.BiometricPrompt.Builder(this)
-                    .setTitle("Unlock Builder Day")
+                    .setTitle("Unlock ORDO")
                     .setSubtitle("Fingerprint, face, or your phone's PIN, pattern or password")
                     .setAllowedAuthenticators(android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_WEAK
                             | android.hardware.biometrics.BiometricManager.Authenticators.DEVICE_CREDENTIAL)

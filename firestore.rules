@@ -5,5 +5,36 @@ service cloud.firestore {
     match /users/{userId}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+
+    // Crews: anyone signed in can look up a crew by its code (to join) or create one.
+    match /groups/{code} {
+      allow get: if request.auth != null;
+      allow list: if false;
+      allow create: if request.auth != null && request.resource.data.owner == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.owner == request.auth.uid;
+
+      function isMember() {
+        return exists(/databases/$(database)/documents/groups/$(code)/members/$(request.auth.uid));
+      }
+
+      // The leaderboard: members see each other; each person writes only their own row.
+      match /members/{uid} {
+        allow read: if request.auth != null && isMember();
+        allow write: if request.auth != null && request.auth.uid == uid;
+      }
+
+      // The activity feed: members read it; each person posts only as themselves; nobody edits history.
+      match /events/{id} {
+        allow read: if request.auth != null && isMember();
+        allow create: if request.auth != null && isMember() && request.resource.data.uid == request.auth.uid;
+        allow update, delete: if false;
+      }
+
+      // Push tokens for crew alerts: each person manages only their own.
+      match /devices/{uid} {
+        allow read: if request.auth != null && isMember();
+        allow write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
   }
 }

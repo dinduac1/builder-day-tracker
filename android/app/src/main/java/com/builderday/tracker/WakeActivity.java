@@ -36,24 +36,24 @@ public class WakeActivity extends Activity {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setGravity(Gravity.CENTER);
-        root.setBackgroundColor(0xFF0D1611);
+        root.setBackgroundColor(0xFF08090C);
         int pad = (int) (28 * dp);
         root.setPadding(pad, pad, pad, pad);
 
-        TextView eyebrow = text("BUILDER DAY", 13, 0xFF93A598, false);
+        TextView eyebrow = text("ORDO", 13, 0xFF8D93A2, false);
         eyebrow.setLetterSpacing(0.15f);
-        TextView time = text(new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date()), 84, 0xFFE4ECE6, true);
-        TextView title = text("Wake up", 30, 0xFFE0AD55, true);
-        TextView desc = text(Schedule.byId("wake").desc, 17, 0xFFB8C7BC, false);
+        TextView time = text(new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date()), 84, 0xFFF3F1EC, true);
+        TextView title = text("Wake up", 30, 0xFF7C8BFF, true);
+        TextView desc = text(Schedule.byId("wake").desc, 17, 0xFF8D93A2, false);
         desc.setPadding(0, (int) (10 * dp), 0, (int) (36 * dp));
 
-        Button up = button("I'm up", 0xFFE0AD55, 0xFF1B1408, dp);
+        Button up = button("I'm up", 0xFF7C8BFF, 0xFF0A0C16, dp);
         up.setOnClickListener(v -> {
             startService(new Intent(this, WakeService.class).setAction(WakeService.ACTION_STOP));
             startActivity(new Intent(this, StartActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
             finish();
         });
-        Button snooze = button("Snooze " + WakeService.SNOOZE_MIN + " min", 0xFF1A2920, 0xFFE4ECE6, dp);
+        Button snooze = button("Snooze " + WakeService.SNOOZE_MIN + " min", 0xFF181B22, 0xFFF3F1EC, dp);
         snooze.setOnClickListener(v -> {
             startService(new Intent(this, WakeService.class).setAction(WakeService.ACTION_SNOOZE));
             finish();

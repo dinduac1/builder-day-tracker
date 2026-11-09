@@ -1,12 +1,12 @@
 {
-  "name": "Builder Day Tracker",
-  "short_name": "Builder Day",
-  "description": "Daily tracker for the Full-Time Builder Day: schedule, reps, records, the Daily Five and a weekly grade.",
+  "name": "ORDO",
+  "short_name": "ORDO",
+  "description": "Daily goals, 75 Hard and other challenges, guided workouts, an honest daily grade and a crew that keeps you honest.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0d1611",
-  "theme_color": "#123a26",
+  "background_color": "#08090C",
+  "theme_color": "#08090C",
   "icons": [
     {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
     {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},

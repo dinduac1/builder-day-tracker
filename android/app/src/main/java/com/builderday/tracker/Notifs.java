@@ -16,7 +16,7 @@ import android.net.Uri;
  */
 final class Notifs {
     static final String CH_VERSION = "v1";
-    static final String CH_WARN = "warn_" + CH_VERSION, CH_WAKE = "wake_" + CH_VERSION, CH_NAG = "nag_" + CH_VERSION;
+    static final String CH_WARN = "warn_" + CH_VERSION, CH_WAKE = "wake_" + CH_VERSION, CH_NAG = "nag_" + CH_VERSION, CH_CREW = "crew_" + CH_VERSION;
 
     static String channelFor(String blockId) { return "block_" + blockId + "_" + CH_VERSION; }
 
@@ -46,6 +46,12 @@ final class Notifs {
         nag.enableVibration(true);
         nag.setVibrationPattern(new long[]{0, 400, 150, 400, 150, 400});
         nm.createNotificationChannel(nag);
+
+        NotificationChannel crew = new NotificationChannel(CH_CREW, "Crew", NotificationManager.IMPORTANCE_HIGH);
+        crew.setDescription("When someone in your crew finishes a goal or a day");
+        crew.setSound(sound(ctx, "s_connect"), notif);
+        crew.enableVibration(true);
+        nm.createNotificationChannel(crew);
 
         // The wake-up alarm plays its own looping sound (WakeService), so this channel is silent.
         NotificationChannel wake = new NotificationChannel(CH_WAKE, "Wake-up alarm", NotificationManager.IMPORTANCE_HIGH);
@@ -89,6 +95,11 @@ final class Notifs {
                 .setCategory(Notification.CATEGORY_REMINDER)
                 .setContentIntent(openTracker(ctx, id))
                 .setAutoCancel(true);
+    }
+
+    static void postCrew(Context ctx, int id, String title, String text) {
+        ctx.getSystemService(NotificationManager.class).notify(id, builder(ctx, id, CH_CREW, title, text)
+                .setCategory(Notification.CATEGORY_SOCIAL).build());
     }
 
     static void post(Context ctx, int id, String channel, String title, String text) {

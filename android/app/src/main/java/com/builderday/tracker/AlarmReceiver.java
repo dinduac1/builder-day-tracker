@@ -14,6 +14,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         long at = intent.getLongExtra(Scheduler.EXTRA_AT, System.currentTimeMillis());
         boolean fresh = System.currentTimeMillis() - at < STALE_MS;
         Notifs.createChannels(ctx);
+        if (!Scheduler.enabled(ctx) && !Nag.KIND_ACK.equals(kind)) return;   // timed schedule switched off
 
         if (Scheduler.KIND_WAKE.equals(kind)) {
             if (fresh) ctx.startForegroundService(new Intent(ctx, WakeService.class));

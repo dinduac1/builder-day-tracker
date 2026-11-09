@@ -22,7 +22,6 @@ def rep(old, new):
 
 s = s[s.index("<title>"):]
 rep("</head>\n<body>\n", "")
-rep("body{margin:0;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}\n", "")
 s = s.rstrip()
 assert s.endswith("</html>")
 s = s[:s.rindex("</body>")].rstrip() + "\n"

@@ -79,7 +79,93 @@ async function api(req, env, url) {
     const r = await sendPush(env, rec.subscription, {title: "Reminders are on", body: "You'll get a notification as each block starts.", tag: "test"});
     return json({ok: r.ok, status: r.status});
   }
+  if (url.pathname === "/api/crew/notify") return crewNotify(env, body);
   return json({error: "Not found"}, 404);
+}
+
+/* ---------- crew alerts ----------
+ * A member finishing something calls this with their Firebase ID token, the crew code and the text.
+ * The token is verified, the crew's devices are read from Firestore *with the caller's own token* (so the
+ * database rules decide who may read them), and everyone else in the crew gets the alert:
+ *   - Android app: Firebase Cloud Messaging (needs the FCM_SA_JSON secret, a Firebase service-account key)
+ *   - website / home-screen app: Web Push (VAPID, already set up for reminders)
+ */
+const PROJECT = "builder-day-lmd5bi";
+async function crewNotify(env, body) {
+  const {idToken, code, title, text, tag} = body;
+  if (typeof idToken !== "string" || typeof code !== "string" || !/^[A-Z0-9]{6}$/.test(code) || typeof text !== "string")
+    return json({error: "Bad request"}, 400);
+  const claims = await verifyFirebaseToken(idToken).catch(() => null);
+  if (!claims) return json({error: "Not signed in"}, 401);
+  const r = await fetch(`https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents/groups/${code}/devices?pageSize=200`,
+    {headers: {authorization: "Bearer " + idToken}});
+  if (!r.ok) return json({error: "Not a member of this crew"}, 403);
+  const docs = (await r.json()).documents || [];
+  const msg = {title: String(title || "Your crew").slice(0, 80), body: text.slice(0, 240), tag: tag || "crew-" + code, url: "/"};
+  let fcm = 0, web = 0;
+  const fcmToken = env.FCM_SA_JSON ? await googleAccessToken(env).catch(() => null) : null;
+  for (const d of docs) {
+    const uid = d.name.split("/").pop();
+    if (uid === claims.user_id) continue;                       // don't alert the sender
+    const f = d.fields || {};
+    const tokens = ((f.fcm || {}).arrayValue || {}).values || [];
+    if (fcmToken) for (const t of tokens) {
+      const res = await fetch(`https://fcm.googleapis.com/v1/projects/${PROJECT}/messages:send`, {method: "POST",
+        headers: {authorization: "Bearer " + fcmToken, "content-type": "application/json"},
+        body: JSON.stringify({message: {token: t.stringValue, data: {title: msg.title, body: msg.body, tag: msg.tag},
+          android: {priority: "high"}}})});
+      if (res.ok) fcm++;
+    }
+    const subs = ((f.web || {}).arrayValue || {}).values || [];
+    for (const sv of subs) {
+      try {
+        const sub = JSON.parse(sv.stringValue);
+        const res = await sendPush(env, sub, msg);
+        if (res.ok) web++;
+      } catch {}
+    }
+  }
+  return json({ok: true, fcm, web, fcmConfigured: !!env.FCM_SA_JSON});
+}
+
+/** Verify a Firebase Auth ID token (RS256, Google's securetoken keys). Returns its claims. */
+let jwkCache = {at: 0, keys: null};
+async function verifyFirebaseToken(token) {
+  const [h, p, sig] = token.split(".");
+  const header = JSON.parse(new TextDecoder().decode(unb64u(h)));
+  const claims = JSON.parse(new TextDecoder().decode(unb64u(p)));
+  const now = Math.floor(Date.now() / 1000);
+  if (claims.aud !== PROJECT || claims.iss !== "https://securetoken.google.com/" + PROJECT || claims.exp < now || !claims.user_id) throw new Error("claims");
+  if (!jwkCache.keys || Date.now() - jwkCache.at > 3600_000) {
+    jwkCache = {at: Date.now(), keys: (await (await fetch("https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com")).json()).keys};
+  }
+  const jwk = jwkCache.keys.find(k => k.kid === header.kid);
+  if (!jwk) throw new Error("kid");
+  const key = await crypto.subtle.importKey("jwk", jwk, {name: "RSASSA-PKCS1-v1_5", hash: "SHA-256"}, false, ["verify"]);
+  const ok = await crypto.subtle.verify("RSASSA-PKCS1-v1_5", key, unb64u(sig), enc.encode(h + "." + p));
+  if (!ok) throw new Error("sig");
+  return claims;
+}
+
+/** OAuth access token for FCM from the service-account key in FCM_SA_JSON (cached ~50 min). */
+let gTok = {at: 0, token: null};
+async function googleAccessToken(env) {
+  if (gTok.token && Date.now() - gTok.at < 50 * 60_000) return gTok.token;
+  const sa = JSON.parse(env.FCM_SA_JSON.replace(/^﻿/, ""));
+  const pem = sa.private_key.replace(/-----[^-]+-----/g, "").replace(/\s+/g, "");
+  const der = Uint8Array.from(atob(pem), c => c.charCodeAt(0));
+  const key = await crypto.subtle.importKey("pkcs8", der, {name: "RSASSA-PKCS1-v1_5", hash: "SHA-256"}, false, ["sign"]);
+  const now = Math.floor(Date.now() / 1000);
+  const head = b64u(enc.encode(JSON.stringify({alg: "RS256", typ: "JWT"})));
+  const claim = b64u(enc.encode(JSON.stringify({iss: sa.client_email, scope: "https://www.googleapis.com/auth/firebase.messaging",
+    aud: "https://oauth2.googleapis.com/token", iat: now, exp: now + 3600})));
+  const sig = new Uint8Array(await crypto.subtle.sign("RSASSA-PKCS1-v1_5", key, enc.encode(head + "." + claim)));
+  const r = await fetch("https://oauth2.googleapis.com/token", {method: "POST", headers: {"content-type": "application/x-www-form-urlencoded"},
+    body: new URLSearchParams({grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer", assertion: `${head}.${claim}.${b64u(sig)}`})});
+  const j = await r.json();
+  if (!j.access_token) throw new Error("token");
+  gTok = {at: Date.now(), token: j.access_token};
+  return gTok.token;
 }
 
 function validTz(tz) {
