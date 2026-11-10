@@ -44,7 +44,7 @@ SCEN = {
   "workout":     ("dark", "friend", 1300, "startWorkout(repDefs('train', keyOf(new Date())))"),
   "routine":     ("dark", "me", 3000, "openRoutine()"),
   "workouts":    ("dark", "me", 1500, "openWorkouts()"),
-  "wedit":       ("dark", "me", 2400, "openWorkouts(null)"),
+  "wedit":       ("dark", "me", 4200, "openWorkouts('full')"),
   "goaledit":    ("dark", "friend", 1700, "editingGoals=true;goalDraft=goalsList().map(g=>({...g}));render()"),
   "program2":    ("light", "blank", 1100, "onboarding('program')"),
 }

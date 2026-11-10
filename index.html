@@ -851,6 +851,10 @@ const ROUTINE = [
   {id:"hammer",       ex:"hammer",     sec:"Upper body", name:"Alternate Hammer Curl",           target:30},
   {id:"diamond",      ex:"diamond",    sec:"Upper body", name:"Diamond Push-Ups",                target:30},
   {id:"decline",      ex:"decline",    sec:"Upper body", name:"Decline Push-Ups",                target:30},
+  {id:"bic_str_l",    ex:"bicstretch", sec:"Upper body", stretch:true, name:"Standing Biceps Stretch · left",     target:30, unit:"sec"},
+  {id:"bic_str_r",    ex:"bicstretch", sec:"Upper body", stretch:true, name:"Standing Biceps Stretch · right",    target:30, unit:"sec"},
+  {id:"tri_str_l",    ex:"tristretch", sec:"Upper body", stretch:true, name:"Triceps Stretch · left",             target:60, unit:"sec"},
+  {id:"tri_str_r",    ex:"tristretch", sec:"Upper body", stretch:true, name:"Triceps Stretch · right",            target:60, unit:"sec"},
   // ── Legs & glutes
   {id:"squats",       ex:"squat",      sec:"Legs & glutes", name:"Squats",                       target:30},
   {id:"sumo",         ex:"sumo",       sec:"Legs & glutes", name:"Sumo Squat",                   target:20},
@@ -863,6 +867,10 @@ const ROUTINE = [
   {id:"calves",       ex:"calf",       sec:"Legs & glutes", name:"Calf Raises",                  target:30},
   {id:"wall_sit",     ex:"wallsit",    sec:"Legs & glutes", name:"Wall Sit",                     target:60, unit:"sec"},
   {id:"bridge_hold",  ex:"bridge",     sec:"Legs & glutes", name:"Bridge (hold)",                target:180, unit:"sec"},
+  {id:"calf_str_l",   ex:"calfstretch",sec:"Legs & glutes", stretch:true, name:"Calf Stretch · left",                target:20, unit:"sec"},
+  {id:"calf_str_r",   ex:"calfstretch",sec:"Legs & glutes", stretch:true, name:"Calf Stretch · right",               target:20, unit:"sec"},
+  {id:"hipflex_l",    ex:"hipflexor",  sec:"Legs & glutes", stretch:true, name:"Hip Flexor Stretch · left",          target:30, unit:"sec"},
+  {id:"hipflex_r",    ex:"hipflexor",  sec:"Legs & glutes", stretch:true, name:"Hip Flexor Stretch · right",         target:30, unit:"sec"},
   // ── Core
   {id:"situps",       ex:"situps",     sec:"Core", name:"Sit-Ups",                               target:10},
   {id:"legraise",     ex:"legraise",   sec:"Core", name:"Leg Raises",                            target:10},
@@ -875,20 +883,11 @@ const ROUTINE = [
   {id:"plank",        ex:"plank",      sec:"Core", name:"Plank",                                 target:120, unit:"sec"},
   {id:"side_plank_r", ex:"sideplank",  sec:"Core", name:"Side Plank · right",                    target:60, unit:"sec"},
   {id:"side_plank_l", ex:"sideplank",  sec:"Core", name:"Side Plank · left",                     target:60, unit:"sec"},
+  {id:"cobra",        ex:"cobra",      sec:"Core", stretch:true, name:"Cobra Stretch",                      target:60, unit:"sec"},
   // ── Back
   {id:"superman",     ex:"superman",   sec:"Back", name:"Superman",                              target:20},
   {id:"bird_dog",     ex:"birddog",    sec:"Back", name:"Bird Dog",                              target:20},
-  // ── Stretch
-  {id:"bic_str_l",    ex:"bicstretch", sec:"Stretch", name:"Standing Biceps Stretch · left",     target:30, unit:"sec"},
-  {id:"bic_str_r",    ex:"bicstretch", sec:"Stretch", name:"Standing Biceps Stretch · right",    target:30, unit:"sec"},
-  {id:"tri_str_l",    ex:"tristretch", sec:"Stretch", name:"Triceps Stretch · left",             target:60, unit:"sec"},
-  {id:"tri_str_r",    ex:"tristretch", sec:"Stretch", name:"Triceps Stretch · right",            target:60, unit:"sec"},
-  {id:"calf_str_l",   ex:"calfstretch",sec:"Stretch", name:"Calf Stretch · left",                target:20, unit:"sec"},
-  {id:"calf_str_r",   ex:"calfstretch",sec:"Stretch", name:"Calf Stretch · right",               target:20, unit:"sec"},
-  {id:"hipflex_l",    ex:"hipflexor",  sec:"Stretch", name:"Hip Flexor Stretch · left",          target:30, unit:"sec"},
-  {id:"hipflex_r",    ex:"hipflexor",  sec:"Stretch", name:"Hip Flexor Stretch · right",         target:30, unit:"sec"},
-  {id:"cobra",        ex:"cobra",      sec:"Stretch", name:"Cobra Stretch",                      target:60, unit:"sec"},
-  {id:"child_pose",   ex:"childpose",  sec:"Stretch", name:"Child's Pose",                       target:60, unit:"sec"},
+  {id:"child_pose",   ex:"childpose",  sec:"Back", stretch:true, name:"Child's Pose",                       target:60, unit:"sec"},
 ];
 // TRAIN: full body every day Mon–Sat, Sunday off. Every area gets moderate daily volume (2–4 sets),
 // which is recoverable six days a week as long as most sets stop 1–2 reps short of failure.
@@ -919,7 +918,29 @@ const OLD_GYM_WORKOUTS = {   // the old gym split; only shown to people who stil
     {id:"calves",   name:"Calf raises",             target:60, hint:"3 × 20"}]},
 };
 const DEFAULT_SPLIT = ["full","full","full","full","full","full","rest"];   // Mon → Sun
-const PLAN_VERSION = 4;
+const PLAN_VERSION = 5;
+const secLabel = r => r.sec ? r.sec + (r.stretch ? " · stretch" : "") : "";
+/** Which area a stretch you wrote yourself belongs with, from its name. */
+function stretchArea(name){
+  const n = String(name || "").toLowerCase();
+  if (/bicep|tricep|shoulder|chest|arm|wrist|neck|pec|delt/.test(n)) return "Upper body";
+  if (/calf|calves|quad|hamstring|hip|glute|leg|groin|ankle|thigh|knee/.test(n)) return "Legs & glutes";
+  if (/\bab|abs|cobra|core|oblique/.test(n)) return "Core";
+  if (/back|lat|spine|child|cat|cow/.test(n)) return "Back";
+  return null;
+}
+/** Put each stretch right after the work it relaxes; items keep their own targets. */
+function orderByArea(items){
+  const AR = ["Upper body", "Legs & glutes", "Core", "Back"], idx = Object.fromEntries(ROUTINE.map((r, i) => [r.id, i]));
+  const fixed = items.map(r => {
+    const base = ROUTINE.find(x => x.id === r.id);
+    if (base) return {...r, sec: base.sec, ...(base.stretch ? {stretch: true} : {})};
+    if (/stretch/i.test(r.name || "") || r.sec === "Stretch") { const a = stretchArea(r.name); if (a) return {...r, sec: a, stretch: true}; }
+    return r;
+  });
+  const rank = r => { const a = AR.indexOf(r.sec); return a < 0 ? 1e6 : a * 1e4 + (r.stretch ? 5000 : 0) + (r.id in idx ? idx[r.id] : 4999); };
+  return fixed.map((r, i) => [r, i]).sort((a, b) => rank(a[0]) - rank(b[0]) || a[1] - b[1]).map(x => x[0]);
+}
 const DOW = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
 const $ = id => document.getElementById(id);
@@ -941,12 +962,18 @@ function norm(v){
 // anything else is added to the full-body list.
 function migratePlan(){
   if (settings.plan === PLAN_VERSION) return false;
+  if (settings.plan === 4) {   // v5: stretches sit with the area they relax, in every saved set
+    const W = {...(settings.workouts || {})};
+    Object.keys(W).forEach(k => { if (W[k] && Array.isArray(W[k].items) && k !== "rest") W[k] = {...W[k], items: orderByArea(W[k].items)}; });
+    settings = {...settings, workouts: W, plan: PLAN_VERSION};
+    return true;
+  }
   if (settings.plan === 3) {
     const W = settings.workouts || {}, old = (W.full || {}).items || [];
     const byId = Object.fromEntries(old.map(r => [r.id, r]));
     const items = ROUTINE.map(r => byId[r.id] ? {...r, target: byId[r.id].target || r.target} : {...r});
     old.filter(r => !ROUTINE.some(x => x.id === r.id)).forEach(r => items.push(r));
-    settings = {...settings, workouts: {...W, full: {...DEFAULT_WORKOUTS.full, items}, core: {...DEFAULT_WORKOUTS.core, items: []}}, plan: PLAN_VERSION};
+    settings = {...settings, workouts: {...W, full: {...DEFAULT_WORKOUTS.full, items: orderByArea(items)}, core: {...DEFAULT_WORKOUTS.core, items: []}}, plan: PLAN_VERSION};
     return true;
   }
   if (settings.plan === 2 || settings.plan === undefined && false) {
@@ -1872,7 +1899,7 @@ function renderReps(b, day, ex, prior7){
       if (g.title) { const t = document.createElement("div"); t.className = "rgtitle"; t.textContent = g.title; box.appendChild(t); }
       let lastSec = null;
       g.items.forEach(r => {
-        if (r.sec && r.sec !== lastSec) { lastSec = r.sec; const sh = document.createElement("div"); sh.className = "rsec"; sh.textContent = r.sec; box.appendChild(sh); }
+        if (r.sec && secLabel(r) !== lastSec) { lastSec = secLabel(r); const sh = document.createElement("div"); sh.className = "rsec"; sh.textContent = lastSec; box.appendChild(sh); }
         const v = day.reps[r.id], has = v != null, n = v || 0;
         const el = document.createElement("div"); el.className = "rep";
         el.innerHTML = `<span class="rname"></span>
@@ -2104,7 +2131,7 @@ function showWork(){
     <div class="ctrl"><button class="ghost" id="pprev">← Previous</button><button class="ghost" id="pskip">Skip →</button></div>
     <div class="gslot"></div></div>`;
   o.querySelector(".exname").textContent = r.name;
-  if (r.sec) { const sx = document.createElement("div"); sx.className = "exsec"; sx.textContent = r.sec; o.querySelector(".exname").before(sx); }
+  if (r.sec) { const sx = document.createElement("div"); sx.className = "exsec"; sx.textContent = secLabel(r); o.querySelector(".exname").before(sx); }
   o.querySelector("#plist").onclick = showList;
   if (player.log[r.id] != null) {
     const b = document.createElement("div"); b.className = "donebanner";
@@ -2151,7 +2178,7 @@ function showList(){
   const list = o.querySelector(".exlist");
   let lastSec = null;
   player.items.forEach((r, idx) => {
-    if (r.sec && r.sec !== lastSec) { lastSec = r.sec; const h = document.createElement("div"); h.className = "sec"; h.textContent = r.sec; list.appendChild(h); }
+    if (r.sec && secLabel(r) !== lastSec) { lastSec = secLabel(r); const h = document.createElement("div"); h.className = "sec"; h.textContent = lastSec; list.appendChild(h); }
     const v = player.log[r.id], b = document.createElement("button");
     b.className = (v != null ? "ok" : "") + (idx === player.i && player.phase !== "done" ? " cur" : "");
     b.innerHTML = `<span class="n">${idx + 1}</span><span></span><span class="st">${v != null ? "✓ " + (r.unit === "sec" ? fmtSec(v) : v) : "—"}</span>`;
@@ -2919,7 +2946,7 @@ function onboarding(step, ctx = {}){
       b.querySelector(".progs").appendChild(c);
     });
   } else if (step === "workout") {
-    b.innerHTML = `<h2>Your workout.</h2><p class="lead">The ORDO workout trains every area: upper body, legs and glutes, core, back, then a stretch. Use all of it, or build your own sets from the areas you want.</p>
+    b.innerHTML = `<h2>Your workout.</h2><p class="lead">The ORDO workout trains every area, and each area ends with the stretches that relax it. Use all of it, or build your own sets from the areas you want.</p>
       <div style="display:grid;gap:10px"><button class="btn primary block" id="obAll">Use the full ORDO workout</button><button class="btn block" id="obBuild">Build my own sets</button></div>`;
     b.querySelector("#obAll").onclick = () => onboarding("crew");
     b.querySelector("#obBuild").onclick = () => openWorkouts(null, () => onboarding("crew"));
@@ -3141,14 +3168,14 @@ function drawRoutine(){
 }
 
 /* =========================================================== workout sets */
-const AREAS = ["Upper body", "Legs & glutes", "Core", "Back", "Stretch", "Your own"];
+const AREAS = ["Upper body", "Legs & glutes", "Core", "Back", "Your own"];
 function exLibrary(){
   const full = ((settings.workouts || {}).full || {}).items || [];
   const lib = ROUTINE.map(r => { const o = full.find(x => x.id === r.id); return {...r, target: o ? o.target : r.target}; });
   Object.values(settings.workouts || {}).forEach(w => (w.items || []).forEach(r => {
-    if (!lib.some(x => x.id === r.id) && !["mobility", "steps"].includes(r.id)) lib.push({...r, sec: r.sec || (/stretch/i.test(r.name) ? "Stretch" : "Your own")});
+    if (!lib.some(x => x.id === r.id) && !["mobility", "steps"].includes(r.id)) lib.push({...r, sec: AREAS.includes(r.sec) ? r.sec : "Your own"});
   }));
-  return lib.sort((a, b) => AREAS.indexOf(a.sec) - AREAS.indexOf(b.sec));
+  return orderByArea(lib).map(r => AREAS.includes(r.sec) ? r : {...r, sec: "Your own"});
 }
 let wDraft = null, wAfter = null;
 function openWorkouts(editKey, after){
@@ -3221,7 +3248,7 @@ function drawWorkoutEditor(key){
   o.querySelector("#wNone").onclick = () => { D.on.clear(); drawWorkoutEditor(key); };
   const list = o.querySelector("#wList"); let last = null;
   lib.forEach(r => {
-    if (r.sec !== last) { last = r.sec; const h = document.createElement("div"); h.className = "rsec"; h.textContent = r.sec; list.appendChild(h); }
+    if (secLabel(r) !== last) { last = secLabel(r); const h = document.createElement("div"); h.className = "rsec"; h.textContent = last; list.appendChild(h); }
     const on = D.on.has(r.id), row = document.createElement("div"); row.className = "wex" + (on ? "" : " off");
     row.innerHTML = `<input type="checkbox" class="chk" aria-label="Include"><button class="rname"></button><input type="number" min="0" inputmode="numeric" aria-label="Target"><span class="u">${r.unit === "sec" ? "s" : "×"}</span>`;
     const c = row.querySelector(".chk"); c.checked = on;
@@ -3232,7 +3259,7 @@ function drawWorkoutEditor(key){
     list.appendChild(row);
   });
   o.querySelector("#wSave").onclick = () => {
-    const items = lib.filter(r => D.on.has(r.id)).map(r => ({...r, target: D.target[r.id]}));
+    const items = orderByArea(lib.filter(r => D.on.has(r.id)).map(r => ({...r, target: D.target[r.id]})));
     if (!items.length) return toast("Pick at least one exercise.");
     const k = key || "w" + Date.now().toString(36);
     const areas = AREAS.filter(a => items.some(r => r.sec === a));
