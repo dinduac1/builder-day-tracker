@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Notification icon: a check mark (Android tints it) -->
+<!-- Notification icon: the ORDO ring (Android tints it) -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp" android:height="24dp"
     android:viewportWidth="24" android:viewportHeight="24">
     <path
         android:fillColor="#00000000"
         android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="3"
+        android:strokeWidth="2.6"
         android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:pathData="M5,12.5 L10,17.5 L19.5,7" />
+        android:pathData="M18.3,12.53 A6.56,6.56 0 1 1 11.48,5.48" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2.6"
+        android:strokeLineCap="round"
+        android:pathData="M14.4,5.89 A6.56,6.56 0 0 1 18,9.6" />
 </vector>

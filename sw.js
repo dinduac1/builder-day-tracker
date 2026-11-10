@@ -1,13 +1,13 @@
-// Service worker: shows schedule reminders pushed by the Worker and opens the tracker when tapped.
+// ORDO service worker: shows reminders and crew alerts pushed by the Worker and opens the tracker when tapped.
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", e => e.waitUntil(self.clients.claim()));
 
 self.addEventListener("push", e => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch { d = {body: e.data && e.data.text()}; }
-  e.waitUntil(self.registration.showNotification(d.title || "Builder Day", {
+  e.waitUntil(self.registration.showNotification(d.title || "ORDO", {
     body: d.body || "",
-    tag: d.tag || "builder-day",
+    tag: d.tag || "ordo",
     renotify: true,
     icon: "icon-192.png",
     badge: "badge-72.png",

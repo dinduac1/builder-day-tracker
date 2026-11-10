@@ -66,7 +66,7 @@ public class StartActivity extends Activity {
         if (showingProblem || launched) return;
         if (!unlocked) { if (!waitForTap) unlock(); return; }   // after a cancel, wait for the Unlock button
         try { nextStep(); }
-        catch (Throwable t) { showProblem("Builder Day couldn't start.", trace(t)); }
+        catch (Throwable t) { showProblem("ORDO couldn't start.", trace(t)); }
     }
 
     private void nextStep() {
@@ -82,7 +82,7 @@ public class StartActivity extends Activity {
         if (!Scheduler.canExact(am) && !prefs.getBoolean("askedExact", false)) {
             prefs.edit().putBoolean("askedExact", true).apply();
             if (tryOpen(new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:" + getPackageName())))) {
-                toast("Allow Builder Day to set alarms, then come back.");
+                toast("Allow ORDO to set alarms, then come back.");
                 return;
             }
         }
@@ -183,7 +183,7 @@ public class StartActivity extends Activity {
         android.app.KeyguardManager km = getSystemService(android.app.KeyguardManager.class);
         if (km == null || !km.isDeviceSecure()) {
             // No fingerprint, PIN, pattern or password on this phone, so there's nothing to check against
-            toast("Set a screen lock in your phone's settings to lock Builder Day.");
+            toast("Set a screen lock in your phone's settings to lock ORDO.");
             onUnlocked();
             return;
         }
@@ -207,7 +207,7 @@ public class StartActivity extends Activity {
                     });
         } else {
             // Android 8–10: the system's confirm-your-screen-lock screen (fingerprint where the phone offers it)
-            Intent i = km.createConfirmDeviceCredentialIntent("Unlock Builder Day", "Use your screen lock to continue");
+            Intent i = km.createConfirmDeviceCredentialIntent("Unlock ORDO", "Use your screen lock to continue");
             if (i == null) { unlocking = false; onUnlocked(); return; }
             startActivityForResult(i, RC_AUTH);
         }
@@ -229,7 +229,7 @@ public class StartActivity extends Activity {
     private void onUnlocked() {
         unlocked = true;
         try { nextStep(); }
-        catch (Throwable t) { showProblem("Builder Day couldn't start.", trace(t)); }
+        catch (Throwable t) { showProblem("ORDO couldn't start.", trace(t)); }
     }
 
     private void showProblem(String headline, String detail) {
@@ -243,7 +243,7 @@ public class StartActivity extends Activity {
                 .setPositiveButton("Open in Chrome", (d, w) -> { openInBrowser(); finish(); })
                 .setNeutralButton("Copy details", (d, w) -> {
                     ClipboardManager cm = getSystemService(ClipboardManager.class);
-                    cm.setPrimaryClip(ClipData.newPlainText("Builder Day error", report));
+                    cm.setPrimaryClip(ClipData.newPlainText("ORDO error", report));
                     toast("Copied. Paste it to Claude.");
                     finish();
                 })
