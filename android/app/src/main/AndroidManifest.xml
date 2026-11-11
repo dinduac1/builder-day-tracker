@@ -57,6 +57,13 @@
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- ORDO's lock screen: PIN, password, or the phone's lock -->
+        <activity
+            android:name=".LockActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:windowSoftInputMode="adjustResize" />
+
         <activity
             android:name=".WakeActivity"
             android:exported="false"

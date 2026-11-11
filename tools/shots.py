@@ -47,6 +47,9 @@ SCEN = {
   "wedit":       ("dark", "me", 4200, "openWorkouts('full')"),
   "goaledit":    ("dark", "friend", 1700, "editingGoals=true;goalDraft=goalsList().map(g=>({...g}));render()"),
   "notif":       ("dark", "me", 2600, "openSettings();setTimeout(openNotifPage,300)"),
+  "lockpage":    ("dark", "me", 1500, "openSettings();setTimeout(()=>{openLockPage();lockDraft.mode='pin';lockDraft.len=6;openLockPage()},300)"),
+  "kegel":       ("dark", "me", 1300, "openGuide('kegelhold',{name:'Kegel Holds · 10 s',target:10})"),
+  "wnew":        ("dark", "me", 900, "openWorkouts(null);setTimeout(()=>drawWorkoutEditor(null),200)"),
   "settings2":   ("dark", "me", 1900, "openSettings()"),
   "program2":    ("light", "blank", 1100, "onboarding('program')"),
 }
@@ -56,11 +59,11 @@ def shoot(name):
     src = open(os.path.join(ROOT, "index.html"), encoding="utf-8").read()
     src = src.replace('<script src="firebase-config.js"></script>', "")
     src = src.replace("<head>\n", "<head>\n" + SEED.replace("%THEME%", theme).replace("%WHO%", who), 1)
-    if name in ("notif", "settings2"):
+    if name in ("notif", "settings2", "lockpage"):
         fake = """<script>window.BuilderDayNative={notifPrefs:()=>JSON.stringify({all:true,extras:{warn:true,nag:true,crew:true,wake:true},warnSound:"s_warn",crewSound:"s_connect",
           blocks:{train:{on:true,sound:"s_train"},study:{on:false,sound:"s_study"},build:{on:true,sound:"s_build"}},
           sounds:[{id:"s_train",label:"Punch"},{id:"s_build",label:"Rising marimba"},{id:"s_warn",label:"Tick-tick"},{id:"s_connect",label:"Ping"},{id:"s_study",label:"Clear bell"},{id:"s_exec",label:"Knock-knock"}]}),
-          setNotif(){},setNotifSound(){},previewSound(){},appLockState:()=>"on",setAppLock(){},setRoutine(){},setScheduleEnabled(){},keepAwake(){},version:()=>"3.3"};</script>"""
+          setNotif(){},setNotifSound(){},previewSound(){},lockInfo:()=>JSON.stringify({mode:"device",len:4,bio:true,bioAvailable:true,deviceSecure:true}),setLock(){},setRoutine(){},setScheduleEnabled(){},keepAwake(){},version:()=>"3.3"};</script>"""
         src = src.replace("<head>\n", "<head>\n" + fake, 1)
     if action: src = src.replace("</body>", f"<script>setTimeout(()=>{{{action}}},900)</script></body>")
     open(os.path.join(ROOT, f"_s_{name}.html"), "w", encoding="utf-8").write(src)

@@ -153,7 +153,7 @@ public class StartActivity extends Activity {
         root.addView(name);
 
         android.widget.TextView sub = new android.widget.TextView(this);
-        sub.setText("Locked · use your fingerprint or screen lock");
+        sub.setText("Locked");
         sub.setTextSize(15);
         sub.setTextColor(0xFF8D93A2);
         sub.setGravity(android.view.Gravity.CENTER);
@@ -179,38 +179,11 @@ public class StartActivity extends Activity {
 
     private void unlock() {
         if (unlocking || unlocked) return;
-        if (!AppLock.enabled(this)) { onUnlocked(); return; }   // app lock switched off in Settings
-        android.app.KeyguardManager km = getSystemService(android.app.KeyguardManager.class);
-        if (km == null || !km.isDeviceSecure()) {
-            // No fingerprint, PIN, pattern or password on this phone, so there's nothing to check against
-            toast("Set a screen lock in your phone's settings to lock ORDO.");
-            onUnlocked();
-            return;
-        }
+        if (!AppLock.enabled(this)) { onUnlocked(); return; }   // no app lock chosen
         unlocking = true;
         if (unlockButton != null) unlockButton.setVisibility(android.view.View.INVISIBLE);
-        if (Build.VERSION.SDK_INT >= 30) {
-            android.hardware.biometrics.BiometricPrompt prompt = new android.hardware.biometrics.BiometricPrompt.Builder(this)
-                    .setTitle("Unlock ORDO")
-                    .setSubtitle("Fingerprint, face, or your phone's PIN, pattern or password")
-                    .setAllowedAuthenticators(android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_WEAK
-                            | android.hardware.biometrics.BiometricManager.Authenticators.DEVICE_CREDENTIAL)
-                    .build();
-            prompt.authenticate(new android.os.CancellationSignal(), getMainExecutor(),
-                    new android.hardware.biometrics.BiometricPrompt.AuthenticationCallback() {
-                        @Override public void onAuthenticationSucceeded(android.hardware.biometrics.BiometricPrompt.AuthenticationResult r) {
-                            unlocking = false; onUnlocked();
-                        }
-                        @Override public void onAuthenticationError(int code, CharSequence msg) {
-                            unlocking = false; showUnlockButton();
-                        }
-                    });
-        } else {
-            // Android 8–10: the system's confirm-your-screen-lock screen (fingerprint where the phone offers it)
-            Intent i = km.createConfirmDeviceCredentialIntent("Unlock ORDO", "Use your screen lock to continue");
-            if (i == null) { unlocking = false; onUnlocked(); return; }
-            startActivityForResult(i, RC_AUTH);
-        }
+        startActivityForResult(new Intent(this, LockActivity.class), RC_AUTH);
+        overridePendingTransition(android.R.anim.fade_in, 0);
     }
 
     @Override

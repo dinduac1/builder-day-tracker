@@ -655,6 +655,22 @@ textarea.tx{resize:vertical;min-height:64px;line-height:1.45}
 .setrow .beat{margin:0}
 .setrow .chev{font-size:28px;line-height:1;color:var(--muted)}
 .setrow:hover{border-color:var(--line-strong)}
+.vid.pace{display:grid;place-content:center;justify-items:center;gap:12px;aspect-ratio:16/9;background:radial-gradient(circle at 50% 40%,#151826,#08090C 70%);border-radius:18px;padding:16px}
+.vid.pace .pring{width:min(32vw,128px);aspect-ratio:1}
+.vid.pace svg{width:100%;height:100%}
+.vid.pace .pr{transform-origin:60px 60px}
+.vid.pace .ptxt{font-size:13.5px;color:rgba(243,241,236,.75);text-align:center;max-width:300px}
+.vid.pace .ptxt b{color:#F3F1EC}
+.capbar{display:grid;gap:6px;margin:-4px 0 4px}
+.capbar .ct{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.capbar .ct b{font-family:var(--f-display);font-size:30px;font-weight:800;letter-spacing:.02em;color:var(--ink);cursor:pointer}
+.capbar .tr{height:6px;border-radius:6px;background:var(--sunk);overflow:hidden}
+.capbar .tr i{display:block;height:100%;background:var(--accent);border-radius:6px;transition:width 1s linear}
+.capbar.late .tr i{background:var(--warn)}.capbar.late .ct b{color:var(--warn)}
+.capbar.up .ct b{color:var(--warn)}
+.capsel{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.capsel button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 11px;font:inherit;font-size:12px;letter-spacing:0;cursor:pointer}
+.capsel button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 </style>
 </head>
 <body>
@@ -903,6 +919,40 @@ const EXERCISES = {
              mistakes:["Forcing the hips down","Holding tension in the shoulders"]},
 };
 
+// Pelvic floor (kegels): optional, added from the workout builder. rhythm = [squeeze s, relax s] for the pacing ring.
+Object.assign(EXERCISES, {
+  kegelfind: {name:"Find the muscle", rhythm:[3, 3], muscles:["Pelvic floor"],
+    steps:["Sit or lie down, relaxed. Breathe normally.","Squeeze as if stopping the flow of urine and holding in gas at the same time. You should feel a lift inside, behind the base of the penis / up toward the navel.","Keep your glutes, thighs and stomach loose. Only the inside lifts.","Let go fully. That lift-and-release is one kegel. Never practise while actually urinating."],
+    mistakes:["Squeezing glutes, thighs or abs instead","Holding your breath","Bearing down (pushing out) instead of lifting"]},
+  kegelhold: {name:"Kegel Holds", rhythm:[10, 10], muscles:["Pelvic floor","Endurance"],
+    steps:["Lie on your back, knees bent, or sit tall.","Lift and squeeze the pelvic floor, then hold for 10 seconds while breathing normally.","Release completely and rest 10 seconds. The rest matters as much as the squeeze.","Build up: start with 5-second holds if 10 is too much; add a second each week."],
+    mistakes:["Holding your breath through the squeeze","Not relaxing fully between reps","Letting the squeeze fade halfway: stop the rep when it fades"]},
+  kegelflick: {name:"Quick Flicks", rhythm:[1, 1], muscles:["Pelvic floor","Fast-twitch"],
+    steps:["Same position as the holds.","Squeeze hard and fast, then let go straight away: about one second each.","Keep them crisp, like a pulse. Breathe throughout.","These train the fast reflex that fires during sudden effort and control."],
+    mistakes:["Getting sloppy as you tire: stop when they lose snap","Tensing the abs or glutes"]},
+  kegelelev: {name:"Elevator Kegels", rhythm:[9, 6], muscles:["Pelvic floor","Control"],
+    steps:["Picture the pelvic floor as a lift going up three floors.","Squeeze a third of the way and pause 3 s, two thirds and pause 3 s, then all the way and pause 3 s.","Come down the same way, one floor at a time, then relax fully.","Slow and controlled: this builds precise, graded control."],
+    mistakes:["Rushing the floors","Losing the squeeze on the way down"]},
+  kegelbridge: {name:"Bridge + Kegel", rhythm:[5, 4], muscles:["Pelvic floor","Glutes","Core"],
+    steps:["Lie on your back, knees bent, feet flat, hip-width apart.","Breathe out, lift and squeeze the pelvic floor, then drive your hips up into a bridge.","Hold the top 5 seconds keeping both squeezes on.","Lower slowly, then release the pelvic floor fully before the next rep."],
+    mistakes:["Arching the lower back at the top","Forgetting the pelvic floor once the hips rise"]},
+  kegelstand: {name:"Standing Kegel Holds", rhythm:[10, 10], muscles:["Pelvic floor","Function"],
+    steps:["Stand tall, feet hip-width, knees soft.","Lift and squeeze for 10 seconds, breathing normally. Standing is harder: gravity is pulling down.","Release completely for 10 seconds.","Once easy, practise the squeeze just before a cough, a lift, or getting up from a chair (“the knack”)."],
+    mistakes:["Clenching the glutes to help","Locking the knees"]},
+  kegelrev: {name:"Reverse Kegels (relax & drop)", rhythm:[5, 5], muscles:["Pelvic floor","Relaxation"],
+    steps:["Lie or sit relaxed. Breathe deep into your belly.","As you breathe in, let the pelvic floor soften and gently drop, as if letting go of a held breath down there. No pushing or straining.","Breathe out and let it return to rest.","These keep the muscle from getting tight and overworked. Do them after every kegel session."],
+    mistakes:["Straining or bearing down hard","Skipping them: a tight pelvic floor works worse, not better"]},
+});
+const EXTRA_LIB = [   // not in the default workout; offered as their own area in the builder
+  {id:"kegel_find",  ex:"kegelfind",  sec:"Pelvic floor", name:"Find the muscle (first sessions)", target:5},
+  {id:"kegel_hold",  ex:"kegelhold",  sec:"Pelvic floor", name:"Kegel Holds · 10 s", target:10, hint:"10 s squeeze · 10 s rest"},
+  {id:"kegel_flick", ex:"kegelflick", sec:"Pelvic floor", name:"Quick Flicks", target:20},
+  {id:"kegel_elev",  ex:"kegelelev",  sec:"Pelvic floor", name:"Elevator Kegels", target:5},
+  {id:"kegel_bridge",ex:"kegelbridge",sec:"Pelvic floor", name:"Bridge + Kegel · 5 s hold", target:10},
+  {id:"kegel_stand", ex:"kegelstand", sec:"Pelvic floor", name:"Standing Kegel Holds · 10 s", target:5},
+  {id:"kegel_rev",   ex:"kegelrev",   sec:"Pelvic floor", name:"Reverse Kegels (relax)", target:10, stretch:true},
+];
+
 // Your FULL BODY TRAIN 10 routine (from Home Workout), in order. unit "sec" = timed hold.
 const ROUTINE = [
   // ── Upper body
@@ -996,7 +1046,7 @@ function stretchArea(name){
 }
 /** Put each stretch right after the work it relaxes; items keep their own targets. */
 function orderByArea(items){
-  const AR = ["Upper body", "Legs & glutes", "Core", "Back"], idx = Object.fromEntries(ROUTINE.map((r, i) => [r.id, i]));
+  const AR = ["Upper body", "Legs & glutes", "Core", "Back", "Pelvic floor"], idx = Object.fromEntries(ROUTINE.map((r, i) => [r.id, i]));
   const fixed = items.map(r => {
     const base = ROUTINE.find(x => x.id === r.id);
     if (base) return {...r, sec: base.sec, ...(base.stretch ? {stretch: true} : {})};
@@ -2108,6 +2158,17 @@ const restSecs = () => (settings.restSec > 0 ? settings.restSec : 20);
 
 function videoBox(e, autoplay){
   const box = document.createElement("div"); box.className = "vid";
+  if (!e.video) {
+    const [sq, rl] = e.rhythm || [5, 5], T = sq + rl;
+    box.classList.add("pace");
+    box.style.setProperty("--T", T + "s"); box.style.setProperty("--sq", (sq / T * 100).toFixed(1) + "%");
+    box.innerHTML = `<div class="pring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="rgba(243,241,236,.1)" stroke-width="8"/><circle class="pr" cx="60" cy="60" r="50" fill="none" stroke="#7C8BFF" stroke-width="8" stroke-linecap="round"/></svg></div>
+      <div class="ptxt"><b>Squeeze ${sq} s</b> as the ring closes · <b>relax ${rl} s</b> as it opens</div>`;
+    const pr = box.querySelector(".pr");
+    pr.animate([{transform: "scale(1)", opacity: .55, offset: 0}, {transform: "scale(.62)", opacity: 1, offset: sq / T}, {transform: "scale(1)", opacity: .55, offset: 1}],
+      {duration: T * 1000, iterations: Infinity, easing: "ease-in-out"});
+    return box;
+  }
   if (!EMBED_VIDEO) {   // Claude artifact: no embedded players or thumbnails allowed, so link out
     box.classList.add("ytlink");
     box.innerHTML = `<a href="https://www.youtube.com/watch?v=${e.video}" target="_blank" rel="noopener">▶ Watch on YouTube</a>`;
@@ -2283,8 +2344,42 @@ function showWork(){
     ctrl.querySelector("#pminus").onclick = () => { player.count = Math.max(0, player.count - 1); paint(); };
     ctrl.querySelector("#pplus").onclick = () => { player.count++; paint(); };
     ctrl.querySelector("#pgo").onclick = () => { beep(1320, .2); logCurrent(player.count); saveWorkoutLog(); nextExercise(true); };
+    // optional time cap: finish the set inside the clock, or it logs what you've got and moves on
+    const sel = document.createElement("div"); sel.className = "capsel";
+    sel.innerHTML = `Time cap ${[0, 120, 180, 300].map(c => `<button data-c="${c}" class="${c === repCap() ? "on" : ""}">${c ? fmtSec(c) : "Off"}</button>`).join("")}`;
+    sel.querySelectorAll("button").forEach(b => b.onclick = () => { settings.repCap = Number(b.dataset.c); saveSettings(); showWork(); });
+    ctrl.after(sel);
+    const cap = repCap();
+    if (cap && player.log[r.id] == null) {
+      const bar = document.createElement("div"); bar.className = "capbar";
+      bar.innerHTML = `<div class="ct"><span>Time left</span><b title="Tap to pause"></b></div><div class="tr"><i></i></div>`;
+      big.before(bar);
+      const t = bar.querySelector("b"), fill = bar.querySelector("i");
+      let left = cap, grace = null, paused = false;
+      const paintCap = () => {
+        if (grace != null) { t.textContent = `Time's up · logging in ${grace}`; return; }
+        t.textContent = fmtSec(left) + (paused ? " · paused" : "");
+        fill.style.width = (left / cap * 100) + "%";
+        bar.classList.toggle("late", left <= 30);
+      };
+      t.onclick = () => { if (grace == null) { paused = !paused; paintCap(); } };
+      paintCap();
+      player.tick = setInterval(() => {
+        if (paused) return;
+        if (grace != null) {
+          grace--; paintCap();
+          if (grace <= 0) { clearInterval(player.tick); beep(1320, .2); logCurrent(player.count); saveWorkoutLog(); nextExercise(true); }
+          return;
+        }
+        left--; paintCap();
+        if (left > 0 && left <= 3) beep(660, .08);
+        if (left === 30) beep(880, .12);
+        if (left <= 0) { beep(1320, .35); grace = 5; bar.classList.add("up"); paintCap(); }   // a moment to fix the count
+      }, 1000);
+    }
   }
 }
+const repCap = () => Number(settings.repCap) || 0;
 function showList(){
   clearInterval(player.tick);
   const o = ovl(), doneN = Object.keys(player.log).length;
@@ -2320,7 +2415,7 @@ function showRest(){
     <div class="rest"><div class="lbl">Rest</div><div class="big" id="rbig"></div>
       <div class="ctrl"><button id="rplus">+20s</button><button class="go" id="rskip">Skip rest</button></div>
       <div class="lbl">Rest between exercises</div><div class="restpick">${[10, 20, 30, 45, 60].map(v => `<button data-v="${v}" class="${v === restSecs() ? "on" : ""}">${v}s</button>`).join("")}</div>
-      <div class="lbl">Next up</div><div class="nextup">${e && EMBED_VIDEO ? `<img alt="" src="${ytThumb(e.video)}">` : ""}<div><b></b><div class="prog"></div></div></div>
+      <div class="lbl">Next up</div><div class="nextup">${e && e.video && EMBED_VIDEO ? `<img alt="" src="${ytThumb(e.video)}">` : ""}<div><b></b><div class="prog"></div></div></div>
     </div></div>`;
   o.querySelector(".nextup b").textContent = r.name;
   o.querySelector(".nextup .prog").textContent = r.unit === "sec" ? `Hold ${fmtSec(r.target)}` : `${r.target} reps`;
@@ -3106,9 +3201,7 @@ function openSettings(){
       <div class="redfoot"><button class="btn-sm" id="stRoutine">Build / edit your routine</button><button class="linkbtn" id="stWorkouts">Workout sets</button></div></div>
     <div class="setgrp"><h3>Challenge</h3><div id="stChal"></div></div>
     <button class="setgrp setrow" id="stNotifRow"><span><h3>Notifications</h3><span class="beat" id="stNotifSum">Reminders, sounds, crew alerts</span></span><span class="chev" aria-hidden="true">›</span></button>
-    <div class="setgrp" id="stLockGrp" hidden><h3>App lock</h3>
-      <label class="toggle"><span>Lock ORDO with your fingerprint, face or phone PIN</span><input type="checkbox" id="stLock"></label>
-      <div class="beat" id="stLockNote"></div></div>
+    <button class="setgrp setrow" id="stLockRow" hidden><span><h3>App lock</h3><span class="beat" id="stLockSum"></span></span><span class="chev" aria-hidden="true">›</span></button>
     <div class="setgrp"><h3>Appearance</h3><div class="seg" id="stTheme"><button data-t="system">System</button><button data-t="dark">Dark</button><button data-t="light">Light</button></div></div>
     <div class="setgrp"><h3>Account</h3><div id="stAcct"></div></div></div>`;
   o.querySelector(".close").onclick = () => { closeOverlay(); render(); };
@@ -3148,17 +3241,10 @@ function openSettings(){
   }
   o.querySelector("#stNotifRow").onclick = openNotifPage;
   o.querySelector("#stNotifSum").textContent = notifSummary();
-  if (NATIVE && NATIVE.appLockState) {
-    const grp = o.querySelector("#stLockGrp"), lk = o.querySelector("#stLock"), note = o.querySelector("#stLockNote");
-    const show = st => {
-      lk.checked = st === "on"; lk.disabled = st === "unavailable";
-      note.textContent = st === "unavailable" ? "Set a screen lock (fingerprint, PIN or pattern) in your phone's settings first."
-        : st === "on" ? "Asks when you open ORDO, and again after 30 seconds away. Turning it off needs your fingerprint."
-        : "Off. Anyone holding your unlocked phone can open ORDO.";
-    };
-    grp.hidden = false; show(NATIVE.appLockState());
-    window.__ordoLockChanged = show;
-    lk.onchange = () => { const want = lk.checked; lk.checked = !want; NATIVE.setAppLock(want); };
+  if (NATIVE && NATIVE.lockInfo) {
+    o.querySelector("#stLockRow").hidden = false;
+    o.querySelector("#stLockSum").textContent = lockSummary(JSON.parse(NATIVE.lockInfo() || "{}"));
+    o.querySelector("#stLockRow").onclick = openLockPage;
   }
   const th = (() => { try { return localStorage.getItem("ordo-theme") || "system"; } catch(e) { return "system"; } })();
   o.querySelectorAll("#stTheme button").forEach(btn => {
@@ -3302,10 +3388,10 @@ function drawRoutine(){
 }
 
 /* =========================================================== workout sets */
-const AREAS = ["Upper body", "Legs & glutes", "Core", "Back", "Your own"];
+const AREAS = ["Upper body", "Legs & glutes", "Core", "Back", "Pelvic floor", "Your own"];
 function exLibrary(){
   const full = ((settings.workouts || {}).full || {}).items || [];
-  const lib = ROUTINE.map(r => { const o = full.find(x => x.id === r.id); return {...r, target: o ? o.target : r.target}; });
+  const lib = [...ROUTINE, ...EXTRA_LIB].map(r => { const o = full.find(x => x.id === r.id); return {...r, target: o ? o.target : r.target}; });
   Object.values(settings.workouts || {}).forEach(w => (w.items || []).forEach(r => {
     if (!lib.some(x => x.id === r.id) && !["mobility", "steps"].includes(r.id)) lib.push({...r, sec: AREAS.includes(r.sec) ? r.sec : "Your own"});
   }));
@@ -3585,6 +3671,74 @@ async function openPhotos(focusK){
   [...L].reverse().forEach(x => { const f = document.createElement("figure"); f.innerHTML = `<img alt="" loading="lazy"><figcaption></figcaption>`; f.querySelector("img").src = x.img; f.querySelector("figcaption").textContent = dayLbl(x.k); f.onclick = () => full(x); grid.appendChild(f); });
   body.appendChild(grid);
   if (focusK) { const x = L.find(y => y.k === focusK); if (x) full(x); }
+}
+
+/* =========================================================== app lock settings (the Android app) */
+function lockSummary(L){
+  return {off: "Off", device: "Phone's lock: fingerprint, face or phone PIN", pin: `ORDO ${L.len || 4}-digit PIN`, password: "ORDO password"}[L.mode] + (["pin", "password"].includes(L.mode) && L.bio && L.bioAvailable ? " + fingerprint/face" : "");
+}
+let lockDraft = null;
+function openLockPage(){
+  const o = ovl(), L = JSON.parse(NATIVE.lockInfo() || "{}");
+  if (!lockDraft) lockDraft = {mode: L.mode, len: L.len || 4, bio: L.bio !== false};
+  const D = lockDraft;
+  const opts = [
+    ["off", "Off", "Anyone holding your unlocked phone can open ORDO."],
+    ["device", "Phone's lock", L.deviceSecure ? "Fingerprint, face, or your phone's PIN, pattern or password." : "Set a screen lock in your phone's settings to use this."],
+    ["pin4", "4-digit PIN", "A PIN just for ORDO."],
+    ["pin6", "6-digit PIN", "Harder to guess."],
+    ["password", "Password", "Letters, numbers, anything. At least 6 characters."],
+  ];
+  const cur = D.mode === "pin" ? "pin" + D.len : D.mode;
+  o.innerHTML = `<div class="in"><div class="bar"><span class="prog">Settings</span><button class="close">← Settings</button></div>
+    <h2 class="exname">App lock</h2><p class="beat">How ORDO checks it's you when you open it, and again after 30 seconds away.</p>
+    <div class="progs" id="lkOpts"></div><div id="lkSetup"></div><p class="beat" id="lkMsg"></p></div>`;
+  o.querySelector(".close").onclick = () => { lockDraft = null; openSettings(); };
+  const box = o.querySelector("#lkOpts");
+  opts.forEach(([k, name, sub]) => {
+    const c = document.createElement("button"); c.className = "prog-card" + (cur === k ? " on" : "");
+    c.innerHTML = `<b></b><span></span><i></i>`; c.querySelector("b").textContent = name; c.querySelector("span").textContent = sub;
+    const isNow = (L.mode === "pin" ? "pin" + L.len : L.mode) === k;
+    c.querySelector("i").textContent = isNow ? "Current" : cur === k ? "Selected" : "";
+    c.disabled = k === "device" && !L.deviceSecure;
+    c.onclick = () => { D.mode = k.startsWith("pin") ? "pin" : k; if (k.startsWith("pin")) D.len = +k.slice(3); openLockPage(); };
+    box.appendChild(c);
+  });
+  const st = o.querySelector("#lkSetup"), msg = o.querySelector("#lkMsg");
+  const apply = (secret) => {
+    window.__ordoLockChanged = (info, err) => { if (err) { msg.textContent = err; msg.style.color = "var(--warn)"; return; } lockDraft = null; toast("App lock: " + lockSummary(info) + "."); openSettings(); };
+    NATIVE.setLock(D.mode, secret || "", D.len, !!D.bio);
+  };
+  const bioRow = () => {
+    if (!L.bioAvailable) return null;
+    const t = document.createElement("label"); t.className = "toggle"; t.innerHTML = `<span>Also unlock with fingerprint or face</span><input type="checkbox">`;
+    const c = t.querySelector("input"); c.checked = D.bio; c.onchange = () => { D.bio = c.checked; };
+    return t;
+  };
+  if (D.mode === "pin" || D.mode === "password") {
+    const pin = D.mode === "pin";
+    const g = document.createElement("div"); g.className = "setgrp";
+    g.innerHTML = `<label class="fl">${pin ? `New ${D.len}-digit PIN` : "New password"}</label><input class="tx" type="password" id="lk1" ${pin ? `inputmode="numeric" maxlength="${D.len}" pattern="[0-9]*"` : `minlength="6" autocomplete="new-password"`}>
+      <label class="fl">Type it again</label><input class="tx" type="password" id="lk2" ${pin ? `inputmode="numeric" maxlength="${D.len}" pattern="[0-9]*"` : `autocomplete="new-password"`}>
+      ${pin ? "" : `<p class="beat">Don't use your crew code: everyone in your crew knows it.</p>`}`;
+    const br = bioRow(); if (br) g.appendChild(br);
+    const sv = document.createElement("button"); sv.className = "btn primary block"; sv.textContent = L.mode !== "off" ? "Confirm it's you, then save" : "Save";
+    sv.onclick = () => {
+      const a = g.querySelector("#lk1").value, b = g.querySelector("#lk2").value;
+      msg.style.color = "var(--warn)";
+      if (pin && !new RegExp(`^\\d{${D.len}}$`).test(a)) return msg.textContent = `Enter ${D.len} digits.`;
+      if (!pin && a.length < 6) return msg.textContent = "Use at least 6 characters.";
+      if (a !== b) return msg.textContent = "Those don't match. Type the same one twice.";
+      if (pin && /^(\d)\1+$/.test(a)) return msg.textContent = "Pick something harder than one digit repeated.";
+      msg.textContent = ""; apply(a);
+    };
+    g.appendChild(sv); st.appendChild(g);
+  } else if (D.mode !== L.mode) {
+    const sv = document.createElement("button"); sv.className = "btn primary block";
+    sv.textContent = L.mode !== "off" ? "Confirm it's you, then save" : "Save";
+    sv.onclick = () => apply("");
+    st.appendChild(sv);
+  } else if (D.mode === L.mode && (D.mode === "pin" || D.mode === "password")) {}
 }
 
 /* =========================================================== notification settings */
