@@ -878,6 +878,9 @@ const EXERCISES = {
   hinge:    {name:"Hip Hinge", video:"gVzth5ngEZ4", muscles:["Hamstrings","Glutes","Lower back"],
              steps:["Stand feet hip-width, knees slightly bent (hold dumbbells if you like).","Push your hips straight back, keeping your back flat and chest proud.","Lower until you feel a stretch in your hamstrings, weights close to your legs.","Squeeze your glutes to drive your hips forward and stand tall."],
              mistakes:["Rounding the back","Turning it into a squat","Hyper-extending at the top"]},
+  rdl:      {name:"Dumbbell Romanian Deadlift", video:"3USggQXRw_U", muscles:["Hamstrings","Glutes","Lower back","Grip"],
+             steps:["Stand feet hip-width, a dumbbell in each hand in front of your thighs, knees softly bent and staying that way.","Push your hips straight back and let the dumbbells slide down the front of your legs, back flat, chest proud, shoulders pulled back.","Go down until you feel a strong stretch in your hamstrings (usually just below the knee). Don't chase the floor.","Drive your hips forward and squeeze your glutes to stand tall. 2 seconds down, 1 second up.","Pick a weight where the last 2 reps of each set are hard. When all sets feel easy, go heavier."],
+             mistakes:["Rounding the back to reach lower","Bending the knees more and turning it into a squat","Letting the dumbbells drift away from your legs","Leaning back at the top"]},
   bridge:   {name:"Glute Bridge", video:"nuapk_-Q2BI", muscles:["Glutes","Hamstrings","Core"],
              steps:["Lie on your back, knees bent, feet flat and hip-width apart, arms by your sides.","Tuck your pelvis slightly and brace your abs.","Drive through your heels to lift your hips until knees, hips and shoulders are in a line.","Hold at the top squeezing your glutes the whole time."],
              mistakes:["Arching the lower back at the top","Pushing through the toes","Letting the knees fall in or out"]},
@@ -1009,7 +1012,7 @@ const ROUTINE = [
   {id:"side_lunges",  ex:"sidelunge",  sec:"Legs & glutes", name:"Side Lunges",                  target:20},
   {id:"bulg_left",    ex:"bulgarian",  sec:"Legs & glutes", name:"Bulgarian Split Squat · left", target:12},
   {id:"bulg_right",   ex:"bulgarian",  sec:"Legs & glutes", name:"Bulgarian Split Squat · right",target:12},
-  {id:"hip_hinge",    ex:"hinge",      sec:"Legs & glutes", name:"Hip Hinge",                    target:30},
+  {id:"db_rdl",       ex:"rdl",        sec:"Legs & glutes", name:"Dumbbell Romanian Deadlift",   target:24, hint:"3 × 8 · last 2 reps of each set hard"},
   {id:"kickbacks",    ex:"kickback",   sec:"Legs & glutes", name:"Glute Kickbacks",              target:20},
   {id:"calves",       ex:"calf",       sec:"Legs & glutes", name:"Calf Raises",                  target:30},
   {id:"wall_sit",     ex:"wallsit",    sec:"Legs & glutes", name:"Wall Sit",                     target:60, unit:"sec"},
@@ -1065,7 +1068,7 @@ const OLD_GYM_WORKOUTS = {   // the old gym split; only shown to people who stil
     {id:"calves",   name:"Calf raises",             target:60, hint:"3 × 20"}]},
 };
 const DEFAULT_SPLIT = ["full","full","full","full","full","full","rest"];   // Mon → Sun
-const PLAN_VERSION = 5;
+const PLAN_VERSION = 6;
 const secLabel = r => r.sec ? r.sec + (r.stretch ? " · stretch" : "") : "";
 /** Which area a stretch you wrote yourself belongs with, from its name. */
 function stretchArea(name){
@@ -1109,17 +1112,23 @@ function norm(v){
 // anything else is added to the full-body list.
 function migratePlan(){
   if (settings.plan === PLAN_VERSION) return false;
+  if (settings.plan === 5) {   // v6: Hip Hinge became the Dumbbell Romanian Deadlift, in every saved set
+    const W = {...(settings.workouts || {})}, rdl = ROUTINE.find(r => r.id === "db_rdl");
+    Object.keys(W).forEach(k => { if (W[k] && Array.isArray(W[k].items)) W[k] = {...W[k], items: W[k].items.map(r => r.id === "hip_hinge" ? {...rdl} : r)}; });
+    settings = {...settings, workouts: W, plan: PLAN_VERSION};
+    return true;
+  }
   if (settings.plan === 4) {   // v5: stretches sit with the area they relax, in every saved set
     const W = {...(settings.workouts || {})};
     Object.keys(W).forEach(k => { if (W[k] && Array.isArray(W[k].items) && k !== "rest") W[k] = {...W[k], items: orderByArea(W[k].items)}; });
-    settings = {...settings, workouts: W, plan: PLAN_VERSION};
-    return true;
+    settings = {...settings, workouts: W, plan: 5};
+    return migratePlan() || true;
   }
   if (settings.plan === 3) {
     const W = settings.workouts || {}, old = (W.full || {}).items || [];
     const byId = Object.fromEntries(old.map(r => [r.id, r]));
     const items = ROUTINE.map(r => byId[r.id] ? {...r, target: byId[r.id].target || r.target} : {...r});
-    old.filter(r => !ROUTINE.some(x => x.id === r.id)).forEach(r => items.push(r));
+    old.filter(r => !ROUTINE.some(x => x.id === r.id) && r.id !== "hip_hinge").forEach(r => items.push(r));
     settings = {...settings, workouts: {...W, full: {...DEFAULT_WORKOUTS.full, items: orderByArea(items)}, core: {...DEFAULT_WORKOUTS.core, items: []}}, plan: PLAN_VERSION};
     return true;
   }
