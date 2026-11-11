@@ -591,6 +591,19 @@ textarea.tx{resize:vertical;min-height:64px;line-height:1.45}
 .admrow .x{height:34px;border-radius:9px;border:1px solid var(--line);background:var(--bg);cursor:pointer;color:var(--warn)}
 .admrow .lk{grid-column:1 / -1;font-family:var(--f-mono);font-size:11px;color:var(--accent)}
 .member .ms .city{color:var(--ink)}
+.nrow{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:8px 10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.nrow:last-child{border-bottom:0}
+.nrow .nn{font-size:14.5px;font-weight:600;min-width:0}
+.nrow .nn small{display:block;font-family:var(--f-mono);font-size:11px;font-weight:400;color:var(--muted);margin-top:2px}
+.nrow .nsnd{grid-column:1 / -1;display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:8px}
+.nrow select{font:inherit;font-size:13.5px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);min-width:0}
+.nrow .play{height:38px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--accent);cursor:pointer;font-size:13px}
+.nrow input[type=checkbox]{appearance:none;width:44px;height:26px;border-radius:999px;background:var(--line-strong);position:relative;cursor:pointer;margin:0;transition:background .15s}
+.nrow input[type=checkbox]::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .15s}
+.nrow input[type=checkbox]:checked{background:var(--accent)}
+.nrow input[type=checkbox]:checked::after{left:21px}
+.nrow.off .nn{color:var(--muted)}
+.nsub{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:14px 0 0}
 </style>
 </head>
 <body>
@@ -2974,6 +2987,7 @@ function openSettings(){
       <label class="toggle"><span>Timed daily routine (your blocks, starred core, alarms)</span><input type="checkbox" id="stSched"></label>
       <div class="redfoot"><button class="btn-sm" id="stRoutine">Build / edit your routine</button><button class="linkbtn" id="stWorkouts">Workout sets</button></div></div>
     <div class="setgrp"><h3>Challenge</h3><div id="stChal"></div></div>
+    <div class="setgrp"><h3>Notifications</h3><div id="stNotif"></div></div>
     <div class="setgrp" id="stLockGrp" hidden><h3>App lock</h3>
       <label class="toggle"><span>Lock ORDO with your fingerprint, face or phone PIN</span><input type="checkbox" id="stLock"></label>
       <div class="beat" id="stLockNote"></div></div>
@@ -3014,6 +3028,7 @@ function openSettings(){
     chal.querySelector("#stStartC").onclick = () => { settings.challenge = {name: "75 Days", length: 75, strict: true, start: keyOf(new Date())}; saveSettings(); openSettings(); };
     if (!goalsList().length) chal.querySelector("#stStartC").disabled = true;
   }
+  renderNotifSettings(o.querySelector("#stNotif"));
   if (NATIVE && NATIVE.appLockState) {
     const grp = o.querySelector("#stLockGrp"), lk = o.querySelector("#stLock"), note = o.querySelector("#stLockNote");
     const show = st => {
@@ -3267,6 +3282,80 @@ function drawWorkoutEditor(key){
     settings.workouts = {...(settings.workouts || {}), [k]: {name, focus: areas.join(" · "), items}};
     saveSettings(); wDraft = null; drawWorkouts(); toast(`${name} saved. Choose it for any day in Your week.`);
   };
+}
+
+/* =========================================================== notification settings */
+function nrow(name, sub, on, onToggle){
+  const r = document.createElement("div"); r.className = "nrow" + (on ? "" : " off");
+  r.innerHTML = `<div class="nn"><span></span>${sub ? "<small></small>" : ""}</div><input type="checkbox">`;
+  r.querySelector(".nn span").textContent = name; if (sub) r.querySelector("small").textContent = sub;
+  const c = r.querySelector("input"); c.checked = on; c.setAttribute("aria-label", name); c.onchange = () => onToggle(c.checked);
+  return r;
+}
+function soundPicker(row, sounds, current, onPick){
+  const w = document.createElement("div"); w.className = "nsnd";
+  w.innerHTML = `<select aria-label="Sound">${sounds.map(x => `<option value="${x.id}">${esc(x.label)}</option>`).join("")}</select><button class="play" aria-label="Play this sound">▶</button>`;
+  const se = w.querySelector("select"); se.value = current;
+  se.onchange = () => onPick(se.value);
+  w.querySelector(".play").onclick = () => { try { NATIVE.previewSound(se.value); } catch(e){} };
+  row.appendChild(w);
+}
+async function renderNotifSettings(box){
+  box.innerHTML = "";
+  const sub = t => { const h = document.createElement("div"); h.className = "nsub"; h.textContent = t; box.appendChild(h); };
+  const note = t => { const p = document.createElement("p"); p.className = "beat"; p.textContent = t; box.appendChild(p); };
+  const blocks = useSchedule() ? BLOCKS.filter(b => b.id !== "wake") : [];
+  const hasWake = useSchedule() && BLOCKS.some(b => b.id === "wake");
+  if (NATIVE && NATIVE.notifPrefs) {
+    let P = {}; try { P = JSON.parse(NATIVE.notifPrefs()); } catch(e){}
+    const again = () => renderNotifSettings(box);
+    const set = (k, on) => { NATIVE.setNotif(k, on); again(); };
+    const snd = (k, v) => { NATIVE.setNotifSound(k, v); again(); };
+    box.appendChild(nrow("All notifications", P.all ? "On" : "Everything is off, including alarms and crew alerts", !!P.all, on => set("all", on)));
+    if (!P.all) return;
+    const X = P.extras || {};
+    sub("Alerts");
+    if (hasWake) box.appendChild(nrow("Wake-up alarm", `${BLOCKS.find(b => b.id === "wake").s} · rings until you tap I'm up`, X.wake !== false, on => set("wake", on)));
+    if (blocks.length) {
+      const w = nrow("5 minutes left", "Before each block ends", X.warn !== false, on => set("warn", on));
+      if (X.warn !== false) soundPicker(w, P.sounds || [], P.warnSound, v => snd("warn", v));
+      box.appendChild(w);
+      box.appendChild(nrow("Nag mode", `Repeats until you start a ${fiveName().replace(/^The /, "")} block`, X.nag !== false, on => set("nag", on)));
+    }
+    const c = nrow("Crew alerts", "When someone in your crew finishes something", X.crew !== false, on => set("crew", on));
+    if (X.crew !== false) soundPicker(c, P.sounds || [], P.crewSound, v => snd("crew", v));
+    box.appendChild(c);
+    if (blocks.length) {
+      sub("Your routine");
+      blocks.forEach(b => {
+        const bp = (P.blocks || {})[b.id] || {on: true, sound: "s_exec"};
+        const r = nrow(b.name, `${b.s}${b.five ? " · core" : ""}`, bp.on !== false, on => set("block:" + b.id, on));
+        if (bp.on !== false) soundPicker(r, P.sounds || [], bp.sound, v => snd(b.id, v));
+        box.appendChild(r);
+      });
+    } else note("Turn on a timed routine (above) to get a reminder as each block starts.");
+    return;
+  }
+  // website / home-screen app: Web Push
+  if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
+    note(isIOS && !standalone ? "On iPhone, add ORDO to your Home Screen first (Share → Add to Home Screen), then open it from the icon." : "This browser can't show notifications. Use Chrome, or the ORDO Android app.");
+    return;
+  }
+  if (Notification.permission === "denied") { note("Notifications are blocked for this site. Allow them in your browser's site settings, then come back."); return; }
+  swReg = swReg || await navigator.serviceWorker.ready.catch(() => null);
+  const subn = await currentSub().catch(() => null);
+  box.appendChild(nrow("Notifications on this device", subn ? "On" : "Off", !!subn, async on => { if (on) await turnOn(); else await turnOff(); renderNotifSettings(box); }));
+  if (!subn) return;
+  if (blocks.length) {
+    sub("Your routine");
+    const chosen = new Set(remindBlocks());
+    blocks.forEach(b => box.appendChild(nrow(b.name, b.s, chosen.has(b.id), async on => {
+      const next = BLOCKS.map(x => x.id).filter(id => id === b.id ? on : chosen.has(id));
+      try { localStorage.setItem(RB_KEY, JSON.stringify(next)); } catch(e){}
+      await postSub(subn).catch(() => {}); renderNotifSettings(box);
+    })));
+  }
+  note("Your browser plays its own notification sound. To pick a sound for each block, use the ORDO Android app.");
 }
 
 /* =========================================================== profile */

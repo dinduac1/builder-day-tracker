@@ -62,7 +62,7 @@ public class WakeService extends Service {
         Schedule.Block w = Schedule.byId("wake");
         return new Notification.Builder(this, Notifs.CH_WAKE)
                 .setSmallIcon(R.drawable.ic_stat)
-                .setColor(0xFFE0AD55)
+                .setColor(Notifs.BRAND)
                 .setContentTitle("Wake up · " + w.start)
                 .setContentText(w.desc)
                 .setCategory(Notification.CATEGORY_ALARM)

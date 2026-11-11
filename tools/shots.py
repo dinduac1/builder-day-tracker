@@ -46,6 +46,7 @@ SCEN = {
   "workouts":    ("dark", "me", 1500, "openWorkouts()"),
   "wedit":       ("dark", "me", 4200, "openWorkouts('full')"),
   "goaledit":    ("dark", "friend", 1700, "editingGoals=true;goalDraft=goalsList().map(g=>({...g}));render()"),
+  "notif":       ("dark", "me", 3400, "openSettings();setTimeout(()=>document.querySelector('#stNotif').scrollIntoView(),300)"),
   "program2":    ("light", "blank", 1100, "onboarding('program')"),
 }
 
@@ -54,6 +55,12 @@ def shoot(name):
     src = open(os.path.join(ROOT, "index.html"), encoding="utf-8").read()
     src = src.replace('<script src="firebase-config.js"></script>', "")
     src = src.replace("<head>\n", "<head>\n" + SEED.replace("%THEME%", theme).replace("%WHO%", who), 1)
+    if name == "notif":
+        fake = """<script>window.BuilderDayNative={notifPrefs:()=>JSON.stringify({all:true,extras:{warn:true,nag:true,crew:true,wake:true},warnSound:"s_warn",crewSound:"s_connect",
+          blocks:{train:{on:true,sound:"s_train"},study:{on:false,sound:"s_study"},build:{on:true,sound:"s_build"}},
+          sounds:[{id:"s_train",label:"Punch"},{id:"s_build",label:"Rising marimba"},{id:"s_warn",label:"Tick-tick"},{id:"s_connect",label:"Ping"},{id:"s_study",label:"Clear bell"},{id:"s_exec",label:"Knock-knock"}]}),
+          setNotif(){},setNotifSound(){},previewSound(){},appLockState:()=>"on",setAppLock(){},setRoutine(){},setScheduleEnabled(){},keepAwake(){},version:()=>"3.3"};</script>"""
+        src = src.replace("<head>\n", "<head>\n" + fake, 1)
     if action: src = src.replace("</body>", f"<script>setTimeout(()=>{{{action}}},900)</script></body>")
     open(os.path.join(ROOT, f"_s_{name}.html"), "w", encoding="utf-8").write(src)
     open(os.path.join(ROOT, f"_f_{name}.html"), "w").write(f'<!doctype html><body style="margin:0;background:#888"><iframe src="_s_{name}.html" style="width:390px;height:{h}px;border:0"></iframe></body>')

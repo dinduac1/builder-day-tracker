@@ -10,43 +10,50 @@ import android.media.AudioAttributes;
 import android.net.Uri;
 
 /**
- * One notification channel per block, each with its own sound (res/raw/s_<block>.wav), plus one for
- * "5 minutes left" warnings. Android fixes a channel's sound when it's created, so changing a sound means
- * bumping CH_VERSION. People can still mute or change any channel in the phone's notification settings.
+ * One notification channel per block and per chosen sound (Android fixes a channel's sound when it's created,
+ * so a new pick makes a new channel and the old one is deleted). Plus channels for 5-minute warnings, nag,
+ * crew alerts and the wake alarm. ORDO → Settings → Notifications drives all of it (NotifPrefs).
  */
 final class Notifs {
     static final String CH_VERSION = "v1";
-    static final String CH_WARN = "warn_" + CH_VERSION, CH_WAKE = "wake_" + CH_VERSION, CH_NAG = "nag_" + CH_VERSION, CH_CREW = "crew_" + CH_VERSION;
+    static final String CH_WAKE = "wake_" + CH_VERSION, CH_NAG = "nag_" + CH_VERSION;
+    static final int BRAND = 0xFF7C8BFF;   // ORDO ultramarine: tints the notification icon
 
-    static final String CH_OTHER = "block_other_" + CH_VERSION;
-    /** Blocks from the original day have their own sound; blocks people create share one channel. */
+    /** Blocks from the original day ship with their own sound. */
     static boolean hasSound(Context ctx, String blockId) {
         return ctx.getResources().getIdentifier("s_" + blockId, "raw", ctx.getPackageName()) != 0;
     }
-    static String channelFor(Context ctx, String blockId) { return hasSound(ctx, blockId) ? "block_" + blockId + "_" + CH_VERSION : CH_OTHER; }
+    static String channelFor(Context ctx, String blockId) { return "blk_" + blockId + "_" + NotifPrefs.soundOf(ctx, blockId); }
+    static String warnChannel(Context ctx) { return "warn_" + NotifPrefs.soundOf(ctx, "warn"); }
+    static String crewChannel(Context ctx) { return "crew_" + NotifPrefs.soundOf(ctx, "crew"); }
+
+    private static void make(NotificationManager nm, Context ctx, String id, String name, String desc, String sound, AudioAttributes aa, java.util.Set<String> keep) {
+        NotificationChannel ch = new NotificationChannel(id, name, NotificationManager.IMPORTANCE_HIGH);
+        ch.setDescription(desc);
+        ch.setSound(NotifPrefs.uri(ctx, sound), aa);
+        ch.enableVibration(!"silent".equals(sound));
+        nm.createNotificationChannel(ch);
+        keep.add(id);
+    }
 
     static void createChannels(Context ctx) {
         NotificationManager nm = ctx.getSystemService(NotificationManager.class);
         AudioAttributes notif = new AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build();
-        NotificationChannel other = new NotificationChannel(CH_OTHER, "Your routine blocks", NotificationManager.IMPORTANCE_HIGH);
-        other.setDescription("Blocks you added to your routine");
-        other.setSound(sound(ctx, "s_exec"), notif);
-        other.enableVibration(true);
-        nm.createNotificationChannel(other);
+        java.util.Set<String> keep = new java.util.HashSet<>();
         for (Schedule.Block b : Schedule.BLOCKS) {
-            if (b.id.equals("wake") || !hasSound(ctx, b.id)) continue;
-            NotificationChannel ch = new NotificationChannel(channelFor(ctx, b.id), b.name.split(" — ")[0], NotificationManager.IMPORTANCE_HIGH);
-            ch.setDescription("Starts at " + b.start);
-            ch.setSound(sound(ctx, "s_" + b.id), notif);
-            ch.enableVibration(true);
-            nm.createNotificationChannel(ch);
+            if (b.id.equals("wake")) continue;
+            make(nm, ctx, channelFor(ctx, b.id), b.name.split(" — ")[0], "Starts at " + b.start, NotifPrefs.soundOf(ctx, b.id), notif, keep);
         }
-        NotificationChannel warn = new NotificationChannel(CH_WARN, "5 minutes left", NotificationManager.IMPORTANCE_HIGH);
-        warn.setDescription("Heads-up before each block ends");
-        warn.setSound(sound(ctx, "s_warn"), notif);
-        nm.createNotificationChannel(warn);
+        make(nm, ctx, warnChannel(ctx), "5 minutes left", "Heads-up before each block ends", NotifPrefs.soundOf(ctx, "warn"), notif, keep);
+        make(nm, ctx, crewChannel(ctx), "Crew", "When someone in your crew finishes a goal or a day", NotifPrefs.soundOf(ctx, "crew"), notif, keep);
+        // channels from older picks (and the first app versions) go, so the phone's settings stay tidy
+        for (NotificationChannel c : nm.getNotificationChannels()) {
+            String id = c.getId();
+            if ((id.startsWith("blk_") || id.startsWith("block_") || id.startsWith("warn_") || id.startsWith("crew_")) && !keep.contains(id))
+                nm.deleteNotificationChannel(id);
+        }
 
         NotificationChannel nag = new NotificationChannel(CH_NAG, "Nag: haven't started", NotificationManager.IMPORTANCE_HIGH);
         nag.setDescription("Repeats every 10 minutes until you start a Daily Five block");
@@ -56,12 +63,6 @@ final class Notifs {
         nag.enableVibration(true);
         nag.setVibrationPattern(new long[]{0, 400, 150, 400, 150, 400});
         nm.createNotificationChannel(nag);
-
-        NotificationChannel crew = new NotificationChannel(CH_CREW, "Crew", NotificationManager.IMPORTANCE_HIGH);
-        crew.setDescription("When someone in your crew finishes a goal or a day");
-        crew.setSound(sound(ctx, "s_connect"), notif);
-        crew.enableVibration(true);
-        nm.createNotificationChannel(crew);
 
         // The wake-up alarm plays its own looping sound (WakeService), so this channel is silent.
         NotificationChannel wake = new NotificationChannel(CH_WAKE, "Wake-up alarm", NotificationManager.IMPORTANCE_HIGH);
@@ -98,7 +99,7 @@ final class Notifs {
     private static Notification.Builder builder(Context ctx, int id, String channel, String title, String text) {
         return new Notification.Builder(ctx, channel)
                 .setSmallIcon(R.drawable.ic_stat)
-                .setColor(0xFF1F6B43)
+                .setColor(BRAND)
                 .setContentTitle(title)
                 .setContentText(text)
                 .setStyle(new Notification.BigTextStyle().bigText(text))
@@ -108,14 +109,16 @@ final class Notifs {
     }
 
     static void postCrew(Context ctx, int id, String title, String text) {
-        ctx.getSystemService(NotificationManager.class).notify(id, builder(ctx, id, CH_CREW, title, text)
+        if (!NotifPrefs.extra(ctx, "crew")) return;
+        createChannels(ctx);
+        ctx.getSystemService(NotificationManager.class).notify(id, builder(ctx, id, crewChannel(ctx), title, text)
                 .setCategory(Notification.CATEGORY_SOCIAL).build());
     }
 
     static void post(Context ctx, int id, String channel, String title, String text) {
         Notification n = new Notification.Builder(ctx, channel)
                 .setSmallIcon(R.drawable.ic_stat)
-                .setColor(0xFF1F6B43)
+                .setColor(BRAND)
                 .setContentTitle(title)
                 .setContentText(text)
                 .setStyle(new Notification.BigTextStyle().bigText(text))

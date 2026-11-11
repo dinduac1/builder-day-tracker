@@ -269,6 +269,19 @@ public class TrackerActivity extends Activity {
                 AppLock.prompt(TrackerActivity.this, ok -> { if (ok) AppLock.setEnabled(TrackerActivity.this, false); reportLock(); });
             });
         }
+        @JavascriptInterface public String notifPrefs() { return NotifPrefs.json(getApplicationContext()); }
+        @JavascriptInterface public void setNotif(String key, boolean on) {
+            android.content.Context c = getApplicationContext();
+            NotifPrefs.set(c, key, on);
+            if (key.equals("all") || key.equals("block:wake") || key.equals("wake")) Scheduler.scheduleAll(c);
+        }
+        @JavascriptInterface public void setNotifSound(String key, String sound) {
+            android.content.Context c = getApplicationContext();
+            NotifPrefs.setSound(c, key, sound);
+            Notifs.createChannels(c);
+            NotifPrefs.preview(c, sound);
+        }
+        @JavascriptInterface public void previewSound(String sound) { NotifPrefs.preview(getApplicationContext(), sound); }
         @JavascriptInterface public void setRoutine(String json) {
             android.content.Context c = getApplicationContext();
             Schedule.save(c, json);
