@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CancellationSignal;
 import android.os.SystemClock;
@@ -58,7 +59,10 @@ public class TrackerActivity extends Activity {
     private long backgroundSince = 0;
     private static final int RC_PICK = 7;
     private android.webkit.ValueCallback<Uri[]> pickCallback;   // profile photo picker
-    private boolean picking = false;                           // the picker isn't "leaving the app": no relock
+    private boolean picking = false;
+    private Uri cameraUri;                                     // where the camera writes a progress photo
+    private static final int RC_CAM = 8;
+    private android.webkit.PermissionRequest pendingCam;      // the page asked for the camera; waiting on Android's prompt                           // the picker isn't "leaving the app": no relock
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -108,11 +112,29 @@ public class TrackerActivity extends Activity {
                 view.setBackgroundColor(Color.BLACK);
             }
             @Override public void onHideCustomView() { exitFullscreen(); }
-            // <input type="file">: profile photos
+            // ORDO's camera screen (getUserMedia): ask Android for the camera, then let the page have it
+            @Override public void onPermissionRequest(android.webkit.PermissionRequest req) {
+                runOnUiThread(() -> {
+                    boolean cam = java.util.Arrays.asList(req.getResources()).contains(android.webkit.PermissionRequest.RESOURCE_VIDEO_CAPTURE);
+                    if (!cam || !siteHost().equals(req.getOrigin().getHost())) { req.deny(); return; }
+                    if (checkSelfPermission(android.Manifest.permission.CAMERA) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                        req.grant(new String[]{android.webkit.PermissionRequest.RESOURCE_VIDEO_CAPTURE});
+                    } else { pendingCam = req; picking = true; requestPermissions(new String[]{android.Manifest.permission.CAMERA}, RC_CAM); }
+                });
+            }
+            // <input type="file">: profile photos, gallery picks
             @Override public boolean onShowFileChooser(WebView v, android.webkit.ValueCallback<Uri[]> cb, FileChooserParams params) {
                 if (pickCallback != null) pickCallback.onReceiveValue(null);
                 pickCallback = cb;
-                try { picking = true; startActivityForResult(params.createIntent(), RC_PICK); }
+                Intent pick = params.createIntent(), cam = cameraIntent(), launch;
+                boolean images = false;
+                for (String t : params.getAcceptTypes()) if (t != null && t.startsWith("image")) images = true;
+                if (cam != null && images && params.isCaptureEnabled()) launch = cam;          // "Take photo": straight to the camera
+                else if (cam != null && images) {                                              // otherwise camera or gallery
+                    launch = Intent.createChooser(pick, "Add a photo");
+                    launch.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{cam});
+                } else { launch = pick; cameraUri = null; }
+                try { picking = true; startActivityForResult(launch, RC_PICK); }
                 catch (Exception e) { picking = false; pickCallback = null; cb.onReceiveValue(null); return false; }
                 return true;
             }
@@ -139,10 +161,22 @@ public class TrackerActivity extends Activity {
     }
 
     @Override
+    public void onRequestPermissionsResult(int rc, String[] perms, int[] results) {
+        super.onRequestPermissionsResult(rc, perms, results);
+        if (rc != RC_CAM || pendingCam == null) return;
+        if (results.length > 0 && results[0] == android.content.pm.PackageManager.PERMISSION_GRANTED)
+            pendingCam.grant(new String[]{android.webkit.PermissionRequest.RESOURCE_VIDEO_CAPTURE});
+        else pendingCam.deny();
+        pendingCam = null;
+    }
+
+    @Override
     protected void onActivityResult(int req, int res, Intent data) {
         super.onActivityResult(req, res, data);
         if (req != RC_PICK || pickCallback == null) return;
-        pickCallback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(res, data));
+        Uri[] got = WebChromeClient.FileChooserParams.parseResult(res, data);
+        if (res == RESULT_OK && (got == null || got.length == 0) && cameraUri != null) got = new Uri[]{cameraUri};   // came from the camera
+        pickCallback.onReceiveValue(got);
         pickCallback = null;
     }
 
@@ -257,6 +291,69 @@ public class TrackerActivity extends Activity {
                 startActivity(Intent.createChooser(i, "Send your report"));
             });
         }
+        /** Every app on this phone that can send text (WhatsApp and WhatsApp Business separately), with icons. */
+        @JavascriptInterface public String shareTargets() {
+            try {
+                android.content.pm.PackageManager pm = getPackageManager();
+                Intent probe = new Intent(Intent.ACTION_SEND).setType("text/plain");
+                org.json.JSONArray out = new org.json.JSONArray();
+                java.util.Set<String> seen = new java.util.HashSet<>();
+                for (android.content.pm.ResolveInfo r : pm.queryIntentActivities(probe, 0)) {
+                    String pkg = r.activityInfo.packageName;
+                    if (pkg.equals(getPackageName()) || !seen.add(pkg)) continue;   // one entry per app
+                    String label = String.valueOf(pm.getApplicationLabel(r.activityInfo.applicationInfo));
+                    if (pkg.equals("com.whatsapp.w4b") && !label.toLowerCase().contains("business")) label = "WhatsApp Business";
+                    out.put(new org.json.JSONObject().put("pkg", pkg).put("label", label).put("icon", iconData(r.loadIcon(pm))));
+                }
+                return out.toString();
+            } catch (Exception e) { return "[]"; }
+        }
+        /** Send straight to one app. WhatsApp (either one) opens the partner's chat when a number is given. */
+        @JavascriptInterface public void shareTo(String pkg, String text, String phone) {
+            runOnUiThread(() -> {
+                Intent i = new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text).setPackage(pkg);
+                if (phone != null && phone.matches("[0-9]{7,15}") && (pkg.equals("com.whatsapp") || pkg.equals("com.whatsapp.w4b")))
+                    i.putExtra("jid", phone + "@s.whatsapp.net");
+                try { startActivity(i); }
+                catch (Exception e) { startActivity(Intent.createChooser(new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text), "Send with")); }
+            });
+        }
+        /** Send text plus a photo (a data: URL) to one app; WhatsApp opens the partner's chat when a number is given. */
+        @JavascriptInterface public void shareImageTo(String pkg, String text, String phone, String image) {
+            runOnUiThread(() -> {
+                Uri u = cacheImage(image, "report.jpg");
+                Intent i = new Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_TEXT, text);
+                if (u != null) i.setType("image/jpeg").putExtra(Intent.EXTRA_STREAM, u).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                else i.setType("text/plain");
+                Intent direct = new Intent(i).setPackage(pkg);
+                if (phone != null && phone.matches("[0-9]{7,15}") && (pkg.equals("com.whatsapp") || pkg.equals("com.whatsapp.w4b")))
+                    direct.putExtra("jid", phone + "@s.whatsapp.net");
+                try { startActivity(direct); } catch (Exception e) { startActivity(Intent.createChooser(i, "Send with")); }
+            });
+        }
+        /** Save a progress photo to the phone's gallery (Pictures/ORDO). Returns "" or what went wrong. */
+        @JavascriptInterface public String savePhoto(String image, String name) {
+            try {
+                byte[] bytes = decodeData(image);
+                if (bytes == null) return "No photo";
+                if (Build.VERSION.SDK_INT >= 29) {
+                    android.content.ContentValues v = new android.content.ContentValues();
+                    v.put(android.provider.MediaStore.Images.Media.DISPLAY_NAME, name);
+                    v.put(android.provider.MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
+                    v.put(android.provider.MediaStore.Images.Media.RELATIVE_PATH, "Pictures/ORDO");
+                    Uri u = getContentResolver().insert(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, v);
+                    if (u == null) return "The gallery refused the file";
+                    try (java.io.OutputStream o = getContentResolver().openOutputStream(u)) { o.write(bytes); }
+                } else {
+                    java.io.File dir = new java.io.File(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_PICTURES), "ORDO");
+                    dir.mkdirs();
+                    java.io.File f = new java.io.File(dir, name);
+                    try (java.io.FileOutputStream o = new java.io.FileOutputStream(f)) { o.write(bytes); }
+                    android.media.MediaScannerConnection.scanFile(TrackerActivity.this, new String[]{f.getPath()}, null, null);
+                }
+                return "";
+            } catch (Exception e) { return String.valueOf(e.getMessage()); }
+        }
         @JavascriptInterface public void notify(String title, String body) {
             Notifs.createChannels(getApplicationContext());
             Notifs.postCrew(getApplicationContext(), Math.abs(body.hashCode()) % 100000 + 10000, title, body);
@@ -315,5 +412,53 @@ public class TrackerActivity extends Activity {
             String html = out.toString("UTF-8").replace("__SITE__", getString(R.string.site_url));
             web.loadDataWithBaseURL("about:blank", html, "text/html", "utf-8", null);
         } catch (java.io.IOException e) { Log.w(TAG, "offline page", e); }
+    }
+
+    private static String iconData(android.graphics.drawable.Drawable d) {
+        int n = 96;
+        android.graphics.Bitmap b = android.graphics.Bitmap.createBitmap(n, n, android.graphics.Bitmap.Config.ARGB_8888);
+        android.graphics.Canvas c = new android.graphics.Canvas(b);
+        d.setBounds(0, 0, n, n); d.draw(c);
+        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        b.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out);
+        return "data:image/png;base64," + android.util.Base64.encodeToString(out.toByteArray(), android.util.Base64.NO_WRAP);
+    }
+
+    /** Camera intent that saves full-size into our cache (shared through FileProvider), or null if no camera app. */
+    private Intent cameraIntent() {
+        // declaring CAMERA means the phone's camera app also needs the grant
+        if (checkSelfPermission(android.Manifest.permission.CAMERA) != android.content.pm.PackageManager.PERMISSION_GRANTED) { cameraUri = null; return null; }
+        try {
+            java.io.File dir = new java.io.File(getCacheDir(), "photos");
+            if (!dir.exists()) dir.mkdirs();
+            java.io.File[] old = dir.listFiles();
+            if (old != null) for (java.io.File f : old) if (System.currentTimeMillis() - f.lastModified() > 86_400_000L) f.delete();
+            java.io.File f = new java.io.File(dir, "p" + System.currentTimeMillis() + ".jpg");
+            cameraUri = androidx.core.content.FileProvider.getUriForFile(this, getPackageName() + ".files", f);
+            Intent i = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE)
+                    .putExtra(android.provider.MediaStore.EXTRA_OUTPUT, cameraUri)
+                    .addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            return i.resolveActivity(getPackageManager()) != null ? i : null;
+        } catch (Exception e) { Log.w(TAG, "camera", e); cameraUri = null; return null; }
+    }
+
+    private static byte[] decodeData(String dataUrl) {
+        if (dataUrl == null) return null;
+        int c = dataUrl.indexOf(',');
+        if (!dataUrl.startsWith("data:") || c < 0) return null;
+        return android.util.Base64.decode(dataUrl.substring(c + 1), android.util.Base64.DEFAULT);
+    }
+
+    /** Write a data: URL image into our cache and share it through FileProvider. */
+    private Uri cacheImage(String dataUrl, String name) {
+        try {
+            byte[] b = decodeData(dataUrl);
+            if (b == null) return null;
+            java.io.File dir = new java.io.File(getCacheDir(), "photos");
+            if (!dir.exists()) dir.mkdirs();
+            java.io.File f = new java.io.File(dir, name);
+            try (java.io.FileOutputStream o = new java.io.FileOutputStream(f)) { o.write(b); }
+            return androidx.core.content.FileProvider.getUriForFile(this, getPackageName() + ".files", f);
+        } catch (Exception e) { Log.w(TAG, "share image", e); return null; }
     }
 }
