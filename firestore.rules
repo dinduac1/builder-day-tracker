@@ -48,6 +48,15 @@ service cloud.firestore {
         allow update, delete: if false;
       }
 
+      // Crew chat: members read it; each person posts only as themselves (text up to 1000 characters) and can delete their own.
+      match /messages/{id} {
+        allow read: if request.auth != null && isMember();
+        allow create: if request.auth != null && isMember() && request.resource.data.uid == request.auth.uid
+          && request.resource.data.text is string && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 1000;
+        allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+        allow update: if false;
+      }
+
       // Push tokens for crew alerts: each person manages only their own.
       match /devices/{uid} {
         allow read: if request.auth != null && isMember();
