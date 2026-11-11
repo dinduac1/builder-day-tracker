@@ -647,9 +647,18 @@ textarea.tx{resize:vertical;min-height:64px;line-height:1.45}
 .sheet .shimg input{appearance:none;width:44px;height:26px;border-radius:999px;background:var(--line-strong);position:relative;cursor:pointer;margin:0}
 .sheet .shimg input::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .15s}
 .sheet .shimg input:checked{background:var(--accent)}.sheet .shimg input:checked::after{left:21px}
+.ordo-load{width:88px;height:88px;display:block;border-radius:21px;box-shadow:0 18px 50px rgba(0,0,0,.45)}.ordo-load .ol-rot{transform-origin:32px 32px;animation:ol-rot 1.5s linear infinite}.ordo-load .ol-iv{stroke-dasharray:54 110;stroke-dashoffset:-20;animation:ol-iv 1.5s ease-in-out infinite}@keyframes ol-rot{to{transform:rotate(-360deg)}}@keyframes ol-iv{0%,100%{stroke-dasharray:34 110}50%{stroke-dasharray:74 110}}.ol-word{font-family:'Big Shoulders Display',system-ui,sans-serif;font-weight:800;letter-spacing:.36em;font-size:15px;color:rgba(243,241,236,.62);margin-left:.36em}.ol-dots::after{content:'';animation:ol-dots 1.5s steps(4) infinite}@keyframes ol-dots{0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}}@media (prefers-reduced-motion:reduce){.ordo-load .ol-rot{animation-duration:4s}.ordo-load .ol-iv{animation:none}}
+#boot{position:fixed;inset:0;z-index:200;background:#08090C;display:grid;place-content:center;justify-items:center;gap:22px;transition:opacity .35s ease}
+#boot.out{opacity:0;pointer-events:none}
+.setrow{display:flex;justify-content:space-between;align-items:center;gap:12px;text-align:left;cursor:pointer;color:var(--ink);font:inherit;width:100%}
+.setrow > span:first-child{display:grid;gap:4px}
+.setrow .beat{margin:0}
+.setrow .chev{font-size:28px;line-height:1;color:var(--muted)}
+.setrow:hover{border-color:var(--line-strong)}
 </style>
 </head>
 <body>
+<div id="boot" aria-label="Loading ORDO"><svg class="ordo-load" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="15" fill="#111318"/><circle cx="32" cy="32" r="17.5" fill="none" stroke="rgba(243,241,236,.08)" stroke-width="6.6"/><g class="ol-rot"><g transform="rotate(-90 32 32)"><circle class="ol-iv" cx="32" cy="32" r="17.5" fill="none" stroke="#F3F1EC" stroke-width="6.6" stroke-linecap="round"/><circle cx="32" cy="32" r="17.5" fill="none" stroke="#7C8BFF" stroke-width="6.6" stroke-linecap="round" stroke-dasharray="11 110"/></g></g></svg><div class="ol-word">ORDO</div></div>
 
 <div class="wrap">
   <header class="top">
@@ -3096,7 +3105,7 @@ function openSettings(){
       <label class="toggle"><span>Timed daily routine (your blocks, starred core, alarms)</span><input type="checkbox" id="stSched"></label>
       <div class="redfoot"><button class="btn-sm" id="stRoutine">Build / edit your routine</button><button class="linkbtn" id="stWorkouts">Workout sets</button></div></div>
     <div class="setgrp"><h3>Challenge</h3><div id="stChal"></div></div>
-    <div class="setgrp"><h3>Notifications</h3><div id="stNotif"></div></div>
+    <button class="setgrp setrow" id="stNotifRow"><span><h3>Notifications</h3><span class="beat" id="stNotifSum">Reminders, sounds, crew alerts</span></span><span class="chev" aria-hidden="true">›</span></button>
     <div class="setgrp" id="stLockGrp" hidden><h3>App lock</h3>
       <label class="toggle"><span>Lock ORDO with your fingerprint, face or phone PIN</span><input type="checkbox" id="stLock"></label>
       <div class="beat" id="stLockNote"></div></div>
@@ -3137,7 +3146,8 @@ function openSettings(){
     chal.querySelector("#stStartC").onclick = () => { settings.challenge = {name: "75 Days", length: 75, strict: true, start: keyOf(new Date())}; saveSettings(); openSettings(); };
     if (!goalsList().length) chal.querySelector("#stStartC").disabled = true;
   }
-  renderNotifSettings(o.querySelector("#stNotif"));
+  o.querySelector("#stNotifRow").onclick = openNotifPage;
+  o.querySelector("#stNotifSum").textContent = notifSummary();
   if (NATIVE && NATIVE.appLockState) {
     const grp = o.querySelector("#stLockGrp"), lk = o.querySelector("#stLock"), note = o.querySelector("#stLockNote");
     const show = st => {
@@ -3578,6 +3588,24 @@ async function openPhotos(focusK){
 }
 
 /* =========================================================== notification settings */
+function notifSummary(){
+  if (NATIVE && NATIVE.notifPrefs) {
+    let P = {}; try { P = JSON.parse(NATIVE.notifPrefs()); } catch(e){}
+    if (!P.all) return "Off";
+    const bl = useSchedule() ? BLOCKS.filter(b => b.id !== "wake") : [], on = bl.filter(b => ((P.blocks || {})[b.id] || {}).on !== false).length;
+    return [bl.length ? `${on} of ${bl.length} blocks` : null, (P.extras || {}).crew !== false ? "crew alerts on" : "crew alerts off"].filter(Boolean).join(" · ");
+  }
+  return "Reminders on this device, crew alerts";
+}
+/** Notifications get their own page, opened from Settings. */
+function openNotifPage(){
+  const o = ovl();
+  o.innerHTML = `<div class="in"><div class="bar"><span class="prog">Settings</span><button class="close">← Settings</button></div>
+    <h2 class="exname">Notification settings</h2><p class="beat">Choose what reaches you, and how each one sounds.</p><div class="setgrp"><div id="stNotif"></div></div></div>`;
+  o.querySelector(".close").onclick = openSettings;
+  o.scrollTop = 0;
+  renderNotifSettings(o.querySelector("#stNotif"));
+}
 function nrow(name, sub, on, onToggle){
   const r = document.createElement("div"); r.className = "nrow" + (on ? "" : " off");
   r.innerHTML = `<div class="nn"><span></span>${sub ? "<small></small>" : ""}</div><input type="checkbox">`;
@@ -3823,6 +3851,15 @@ function drawProgramEditor(key){
 }
 
 /* ---------- boot ---------- */
+/** Fade the loading screen once the first render and the fonts are in (never longer than 2.5 s). */
+let bootWaitAuth = !!(NATIVE && NATIVE.autoSignIn);   // in the app, hold the loader while the session is restored
+setTimeout(() => { bootWaitAuth = false; bootDone(); }, 7000);
+function bootDone(){
+  const b = $("boot"); if (!b || b.classList.contains("out") || bootWaitAuth) return;
+  b.classList.add("out"); setTimeout(() => b.remove(), 400);
+  try { NATIVE && NATIVE.appReady && NATIVE.appReady(); } catch(e){}
+}
+Promise.race([document.fonts ? document.fonts.ready : Promise.resolve(), new Promise(r => setTimeout(r, 2500))]).then(() => requestAnimationFrame(() => setTimeout(bootDone, 120)));
 $("brandMark").innerHTML = BRAND_SVG;
 $("editRoutine").onclick = () => openRoutine();
 $("editWorkouts").onclick = () => openWorkouts();
@@ -3851,7 +3888,19 @@ const G_ICON = '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107"
     });
   };
   window.__ordoSignIn = signIn;
-  window.__ordoSignOut = () => { auth.signOut(); if (NATIVE) NATIVE.signOut(); };
+  let autoTried = false, autoFailed = false;
+  function showSignedOut(){
+    bootWaitAuth = false; bootDone();
+    if (auth.currentUser) return;
+    authBox.innerHTML = "";
+    LS_KEY = "builder-day-v2"; lsLoad(); render();
+    if (!sessionStorage.getItem("ordo-local")) onboarding("welcome");
+    $("storeNote").textContent = "Saved in this browser only. Sign in to sync across your devices.";
+    const b = document.createElement("button"); b.className = "btn-g"; b.innerHTML = G_ICON + "<span>Sign in with Google</span>";
+    b.onclick = signIn;
+    authBox.appendChild(b);
+  }
+  window.__ordoSignOut = () => { autoTried = true; auth.signOut(); if (NATIVE) NATIVE.signOut(); };
 
   // Inside the Android app, Google sign-in runs natively and hands back an ID token
   window.__bdNativeSignIn = idToken => auth.signInWithCredential(firebase.auth.GoogleAuthProvider.credential(idToken))
@@ -3865,15 +3914,17 @@ const G_ICON = '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107"
     window.__ordo = u ? {db, uid: u.uid, user: u} : null;
     if (crewState.unsub) { crewState.unsub(); crewState.unsub = null; crewState.code = null; }
     unwatchHosted(); photoCache = {};
-    if (!u) {
-      LS_KEY = "builder-day-v2"; lsLoad(); render();
-      if (!sessionStorage.getItem("ordo-local")) onboarding("welcome");
-      $("storeNote").textContent = "Saved in this browser only. Sign in to sync across your devices.";
-      const b = document.createElement("button"); b.className = "btn-g"; b.innerHTML = G_ICON + "<span>Sign in with Google</span>";
-      b.onclick = signIn;
-      authBox.appendChild(b);
+    if (!u && NATIVE && NATIVE.autoSignIn && !autoTried) {
+      // the app was signed in before (e.g. this is an update): sign back in silently instead of asking
+      autoTried = true;
+      window.__ordoAutoSignInFailed = () => { autoFailed = true; showSignedOut(); };
+      $("storeNote").textContent = "Signing you back in…";
+      try { NATIVE.autoSignIn(); } catch(e) { showSignedOut(); }
       return;
     }
+    if (!u) { showSignedOut(); return; }
+    bootWaitAuth = false; bootDone();
+    try { NATIVE && NATIVE.markSignedIn && NATIVE.markSignedIn(); } catch(e){}
     // Signed in: load this account's cached copy, then live data from Firestore
     const local = lsRead("builder-day-v2");
     LS_KEY = "builder-day-v2:" + u.uid; lsLoad(); render();

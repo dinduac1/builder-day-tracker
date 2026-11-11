@@ -57,6 +57,7 @@ public class TrackerActivity extends Activity {
     private View fullscreenView;
     private WebChromeClient.CustomViewCallback fullscreenCallback;
     private long backgroundSince = 0;
+    private WebView splash;                                    // ORDO loading animation over the page while it loads
     private static final int RC_PICK = 7;
     private android.webkit.ValueCallback<Uri[]> pickCallback;   // profile photo picker
     private boolean picking = false;
@@ -76,6 +77,14 @@ public class TrackerActivity extends Activity {
         web = new WebView(this);
         web.setBackgroundColor(0xFF08090C);
         root.addView(web, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        if (state == null) {
+            splash = new WebView(this);
+            splash.setBackgroundColor(0xFF08090C);
+            splash.setVerticalScrollBarEnabled(false);
+            splash.loadUrl("file:///android_asset/loader.html");
+            root.addView(splash, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            root.postDelayed(this::hideSplash, 12_000);   // never trap anyone behind it
+        }
         setContentView(root);
 
         WebSettings ws = web.getSettings();
@@ -96,6 +105,10 @@ public class TrackerActivity extends Activity {
                 if (!req.isForMainFrame()) return false;
                 try { startActivity(new Intent(Intent.ACTION_VIEW, u)); } catch (Exception ignored) { }
                 return true;                                          // other sites open in their own app/browser
+            }
+            @Override
+            public void onPageFinished(WebView v, String url) {
+                if (url != null && url.startsWith("about:")) hideSplash();          // offline screen has its own animation
             }
             // No connection and nothing cached: show ORDO's own offline screen, not Android's error page
             @Override
@@ -243,6 +256,7 @@ public class TrackerActivity extends Activity {
                         Credential c = response.getCredential();
                         if (c instanceof CustomCredential && GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL.equals(c.getType())) {
                             String idToken = GoogleIdTokenCredential.createFrom(c.getData()).getIdToken();
+                            rememberGoogle(true);
                             js("window.__bdNativeSignIn && window.__bdNativeSignIn(" + JSONObject.quote(idToken) + ")");
                         } else {
                             jsError("Google didn't return an account.");
@@ -256,7 +270,36 @@ public class TrackerActivity extends Activity {
                 });
     }
 
+    /** The person has signed in with Google in this app (cleared only when they sign out). */
+    private void rememberGoogle(boolean on) { getSharedPreferences("auth", MODE_PRIVATE).edit().putBoolean("google", on).apply(); }
+
+    /**
+     * The page has no session (after an update, cleared storage, a new WebView): sign back in with the
+     * Google account already used here, with no account picker. Tells the page if that isn't possible.
+     */
+    private void autoSignIn() {
+        if (!getSharedPreferences("auth", MODE_PRIVATE).getBoolean("google", false)) { js("window.__ordoAutoSignInFailed && window.__ordoAutoSignInFailed()"); return; }
+        com.google.android.libraries.identity.googleid.GetGoogleIdOption opt = new com.google.android.libraries.identity.googleid.GetGoogleIdOption.Builder()
+                .setServerClientId(WEB_CLIENT_ID).setFilterByAuthorizedAccounts(true).setAutoSelectEnabled(true).build();
+        GetCredentialRequest request = new GetCredentialRequest.Builder().addCredentialOption(opt).build();
+        CredentialManager.create(this).getCredentialAsync(this, request, new CancellationSignal(), getMainExecutor(),
+                new CredentialManagerCallback<GetCredentialResponse, GetCredentialException>() {
+                    @Override public void onResult(GetCredentialResponse response) {
+                        Credential c = response.getCredential();
+                        if (c instanceof CustomCredential && GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL.equals(c.getType())) {
+                            String idToken = GoogleIdTokenCredential.createFrom(c.getData()).getIdToken();
+                            js("window.__bdNativeSignIn && window.__bdNativeSignIn(" + JSONObject.quote(idToken) + ")");
+                        } else js("window.__ordoAutoSignInFailed && window.__ordoAutoSignInFailed()");
+                    }
+                    @Override public void onError(GetCredentialException e) {
+                        Log.w(TAG, "silent sign-in unavailable", e);
+                        js("window.__ordoAutoSignInFailed && window.__ordoAutoSignInFailed()");
+                    }
+                });
+    }
+
     private void signOutOfGoogle() {
+        rememberGoogle(false);
         CredentialManager.create(this).clearCredentialStateAsync(new ClearCredentialStateRequest(), new CancellationSignal(),
                 getMainExecutor(), new CredentialManagerCallback<Void, ClearCredentialException>() {
                     @Override public void onResult(Void v) { }
@@ -274,6 +317,9 @@ public class TrackerActivity extends Activity {
     private class Bridge {
         @JavascriptInterface public void signInWithGoogle() { runOnUiThread(TrackerActivity.this::signInWithGoogle); }
         @JavascriptInterface public void signOut() { runOnUiThread(TrackerActivity.this::signOutOfGoogle); }
+        @JavascriptInterface public void autoSignIn() { runOnUiThread(TrackerActivity.this::autoSignIn); }
+        /** The page is signed in (covers people who signed in before this version existed). */
+        @JavascriptInterface public void markSignedIn() { rememberGoogle(true); }
         @JavascriptInterface public void keepAwake(boolean on) {
             runOnUiThread(() -> {
                 if (on) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -354,6 +400,8 @@ public class TrackerActivity extends Activity {
                 return "";
             } catch (Exception e) { return String.valueOf(e.getMessage()); }
         }
+        /** The page has drawn its first screen: drop the loading animation. */
+        @JavascriptInterface public void appReady() { runOnUiThread(TrackerActivity.this::hideSplash); }
         @JavascriptInterface public void notify(String title, String body) {
             Notifs.createChannels(getApplicationContext());
             Notifs.postCrew(getApplicationContext(), Math.abs(body.hashCode()) % 100000 + 10000, title, body);
@@ -402,6 +450,12 @@ public class TrackerActivity extends Activity {
     private void reportLock() {
         String st = !AppLock.isAvailable(this) ? "unavailable" : AppLock.enabled(this) ? "on" : "off";
         web.evaluateJavascript("window.__ordoLockChanged && window.__ordoLockChanged('" + st + "')", null);
+    }
+
+    private void hideSplash() {
+        if (splash == null) return;
+        WebView s = splash; splash = null;
+        s.animate().alpha(0f).setDuration(280).withEndAction(() -> { root.removeView(s); s.destroy(); }).start();
     }
 
     private void showOffline() {
