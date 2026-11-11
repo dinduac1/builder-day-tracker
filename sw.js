@@ -1,7 +1,7 @@
 // ORDO service worker: keeps the app opening offline, shows reminders and crew alerts, opens ORDO when tapped.
 // Pages: network first (always fresh when online), cached copy when offline.
 // Files, fonts and the Firebase SDK: served from cache, refreshed in the background.
-const CACHE = "ordo-v2";
+const CACHE = "ordo-v3", MEDIA_CACHE = "ordo-media";
 const CORE = ["./", "firebase-config.js", "manifest.webmanifest", "favicon.png", "icon-192.png", "badge-72.png",
   "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js",
   "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js",
@@ -12,7 +12,7 @@ self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => Promise.all(CORE.map(u => c.add(u).catch(() => {})))).then(() => self.skipWaiting()));
 });
 self.addEventListener("activate", e => e.waitUntil((async () => {
-  for (const k of await caches.keys()) if (k !== CACHE) await caches.delete(k);
+  for (const k of await caches.keys()) if (k !== CACHE && k !== MEDIA_CACHE) await caches.delete(k);
   await self.clients.claim();
 })()));
 
@@ -20,6 +20,15 @@ self.addEventListener("fetch", e => {
   const req = e.request, url = new URL(req.url);
   if (req.method !== "GET") return;
   const same = url.origin === self.location.origin;
+  if (same && url.pathname.startsWith("/api/media/")) {               // chat photos, videos, voice notes: download once
+    e.respondWith((async () => {
+      const c = await caches.open(MEDIA_CACHE), hit = await c.match(url.pathname);
+      if (hit) return hit;
+      if (req.headers.has("range")) { e.waitUntil(fetch(url.pathname).then(r => r.ok && c.put(url.pathname, r)).catch(() => {})); return fetch(req); }
+      const res = await fetch(req); if (res.ok) c.put(url.pathname, res.clone()); return res;
+    })());
+    return;
+  }
   if (same && url.pathname.startsWith("/api/")) return;              // reminder / crew server: always live
   if (!same && !SHELL_HOSTS.includes(url.hostname)) return;          // Firebase, YouTube etc. handle themselves
   if (req.mode === "navigate") {

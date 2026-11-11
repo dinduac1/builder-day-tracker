@@ -64,7 +64,8 @@ public class TrackerActivity extends Activity {
     private Uri cameraUri;                                     // where the camera writes a progress photo
     private static final int RC_CAM = 8, RC_LOCK = 9, RC_CONFIRM = 12;
     private String[] pendingLock;                              // a lock change waiting for "confirm it's you"
-    private android.webkit.PermissionRequest pendingCam;      // the page asked for the camera; waiting on Android's prompt                           // the picker isn't "leaving the app": no relock
+    private android.webkit.PermissionRequest pendingCam;      // the page asked for camera / microphone; waiting on Android's prompt
+    private String[] pendingRes;                           // the picker isn't "leaving the app": no relock
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -126,14 +127,22 @@ public class TrackerActivity extends Activity {
                 view.setBackgroundColor(Color.BLACK);
             }
             @Override public void onHideCustomView() { exitFullscreen(); }
-            // ORDO's camera screen (getUserMedia): ask Android for the camera, then let the page have it
+            // the page asks for the camera (ORDO camera) or microphone (voice notes): ask Android, then let it have them
             @Override public void onPermissionRequest(android.webkit.PermissionRequest req) {
                 runOnUiThread(() -> {
-                    boolean cam = java.util.Arrays.asList(req.getResources()).contains(android.webkit.PermissionRequest.RESOURCE_VIDEO_CAPTURE);
-                    if (!cam || !siteHost().equals(req.getOrigin().getHost())) { req.deny(); return; }
-                    if (checkSelfPermission(android.Manifest.permission.CAMERA) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                        req.grant(new String[]{android.webkit.PermissionRequest.RESOURCE_VIDEO_CAPTURE});
-                    } else { pendingCam = req; picking = true; requestPermissions(new String[]{android.Manifest.permission.CAMERA}, RC_CAM); }
+                    if (!siteHost().equals(req.getOrigin().getHost())) { req.deny(); return; }
+                    java.util.List<String> res = new java.util.ArrayList<>(), need = new java.util.ArrayList<>();
+                    for (String r : req.getResources()) {
+                        String perm = android.webkit.PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(r) ? android.Manifest.permission.CAMERA
+                                : android.webkit.PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(r) ? android.Manifest.permission.RECORD_AUDIO : null;
+                        if (perm == null) continue;
+                        res.add(r);
+                        if (checkSelfPermission(perm) != android.content.pm.PackageManager.PERMISSION_GRANTED) need.add(perm);
+                    }
+                    if (res.isEmpty()) { req.deny(); return; }
+                    if (need.isEmpty()) { req.grant(res.toArray(new String[0])); return; }
+                    pendingCam = req; pendingRes = res.toArray(new String[0]); picking = true;
+                    requestPermissions(need.toArray(new String[0]), RC_CAM);
                 });
             }
             // <input type="file">: profile photos, gallery picks
@@ -178,9 +187,9 @@ public class TrackerActivity extends Activity {
     public void onRequestPermissionsResult(int rc, String[] perms, int[] results) {
         super.onRequestPermissionsResult(rc, perms, results);
         if (rc != RC_CAM || pendingCam == null) return;
-        if (results.length > 0 && results[0] == android.content.pm.PackageManager.PERMISSION_GRANTED)
-            pendingCam.grant(new String[]{android.webkit.PermissionRequest.RESOURCE_VIDEO_CAPTURE});
-        else pendingCam.deny();
+        boolean all = results.length > 0;
+        for (int r : results) if (r != android.content.pm.PackageManager.PERMISSION_GRANTED) all = false;
+        if (all && pendingRes != null) pendingCam.grant(pendingRes); else pendingCam.deny();
         pendingCam = null;
     }
 
