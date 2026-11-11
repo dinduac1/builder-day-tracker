@@ -1,155 +1,48 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ORDO · Loading options</title>
+<title>ORDO · Motion</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800&family=Geist:wght@400;600&family=Geist+Mono:wght@500&display=swap">
 <style>
-:root{--bg:#08090C;--tile:#111318;--ink:#F3F1EC;--acc:#7C8BFF;--muted:rgba(243,241,236,.55)}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:Geist,system-ui,sans-serif}
-header{padding:28px 16px 6px;max-width:980px;margin:0 auto}
+body{margin:0;background:#08090C;color:#F3F1EC;font-family:Geist,system-ui,sans-serif}
+header{padding:28px 16px 4px;max-width:1000px;margin:0 auto}
 h1{font-family:"Big Shoulders Display",sans-serif;font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:34px;margin:0}
-header p{color:var(--muted);margin:6px 0 0;font-size:14.5px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;max-width:980px;margin:18px auto 40px;padding:0 16px}
+h2.sec{font-family:"Big Shoulders Display",sans-serif;font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:22px;max-width:1000px;margin:26px auto 0;padding:0 16px}
+header p,.secp{color:rgba(243,241,236,.6);margin:6px auto 0;font-size:14.5px;max-width:1000px}
+.secp{padding:0 16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;max-width:1000px;margin:12px auto 0;padding:0 16px}
 .card{background:#0c0d11;border:1px solid rgba(243,241,236,.08);border-radius:22px;padding:18px;display:grid;gap:10px}
-.stage{height:230px;border-radius:16px;background:radial-gradient(circle at 50% 42%,#141726,#08090C 72%);display:grid;place-content:center;justify-items:center;gap:18px;overflow:hidden}
-.card h2{margin:0;font-family:"Big Shoulders Display",sans-serif;font-weight:800;font-size:22px;letter-spacing:.06em;text-transform:uppercase}
-.card h2 span{font-family:"Geist Mono",monospace;font-size:12px;color:var(--acc);letter-spacing:.1em;margin-right:8px}
-.card p{margin:0;color:var(--muted);font-size:13.5px;line-height:1.45}
-svg{display:block;overflow:visible}
-.word{font-family:"Big Shoulders Display",sans-serif;font-weight:800;letter-spacing:.38em;font-size:15px;color:var(--muted);margin-left:.38em}
+.stage{height:270px;border-radius:16px;background:radial-gradient(circle at 50% 40%,#151828,#08090C 72%);display:grid;place-content:center;overflow:hidden}
+.card h3{margin:0;font-family:"Big Shoulders Display",sans-serif;font-weight:800;font-size:22px;letter-spacing:.06em;text-transform:uppercase}
+.card h3 span{font-family:"Geist Mono",monospace;font-size:12px;color:#7C8BFF;letter-spacing:.1em;margin-right:8px}
+.card p{margin:0;color:rgba(243,241,236,.6);font-size:13.5px;line-height:1.45}
+.pick{display:inline-block;font-family:"Geist Mono",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#0A0C16;background:#7C8BFF;border-radius:999px;padding:3px 9px;margin-left:6px;vertical-align:middle}
+footer{height:40px}
+</style>
+<script src="ordo-anim.js"></script>
+</head><body>
+<header><h1>ORDO motion</h1><p>Round two, built from your picks. These run in the app as shown here.</p></header>
 
-/* A · Orbit */
-.a .spin{transform-origin:40px 40px;animation:spin 1.1s cubic-bezier(.55,.15,.45,.85) infinite}
-.a .glow{filter:drop-shadow(0 0 6px rgba(124,139,255,.9))}
-.a .halo{transform-origin:40px 40px;animation:halo 2.2s ease-in-out infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes halo{0%,100%{opacity:.25;transform:scale(1)}50%{opacity:.6;transform:scale(1.06)}}
+<h2 class="sec">Opening the app</h2><p class="secp">Streak merged into the logo, then the brand reveal.</p>
+<div class="grid"><div class="card"><div class="stage" id="a-open"></div>
+  <h3><span>1</span>Seven days → ORDO <i class="pick">In the app</i></h3><p>Seven days light up around the ring. Days 1–6 melt into the ivory ring, day 7 becomes the ultramarine segment and snaps into its slot, then O·R·D·O drops in.</p></div></div>
 
-/* B · Assemble */
-.b .iv{stroke-dasharray:96 200;animation:draw 2.6s cubic-bezier(.65,0,.35,1) infinite}
-.b .ul{transform-origin:43px 21px;animation:snap 2.6s cubic-bezier(.34,1.56,.64,1) infinite}
-.b .tile{transform-origin:40px 40px;animation:tile 2.6s ease-in-out infinite}
-@keyframes draw{0%{stroke-dashoffset:96}40%,78%{stroke-dashoffset:0}100%{stroke-dashoffset:-96}}
-@keyframes snap{0%,40%{opacity:0;transform:scale(.2) rotate(-60deg)}55%,78%{opacity:1;transform:none}92%,100%{opacity:0;transform:scale(.6)}}
-@keyframes tile{0%,40%{transform:scale(.96)}55%{transform:scale(1.04)}70%,100%{transform:scale(.96)}}
+<h2 class="sec">Syncing</h2><p class="secp">Orbit + Assemble + Grade up, merged.</p>
+<div class="grid"><div class="card"><div class="stage" id="a-sync"></div>
+  <h3><span>2</span>Comet draw <i class="pick">In the app</i></h3><p>A comet races round and draws the ring behind it while the centre counts 0 → 100%. It docks into its slot as the ultramarine segment and the centre lands on A+.</p></div></div>
 
-/* C · Heartbeat */
-.c .beat{transform-origin:40px 40px;animation:beat 1.6s ease-in-out infinite}
-.c .rip{transform-origin:40px 40px;fill:none;stroke:var(--acc);stroke-width:1.6;opacity:0;animation:rip 1.6s ease-out infinite}
-.c .rip.two{animation-delay:.28s}
-@keyframes beat{0%,100%{transform:scale(1)}12%{transform:scale(1.12)}24%{transform:scale(.98)}36%{transform:scale(1.08)}55%{transform:scale(1)}}
-@keyframes rip{0%{opacity:.75;transform:scale(.55)}70%,100%{opacity:0;transform:scale(1.25)}}
-
-/* D · Streak */
-.d .dot{fill:rgba(243,241,236,.14);transition:fill .2s,transform .25s;transform-box:fill-box;transform-origin:center}
-.d .dot.on{fill:var(--acc);transform:scale(1.35)}
-.d .ring{transition:stroke .3s}
-.d .flash{transform-origin:40px 40px;animation:none}
-.d .flash.go{animation:pop .55s ease-out}
-.d .lbl{font-family:"Geist Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);min-height:14px}
-@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.14)}100%{transform:scale(1)}}
-
-/* E · Grade */
-.e .arc{stroke-dasharray:0 110;transition:stroke-dasharray .12s linear}
-.e .g{font-family:"Big Shoulders Display",sans-serif;font-weight:800;font-size:19px;fill:var(--ink)}
-.e .wrap{transform-origin:40px 40px}
-.e .wrap.win{animation:pop .5s ease-out}
-
-/* F · Wordmark */
-.f .spin{transform-origin:32px 32px;animation:fspin 2.8s cubic-bezier(.7,0,.3,1) infinite}
-.f .letters{display:flex;gap:.34em;font-family:"Big Shoulders Display",sans-serif;font-weight:800;font-size:30px;letter-spacing:0}
-.f .letters span{display:inline-block;opacity:0;animation:drop 2.8s cubic-bezier(.34,1.56,.64,1) infinite}
-.f .letters span:nth-child(2){animation-delay:.09s}.f .letters span:nth-child(3){animation-delay:.18s}.f .letters span:nth-child(4){animation-delay:.27s}
-@keyframes fspin{0%{transform:rotate(-200deg)}38%,100%{transform:rotate(0deg)}}
-@keyframes drop{0%,30%{opacity:0;transform:translateY(-16px)}44%,82%{opacity:1;transform:none}96%,100%{opacity:0;transform:translateY(8px)}}
-@media (prefers-reduced-motion:reduce){*{animation-duration:6s!important}}
-</style></head><body>
-<header><h1>Loading animations</h1><p>Six options built from the ORDO ring. Pick one (or a mix) and it replaces the current loader on app start, while syncing, and on the offline screen.</p></header>
+<h2 class="sec">Reconnecting</h2><p class="secp">Three takes on Grade up. Tell me which one wins; Charge is in the app until you choose.</p>
 <div class="grid">
-
-<div class="card a"><div class="stage">
-  <svg width="120" height="120" viewBox="0 0 80 80" aria-hidden="true">
-    <circle class="halo" cx="40" cy="40" r="30" fill="none" stroke="#7C8BFF" stroke-width="1" opacity=".3"/>
-    <rect x="8" y="8" width="64" height="64" rx="15" fill="#111318"/>
-    <circle cx="40" cy="40" r="17.5" fill="none" stroke="#F3F1EC" stroke-width="6.6" opacity=".92"/>
-    <g class="spin"><g transform="rotate(-90 40 40)">
-      <circle cx="40" cy="40" r="17.5" fill="none" stroke="#7C8BFF" stroke-width="6.6" stroke-dasharray="3 110" stroke-dashoffset="22" opacity=".18"/>
-      <circle cx="40" cy="40" r="17.5" fill="none" stroke="#7C8BFF" stroke-width="6.6" stroke-dasharray="5 110" stroke-dashoffset="16" opacity=".35"/>
-      <circle cx="40" cy="40" r="17.5" fill="none" stroke="#7C8BFF" stroke-width="6.6" stroke-dasharray="7 110" stroke-dashoffset="9" opacity=".6"/>
-      <circle class="glow" cx="40" cy="40" r="17.5" fill="none" stroke="#7C8BFF" stroke-width="7.4" stroke-linecap="round" stroke-dasharray="11 110"/>
-    </g></g>
-  </svg><div class="word">ORDO</div></div>
-  <h2><span>A</span>Orbit</h2><p>The ultramarine segment races around the ring like a comet, with a fading trail and a soft breathing halo. Energetic and premium.</p></div>
-
-<div class="card b"><div class="stage">
-  <svg width="120" height="120" viewBox="0 0 80 80" aria-hidden="true">
-    <g class="tile"><rect x="8" y="8" width="64" height="64" rx="15" fill="#111318"/>
-    <path class="iv" d="M56.8 41.4A17.5 17.5 0 1 1 38.6 22.6" fill="none" stroke="#F3F1EC" stroke-width="6.6" stroke-linecap="round"/>
-    <path class="ul" d="M46.4 23.7a17.5 17.5 0 0 1 9.6 9.9" fill="none" stroke="#7C8BFF" stroke-width="6.6" stroke-linecap="round"/></g>
-  </svg><div class="word">ORDO</div></div>
-  <h2><span>B</span>Assemble</h2><p>The logo builds itself: the ivory ring draws on, the ultramarine piece snaps into its gap with a bounce, holds, then unwinds and repeats.</p></div>
-
-<div class="card c"><div class="stage">
-  <svg width="120" height="120" viewBox="0 0 80 80" aria-hidden="true">
-    <circle class="rip" cx="40" cy="40" r="32"/><circle class="rip two" cx="40" cy="40" r="32"/>
-    <g class="beat"><rect x="8" y="8" width="64" height="64" rx="15" fill="#111318"/>
-    <path d="M46.4 23.7a17.5 17.5 0 0 1 9.6 9.9" fill="none" stroke="#7C8BFF" stroke-width="6.6" stroke-linecap="round"/>
-    <path d="M56.8 41.4A17.5 17.5 0 1 1 38.6 22.6" fill="none" stroke="#F3F1EC" stroke-width="6.6" stroke-linecap="round"/></g>
-  </svg><div class="word">ORDO</div></div>
-  <h2><span>C</span>Heartbeat</h2><p>The icon beats like a heart (ba-bum) and sends ultramarine ripples outward. Alive, intense, a little dramatic.</p></div>
-
-<div class="card d"><div class="stage">
-  <svg width="140" height="140" viewBox="0 0 80 80" aria-hidden="true"><g class="flash">
-    <rect x="18" y="18" width="44" height="44" rx="11" fill="#111318"/>
-    <circle class="ring" cx="40" cy="40" r="12" fill="none" stroke="#F3F1EC" stroke-width="4.6"/>
-    <g id="dDots"></g></g>
-  </svg><div class="lbl" id="dLbl">Day 1</div></div>
-  <h2><span>D</span>Streak</h2><p>Seven days light up around the icon, one after another. On day 7 the ring turns ultramarine and pops: a week kept. Then it starts again.</p></div>
-
-<div class="card e"><div class="stage">
-  <svg width="120" height="120" viewBox="0 0 80 80" aria-hidden="true"><g class="wrap" id="eWrap">
-    <rect x="8" y="8" width="64" height="64" rx="15" fill="#111318"/>
-    <circle cx="40" cy="40" r="17.5" fill="none" stroke="rgba(243,241,236,.12)" stroke-width="6.6"/>
-    <g transform="rotate(-90 40 40)"><circle id="eArc" class="arc" cx="40" cy="40" r="17.5" fill="none" stroke="#7C8BFF" stroke-width="6.6" stroke-linecap="round"/></g>
-    <text id="eG" class="g" x="40" y="47" text-anchor="middle">F</text></g>
-  </svg><div class="word">ORDO</div></div>
-  <h2><span>E</span>Grade up</h2><p>The ring fills while the grade in the middle climbs F → D → C → B → A → A+. Ties straight into ORDO's daily grade.</p></div>
-
-<div class="card f"><div class="stage">
-  <svg width="96" height="96" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="15" fill="#111318"/><g class="spin">
-    <path d="M38.4 15.7a17.5 17.5 0 0 1 9.6 9.9" fill="none" stroke="#7C8BFF" stroke-width="6.6" stroke-linecap="round"/>
-    <path d="M48.8 33.4A17.5 17.5 0 1 1 30.6 14.6" fill="none" stroke="#F3F1EC" stroke-width="6.6" stroke-linecap="round"/></g></svg>
-  <div class="letters"><span>O</span><span>R</span><span>D</span><span>O</span></div></div>
-  <h2><span>F</span>Brand reveal</h2><p>The icon whips round into place and the letters O·R·D·O drop in one by one. Feels like a TV intro.</p></div>
+  <div class="card"><div class="stage" id="a-charge"></div><h3><span>3A</span>Charge <i class="pick">In the app</i></h3><p>The ring charges up while the grade climbs F → A+. On A+ the segment snaps in with a shockwave, then it drains and goes again.</p></div>
+  <div class="card"><div class="stage" id="a-flap"></div><h3><span>3B</span>Split-flap</h3><p>The ring holds still while the segment orbits like a scanner. The grade flips like an airport board and the segment lands in its slot exactly on A+.</p></div>
+  <div class="card"><div class="stage" id="a-rise"></div><h3><span>3C</span>Rise</h3><p>Ultramarine rises inside the ring like a charge level, with a moving wave, as the grade climbs. Full = A+, the segment snaps in, then it drains.</p></div>
 </div>
+<footer></footer>
 <script>
-// D · Streak
-(function(){
-  const g = document.getElementById("dDots"), lbl = document.getElementById("dLbl"), ring = document.querySelector(".d .ring"), fl = document.querySelector(".d .flash");
-  const dots = [];
-  for (let i = 0; i < 7; i++) { const a = -Math.PI / 2 + i * 2 * Math.PI / 7, c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    c.setAttribute("cx", 40 + 30 * Math.cos(a)); c.setAttribute("cy", 40 + 30 * Math.sin(a)); c.setAttribute("r", 3.4); c.setAttribute("class", "dot"); g.appendChild(c); dots.push(c); }
-  let n = 0;
-  setInterval(() => {
-    if (n === 8) { dots.forEach(d => d.classList.remove("on")); ring.style.stroke = "#F3F1EC"; fl.classList.remove("go"); n = 0; lbl.textContent = "Day 1"; return; }
-    if (n < 7) { dots[n].classList.add("on"); lbl.textContent = "Day " + (n + 1); }
-    if (n === 6) { ring.style.stroke = "#7C8BFF"; void fl.offsetWidth; fl.classList.add("go"); lbl.textContent = "Week kept"; }
-    n++;
-  }, 260);
-})();
-// E · Grade up
-(function(){
-  const arc = document.getElementById("eArc"), g = document.getElementById("eG"), w = document.getElementById("eWrap");
-  const G = ["F","D","C","B","A","A+"]; let p = 0;
-  setInterval(() => {
-    p = p >= 118 ? 0 : p + 2;
-    const f = Math.min(1, p / 100);
-    arc.style.strokeDasharray = `${(f * 110).toFixed(1)} 110`;
-    g.textContent = G[Math.min(5, Math.floor(f * 5.99))];
-    if (p === 100) { void w.offsetWidth; w.classList.add("win"); }
-    if (p === 0) w.classList.remove("win");
-  }, 28);
-})();
+ORDOAnim.mount(document.getElementById("a-open"), "open", {size: 110});
+ORDOAnim.mount(document.getElementById("a-sync"), "sync", {size: 110});
+ORDOAnim.mount(document.getElementById("a-charge"), "charge", {size: 110});
+ORDOAnim.mount(document.getElementById("a-flap"), "flap", {size: 110});
+ORDOAnim.mount(document.getElementById("a-rise"), "rise", {size: 110});
 </script>
 </body></html>

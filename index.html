@@ -772,10 +772,20 @@ textarea.tx{resize:vertical;min-height:64px;line-height:1.45}
 .pfhandle{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;border:1px solid var(--line);border-radius:14px;background:var(--bg);padding-left:14px}
 .pfhandle span{color:var(--muted);font-size:17px}
 .pfhandle input{border:0!important;background:none!important;padding-left:4px!important}
+.wday2{display:grid;gap:8px;padding:12px 0;border-bottom:1px solid var(--line)}
+.wday2 .wdh{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.wday2 .wdh b{font-family:var(--f-display);font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:18px}
+.wday2 .wdh span{font-size:12.5px;color:var(--muted);text-align:right}
+.wday2 .chipbtn{padding:7px 11px;font-size:12.5px}
+.wday2 .wset{font:inherit;font-size:13px;padding:7px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--muted);justify-self:start}
 </style>
 </head>
 <body>
-<div id="boot" aria-label="Loading ORDO"><svg class="ordo-load" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="15" fill="#111318"/><circle cx="32" cy="32" r="17.5" fill="none" stroke="rgba(243,241,236,.08)" stroke-width="6.6"/><g class="ol-rot"><g transform="rotate(-90 32 32)"><circle class="ol-iv" cx="32" cy="32" r="17.5" fill="none" stroke="#F3F1EC" stroke-width="6.6" stroke-linecap="round"/><circle cx="32" cy="32" r="17.5" fill="none" stroke="#7C8BFF" stroke-width="6.6" stroke-linecap="round" stroke-dasharray="11 110"/></g></g></svg><div class="ol-word">ORDO</div></div>
+<script src="ordo-anim.js"></script>
+<script src="ordo-anim.js"></script>
+<div id="boot" aria-label="Loading ORDO"><div id="bootAnim"></div></div>
+<script>window.ORDOAnim && ORDOAnim.mount(document.getElementById("bootAnim"), "sync", {size: 92});</script>
+<script>window.ORDOAnim && ORDOAnim.mount(document.getElementById("bootAnim"), "sync", {size: 92});</script>
 
 <div class="wrap">
   <header class="top">
@@ -1334,11 +1344,31 @@ const setKeys = () => { const W = workouts(); return Object.keys(W).filter(k => 
 const estMin = items => Math.round(items.reduce((t, r) => t + (r.unit === "sec" ? r.target : r.target * 3) + restSecs(), 0) / 60);
 const split = () => (settings.split && settings.split.length === 7) ? settings.split : DEFAULT_SPLIT;
 const defaultWorkoutFor = k => split()[(fromKey(k).getDay() + 6) % 7];
-const workoutKeyFor = k => { const w = (days[k] && days[k].workout) || defaultWorkoutFor(k); return workouts()[w] ? w : "full"; };
+const PLAN_AREAS = ["Upper body", "Back", "Core", "Legs & glutes", "Pelvic floor"];
+const isAreaPlan = w => typeof w === "string" && w.startsWith("areas:");
+const planAreas = w => isAreaPlan(w) ? w.slice(6).split("|").filter(a => PLAN_AREAS.includes(a)) : [];
+const areaPlanKey = areas => areas.length ? "areas:" + PLAN_AREAS.filter(a => areas.includes(a)).join("|") : "rest";
+const workoutKeyFor = k => { const w = (days[k] && days[k].workout) || defaultWorkoutFor(k); return workouts()[w] || (isAreaPlan(w) && planAreas(w).length) ? w : "full"; };
+/** What a plan entry means: a saved set, or chosen areas taken from your Full body set (library for areas it doesn't have). */
+function resolveWorkout(key){
+  const W = workouts();
+  if (isAreaPlan(key)) {
+    const areas = planAreas(key), base = (W.full && W.full.items) || [], lib = exLibrary();
+    const items = areas.flatMap(a => { const mine = base.filter(r => r.sec === a); return (mine.length ? mine : lib.filter(r => r.sec === a)).map(r => ({...r})); });
+    return {key, name: areas.join(" + "), focus: `${areas.length} area${areas.length > 1 ? "s" : ""} · ${items.length} exercises`, items, areas: true};
+  }
+  const w = W[key] || W.full;
+  return {key: W[key] ? key : "full", ...w};
+}
+const WEEK_TEMPLATES = [
+  {name: "2 areas a day", sub: "Upper + Back · Core + Legs · Sun pelvic floor", plan: ["areas:Upper body|Back", "areas:Core|Legs & glutes", "areas:Upper body|Back", "areas:Core|Legs & glutes", "areas:Upper body|Back", "areas:Core|Legs & glutes", "areas:Pelvic floor"]},
+  {name: "Full body", sub: "Everything Mon–Sat · Sun rest", plan: ["full", "full", "full", "full", "full", "full", "rest"]},
+  {name: "Upper / Lower", sub: "Upper + Back · Legs + Core, 2 rest days", plan: ["areas:Upper body|Back", "areas:Core|Legs & glutes", "rest", "areas:Upper body|Back", "areas:Core|Legs & glutes", "areas:Upper body|Back|Core|Legs & glutes", "rest"]},
+];
 function repGroups(blockId, k){
   if (blockId === "train") {
-    const wk = workoutKeyFor(k), W = workouts();
-    const gs = [{key:"w:" + wk, label:W[wk].name, title:`${W[wk].name} · ${W[wk].focus}`, items:W[wk].items}];
+    const wk = workoutKeyFor(k), W = workouts(), R = resolveWorkout(wk);
+    const gs = [{key:(R.areas ? "a:" : "w:") + wk, label:R.name, title:`${R.name} · ${R.focus}`, items:R.items}];
     if (wk !== "rest" && W.core.items.length) gs.push({key:"w:core", label:"Core", title:"Core · every training day", items:W.core.items});
     return gs;
   }
@@ -2136,11 +2166,12 @@ function renderReps(b, day, ex, prior7){
   if (b.id === "train") {
     const wk = workoutKeyFor(sel), W = workouts();
     const bar = document.createElement("div"); bar.className = "wsel";
-    bar.innerHTML = `<label class="fl" for="wsel">Workout</label><select id="wsel" class="ed">${setKeys().map(k => `<option value="${k}">${esc(W[k].name)} · ${esc(W[k].focus || "")}</option>`).join("")}</select>`;
+    const opts = [...new Set([defaultWorkoutFor(sel), wk, ...split().filter(isAreaPlan), ...PLAN_AREAS.map(a => "areas:" + a), ...setKeys()])].filter(k => k === "rest" || W[k] || isAreaPlan(k));
+    bar.innerHTML = `<label class="fl" for="wsel">Workout</label><select id="wsel" class="ed">${opts.map(k => { const R = resolveWorkout(k); return `<option value="${esc(k)}">${esc(k === "rest" ? "Rest" : R.name)}${k === defaultWorkoutFor(sel) ? " · today's plan" : ""}</option>`; }).join("")}</select>`;
     const se = bar.querySelector("select"); se.value = wk;
     se.onchange = () => { const d = ensure(sel); d.workout = se.value === defaultWorkoutFor(sel) ? null : se.value; saveDay(d,false); render(); };
     const sp = document.createElement("div"); sp.className = "rmeta";
-    sp.textContent = "Week: " + DOW.map((n,i) => `${n} ${(W[split()[i]] || W.full).name}`).join(" · ");
+    sp.textContent = "Week: " + DOW.map((n,i) => `${n} ${split()[i] === "rest" ? "Rest" : resolveWorkout(split()[i]).name}`).join(" · ");
     const wl = document.createElement("button"); wl.className = "linkbtn"; wl.textContent = "Build workout sets · plan your week";
     wl.onclick = () => openWorkouts();
     ex.append(bar, sp, wl);
@@ -2208,8 +2239,8 @@ function renderReps(b, day, ex, prior7){
       ex.appendChild(box);
     }
     const link = document.createElement("button"); link.className = "linkbtn";
-    link.textContent = g.items.length ? `Edit ${g.label} counters` : "+ Track reps";
-    link.onclick = () => { editingReps = g.key; repDraft = g.items.map(r => ({...r})); if (!repDraft.length) repDraft.push(newRep()); render(); };
+    link.textContent = g.key.startsWith("a:") ? "Change exercises or targets in Workout sets" : g.items.length ? `Edit ${g.label} counters` : "+ Track reps";
+    link.onclick = g.key.startsWith("a:") ? () => openWorkouts("full") : () => { editingReps = g.key; repDraft = g.items.map(r => ({...r})); if (!repDraft.length) repDraft.push(newRep()); render(); };
     ex.appendChild(link);
   });
   return recs;
@@ -2904,7 +2935,7 @@ function renderGoals(today){
     }
     if (g.workout) {
       const acts = document.createElement("div"); acts.className = "gacts";
-      const W = workouts()[workoutKeyFor(sel)], items = repDefs("train", sel);
+      const W = resolveWorkout(workoutKeyFor(sel)), items = repDefs("train", sel);
       if (sel === today && items.length && workoutKeyFor(sel) !== "rest") {
         const w = document.createElement("button"); w.className = "linkbtn gwork";
         w.textContent = `▶ ${W.name} · ${items.length} exercises · ~${estMin(items)} min`;
@@ -3937,12 +3968,26 @@ function drawWorkouts(){
     box.appendChild(c);
   });
   o.querySelector("#wNew").onclick = () => drawWorkoutEditor(null);
-  const wk = o.querySelector(".wweek"), keys = setKeys();
+  const wk = o.querySelector(".wweek"), keys = setKeys().filter(k => k !== "rest");
+  const tp = document.createElement("div"); tp.className = "tpls";
+  WEEK_TEMPLATES.forEach(T => { const c = document.createElement("button"); c.className = "tpl"; c.innerHTML = `<b></b><span></span>`; c.querySelector("b").textContent = T.name; c.querySelector("span").textContent = T.sub;
+    c.onclick = () => { settings.split = [...T.plan]; saveSettings(); drawWorkouts(); toast(`${T.name} plan set.`); }; tp.appendChild(c); });
+  wk.appendChild(tp);
+  const note = document.createElement("p"); note.className = "beat"; note.style.margin = "4px 0"; note.textContent = "Tap the areas you train each day (as many as you like). Exercises and targets come from your Full body set.";
+  wk.appendChild(note);
   DOW.forEach((dn, i) => {
-    const r = document.createElement("label"); r.className = "wday";
-    r.innerHTML = `<span>${dn}</span><select>${keys.map(k => `<option value="${k}">${esc(W[k].name)}</option>`).join("")}</select>`;
-    const se = r.querySelector("select"); se.value = W[split()[i]] ? split()[i] : "full";
-    se.onchange = () => { const sp = [...split()]; sp[i] = se.value; settings.split = sp; saveSettings(); };
+    const e = split()[i], areas = planAreas(e);
+    const r = document.createElement("div"); r.className = "wday2";
+    r.innerHTML = `<div class="wdh"><b>${dn}</b><span></span></div><div class="chips2"></div><select class="wset"><option value="">Or a saved set…</option>${keys.map(k => `<option value="${k}">${esc(W[k].name)}</option>`).join("")}</select>`;
+    const cnt = isAreaPlan(e) ? resolveWorkout(e).items.length : e === "rest" ? 0 : (W[e] || W.full).items.length;
+    r.querySelector(".wdh span").textContent = e === "rest" ? "Rest" : `${isAreaPlan(e) ? areas.join(" + ") : (W[e] || W.full).name} · ${cnt} exercises`;
+    const ch = r.querySelector(".chips2");
+    const setDay = v => { const sp = [...split()]; sp[i] = v; settings.split = sp; saveSettings(); drawWorkouts(); };
+    PLAN_AREAS.forEach(a => { const b = document.createElement("button"); b.className = "chipbtn" + (areas.includes(a) ? " on" : ""); b.textContent = a;
+      b.onclick = () => setDay(areaPlanKey(areas.includes(a) ? areas.filter(x => x !== a) : [...areas, a])); ch.appendChild(b); });
+    const rb = document.createElement("button"); rb.className = "chipbtn" + (e === "rest" ? " on" : ""); rb.textContent = "Rest"; rb.onclick = () => setDay("rest"); ch.appendChild(rb);
+    const se = r.querySelector("select"); se.value = W[e] && e !== "rest" ? e : "";
+    se.onchange = () => { if (se.value) setDay(se.value); };
     wk.appendChild(r);
   });
 }
@@ -4613,6 +4658,8 @@ const G_ICON = '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107"
         else setTimeout(() => onboarding("profile"), 50);
       }
       watchCrew(); watchFeed(); renderCrew(); registerCrewDevice(); watchHosted();
+      // the founder asked for 2 areas a day (Mon/Wed/Fri upper + back, Tue/Thu/Sat core + legs, Sun pelvic floor): set once
+      if (FOUNDERS.includes(myEmail()) && !settings.weekPlanSet) { settings.split = [...WEEK_TEMPLATES[0].plan]; settings.weekPlanSet = 1; saveSettings(); render(); }
       // First sign-in on a device that was used signed-out: carry those days into an empty account
       if (snap.empty && local && local.days && Object.keys(local.days).length) {
         for (const k in local.days) { days[k] = norm(local.days[k]); store.put("day-" + k, days[k]); }
