@@ -93,6 +93,11 @@ public class TrackerActivity extends Activity {
                 try { startActivity(new Intent(Intent.ACTION_VIEW, u)); } catch (Exception ignored) { }
                 return true;                                          // other sites open in their own app/browser
             }
+            // No connection and nothing cached: show ORDO's own offline screen, not Android's error page
+            @Override
+            public void onReceivedError(WebView v, WebResourceRequest req, android.webkit.WebResourceError err) {
+                if (req.isForMainFrame()) showOffline();
+            }
         });
         web.setWebChromeClient(new WebChromeClient() {
             // full-screen video
@@ -300,5 +305,15 @@ public class TrackerActivity extends Activity {
     private void reportLock() {
         String st = !AppLock.isAvailable(this) ? "unavailable" : AppLock.enabled(this) ? "on" : "off";
         web.evaluateJavascript("window.__ordoLockChanged && window.__ordoLockChanged('" + st + "')", null);
+    }
+
+    private void showOffline() {
+        try (java.io.InputStream in = getAssets().open("offline.html")) {
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            byte[] buf = new byte[4096]; int n;
+            while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+            String html = out.toString("UTF-8").replace("__SITE__", getString(R.string.site_url));
+            web.loadDataWithBaseURL("about:blank", html, "text/html", "utf-8", null);
+        } catch (java.io.IOException e) { Log.w(TAG, "offline page", e); }
     }
 }

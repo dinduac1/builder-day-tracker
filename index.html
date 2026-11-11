@@ -2388,6 +2388,8 @@ async function sendTest(){
     renderReminders(j.ok ? "Test sent. It should arrive in a few seconds." : "The test didn't go through" + (j.status ? ` (push service said ${j.status})` : "") + ".", !j.ok);
   } catch(e) { renderReminders("Couldn't reach the reminder server.", true); }
 }
+// The service worker keeps ORDO opening offline (the app too); push reminders are only wired on the website.
+if ("serviceWorker" in navigator && location.protocol === "https:" && (NATIVE || !REMINDERS)) navigator.serviceWorker.register("sw.js").catch(() => {});
 if (REMINDERS && !NATIVE) {
   $("remindLink").onclick = () => $("remindPanel").scrollIntoView({behavior: "smooth", block: "start"});
   (async () => {
