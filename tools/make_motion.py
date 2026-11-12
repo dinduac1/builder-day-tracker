@@ -7,7 +7,7 @@ anim = open(os.path.join(ROOT, "ordo-anim.js"), encoding="utf-8").read()
 RECONNECT = "charge"   # the user's pick for the Reconnecting screen: charge | flap | rise
 
 open(os.path.join(A, "loader.html"), "w", encoding="utf-8", newline="\n").write(f'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800&family=Geist+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://builder-day-tracker.dinduking1.workers.dev/fonts/fonts.css">
 <style>html,body{{margin:0;height:100%;background:#08090C;overflow:hidden}}main{{height:100%;display:grid;place-content:center}}</style></head>
 <body><main id="m"></main><script>{anim}
 ORDOAnim.mount(document.getElementById("m"), "open", {{size: 104}});</script></body></html>

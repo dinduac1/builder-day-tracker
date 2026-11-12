@@ -2,11 +2,11 @@
 // Pages: network first (always fresh when online), cached copy when offline.
 // Files, fonts and the Firebase SDK: served from cache, refreshed in the background.
 const CACHE = "ordo-v4", MEDIA_CACHE = "ordo-media";
-const CORE = ["./", "ordo-anim.js", "firebase-config.js", "manifest.webmanifest", "favicon.png", "icon-192.png", "badge-72.png",
+const CORE = ["./", "ordo-anim.js", "fonts/fonts.css", "firebase-config.js", "manifest.webmanifest", "favicon.png", "icon-192.png", "badge-72.png",
   "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js",
   "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js",
   "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"];
-const SHELL_HOSTS = ["www.gstatic.com", "fonts.googleapis.com", "fonts.gstatic.com"];
+const SHELL_HOSTS = ["www.gstatic.com"];   // the Firebase SDK; fonts are served from ORDO itself
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => Promise.all(CORE.map(u => c.add(u).catch(() => {})))).then(() => self.skipWaiting()));
