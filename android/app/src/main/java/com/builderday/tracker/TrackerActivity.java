@@ -57,7 +57,9 @@ public class TrackerActivity extends Activity {
     private View fullscreenView;
     private WebChromeClient.CustomViewCallback fullscreenCallback;
     private long backgroundSince = 0;
-    private WebView splash;                                    // ORDO loading animation over the page while it loads
+    private WebView splash;
+    private String pendingOpen;                                // "chat" when opened from a chat notification
+    private boolean pageReady;                                    // ORDO loading animation over the page while it loads
     private static final int RC_PICK = 7;
     private android.webkit.ValueCallback<Uri[]> pickCallback;   // profile photo picker
     private boolean picking = false;
@@ -149,14 +151,18 @@ public class TrackerActivity extends Activity {
             @Override public boolean onShowFileChooser(WebView v, android.webkit.ValueCallback<Uri[]> cb, FileChooserParams params) {
                 if (pickCallback != null) pickCallback.onReceiveValue(null);
                 pickCallback = cb;
-                Intent pick = params.createIntent(), cam = cameraIntent(), launch;
-                boolean images = false;
-                for (String t : params.getAcceptTypes()) if (t != null && t.startsWith("image")) images = true;
-                if (cam != null && images && params.isCaptureEnabled()) launch = cam;          // "Take photo": straight to the camera
-                else if (cam != null && images) {                                              // otherwise camera or gallery
-                    launch = Intent.createChooser(pick, "Add a photo");
-                    launch.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{cam});
-                } else { launch = pick; cameraUri = null; }
+                boolean img = false, vid = false;
+                for (String t : params.getAcceptTypes()) {
+                    if (t == null) continue;
+                    for (String one : t.split(",")) { one = one.trim(); if (one.startsWith("image")) img = true; if (one.startsWith("video")) vid = true; }
+                }
+                boolean multi = params.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE;
+                Intent launch = null;
+                cameraUri = null;
+                if (params.isCaptureEnabled() && (img || vid))                                  // "Take a photo" / "Record a video"
+                    launch = vid && !img ? captureIntent(android.provider.MediaStore.ACTION_VIDEO_CAPTURE, ".mp4") : captureIntent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE, ".jpg");
+                if (launch == null && (img || vid)) launch = galleryIntent(img, vid, multi);    // the phone's photo & video grid
+                if (launch == null) launch = params.createIntent();
                 try { picking = true; startActivityForResult(launch, RC_PICK); }
                 catch (Exception e) { picking = false; pickCallback = null; cb.onReceiveValue(null); return false; }
                 return true;
@@ -169,6 +175,7 @@ public class TrackerActivity extends Activity {
                     getSharedPreferences(CrewMessagingService.PREFS, MODE_PRIVATE).edit().putString(CrewMessagingService.KEY_TOKEN, t).apply());
         } catch (Throwable t) { Log.w(TAG, "push token unavailable", t); }
 
+        pendingOpen = getIntent().getStringExtra("open");
         if (state != null) web.restoreState(state);
         else web.loadUrl(getString(R.string.site_url));
     }
@@ -204,7 +211,14 @@ public class TrackerActivity extends Activity {
             return;
         }
         if (req != RC_PICK || pickCallback == null) return;
-        Uri[] got = WebChromeClient.FileChooserParams.parseResult(res, data);
+        Uri[] got = null;
+        if (res == RESULT_OK && data != null) {
+            if (data.getClipData() != null) {                       // several picked
+                android.content.ClipData c = data.getClipData();
+                got = new Uri[c.getItemCount()];
+                for (int i = 0; i < got.length; i++) got[i] = c.getItemAt(i).getUri();
+            } else if (data.getData() != null) got = new Uri[]{data.getData()};
+        }
         if (res == RESULT_OK && (got == null || got.length == 0) && cameraUri != null) got = new Uri[]{cameraUri};   // came from the camera
         pickCallback.onReceiveValue(got);
         pickCallback = null;
@@ -214,6 +228,8 @@ public class TrackerActivity extends Activity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
+        String open = intent.getStringExtra("open");
+        if (open != null) { pendingOpen = open; if (pageReady) deliverOpen(); }
     }
 
     /* ---------- Back: video full screen → page's own back (closes guides / asks before leaving a workout) → leave ---------- */
@@ -417,7 +433,7 @@ public class TrackerActivity extends Activity {
             } catch (Exception e) { return String.valueOf(e.getMessage()); }
         }
         /** The page has drawn its first screen: drop the loading animation. */
-        @JavascriptInterface public void appReady() { runOnUiThread(TrackerActivity.this::hideSplash); }
+        @JavascriptInterface public void appReady() { runOnUiThread(() -> { hideSplash(); pageReady = true; deliverOpen(); }); }
         @JavascriptInterface public void notify(String title, String body) {
             Notifs.createChannels(getApplicationContext());
             Notifs.postCrew(getApplicationContext(), Math.abs(body.hashCode()) % 100000 + 10000, title, body);
@@ -471,6 +487,12 @@ public class TrackerActivity extends Activity {
         web.evaluateJavascript("window.__ordoLockChanged && window.__ordoLockChanged(" + AppLock.info(this) + "," + JSONObject.quote(error) + ")", null);
     }
 
+    private void deliverOpen() {
+        if (pendingOpen == null) return;
+        js("window.__ordoOpen && window.__ordoOpen(" + JSONObject.quote(pendingOpen) + ")");
+        pendingOpen = null;
+    }
+
     private void hideSplash() {
         if (splash == null) return;
         WebView s = splash; splash = null;
@@ -495,6 +517,43 @@ public class TrackerActivity extends Activity {
         java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
         b.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out);
         return "data:image/png;base64," + android.util.Base64.encodeToString(out.toByteArray(), android.util.Base64.NO_WRAP);
+    }
+
+    /** Android's Photo Picker: every photo and video on the phone in a grid, no storage permission needed. */
+    private Intent galleryIntent(boolean img, boolean vid, boolean multi) {
+        boolean picker = Build.VERSION.SDK_INT >= 33;
+        if (!picker && Build.VERSION.SDK_INT >= 30) {
+            try { picker = android.os.ext.SdkExtensions.getExtensionVersion(Build.VERSION_CODES.R) >= 2; } catch (Throwable ignored) { }
+        }
+        if (picker) {
+            Intent i = new Intent(android.provider.MediaStore.ACTION_PICK_IMAGES);
+            if (img && !vid) i.setType("image/*"); else if (vid && !img) i.setType("video/*");
+            if (multi) {
+                int max = 30;
+                try { max = Math.min(30, android.provider.MediaStore.getPickImagesMaxLimit()); } catch (Throwable ignored) { }
+                i.putExtra(android.provider.MediaStore.EXTRA_PICK_IMAGES_MAX, max);
+            }
+            return i;
+        }
+        Intent i = new Intent(Intent.ACTION_GET_CONTENT).addCategory(Intent.CATEGORY_OPENABLE).setType(img && vid ? "*/*" : img ? "image/*" : "video/*");
+        if (img && vid) i.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"image/*", "video/*"});
+        if (multi) i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        return i;
+    }
+
+    private Intent captureIntent(String action, String ext) {
+        Intent i = cameraIntent();
+        if (i == null) return null;
+        if (!android.provider.MediaStore.ACTION_IMAGE_CAPTURE.equals(action)) {
+            try {
+                java.io.File f = new java.io.File(new java.io.File(getCacheDir(), "photos"), "v" + System.currentTimeMillis() + ext);
+                cameraUri = androidx.core.content.FileProvider.getUriForFile(this, getPackageName() + ".files", f);
+                i = new Intent(action).putExtra(android.provider.MediaStore.EXTRA_OUTPUT, cameraUri)
+                        .addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                if (i.resolveActivity(getPackageManager()) == null) { cameraUri = null; return null; }
+            } catch (Exception e) { cameraUri = null; return null; }
+        }
+        return i;
     }
 
     /** Camera intent that saves full-size into our cache (shared through FileProvider), or null if no camera app. */

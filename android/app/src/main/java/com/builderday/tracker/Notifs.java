@@ -26,6 +26,7 @@ final class Notifs {
     static String channelFor(Context ctx, String blockId) { return "blk_" + blockId + "_" + NotifPrefs.soundOf(ctx, blockId); }
     static String warnChannel(Context ctx) { return "warn_" + NotifPrefs.soundOf(ctx, "warn"); }
     static String crewChannel(Context ctx) { return "crew_" + NotifPrefs.soundOf(ctx, "crew"); }
+    static String chatChannel(Context ctx) { return "chat_" + NotifPrefs.soundOf(ctx, "chat"); }
 
     private static void make(NotificationManager nm, Context ctx, String id, String name, String desc, String sound, AudioAttributes aa, java.util.Set<String> keep) {
         NotificationChannel ch = new NotificationChannel(id, name, NotificationManager.IMPORTANCE_HIGH);
@@ -48,10 +49,12 @@ final class Notifs {
         }
         make(nm, ctx, warnChannel(ctx), "5 minutes left", "Heads-up before each block ends", NotifPrefs.soundOf(ctx, "warn"), notif, keep);
         make(nm, ctx, crewChannel(ctx), "Crew", "When someone in your crew finishes a goal or a day", NotifPrefs.soundOf(ctx, "crew"), notif, keep);
+        make(nm, ctx, chatChannel(ctx), "Crew chat", "New messages, photos and voice notes from your crew", NotifPrefs.soundOf(ctx, "chat"), new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION_COMMUNICATION_INSTANT).setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build(), keep);
         // channels from older picks (and the first app versions) go, so the phone's settings stay tidy
         for (NotificationChannel c : nm.getNotificationChannels()) {
             String id = c.getId();
-            if ((id.startsWith("blk_") || id.startsWith("block_") || id.startsWith("warn_") || id.startsWith("crew_")) && !keep.contains(id))
+            if ((id.startsWith("blk_") || id.startsWith("block_") || id.startsWith("warn_") || id.startsWith("crew_") || id.startsWith("chat_")) && !keep.contains(id))
                 nm.deleteNotificationChannel(id);
         }
 
@@ -74,6 +77,29 @@ final class Notifs {
 
     static Uri sound(Context ctx, String raw) {
         return Uri.parse("android.resource://" + ctx.getPackageName() + "/raw/" + raw);
+    }
+
+    /** Tapping opens ORDO straight into the crew chat. */
+    static PendingIntent openChat(Context ctx, int rc) {
+        Intent i = new Intent(ctx, StartActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).putExtra("open", "chat");
+        return PendingIntent.getActivity(ctx, rc, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+    }
+
+    /** A crew chat message: own channel and sound, grouped per crew like a messaging app. */
+    static void postChat(Context ctx, String group, String title, String text) {
+        if (!NotifPrefs.extra(ctx, "chat")) return;
+        createChannels(ctx);
+        NotificationManager nm = ctx.getSystemService(NotificationManager.class);
+        int id = Math.abs((title + text + System.currentTimeMillis()).hashCode()) % 100000 + 20000;
+        nm.notify(id, new Notification.Builder(ctx, chatChannel(ctx))
+                .setSmallIcon(R.drawable.ic_stat).setColor(BRAND)
+                .setContentTitle(title).setContentText(text).setStyle(new Notification.BigTextStyle().bigText(text))
+                .setCategory(Notification.CATEGORY_MESSAGE).setGroup(group)
+                .setContentIntent(openChat(ctx, id)).setAutoCancel(true).build());
+        nm.notify(group.hashCode(), new Notification.Builder(ctx, chatChannel(ctx))
+                .setSmallIcon(R.drawable.ic_stat).setColor(BRAND).setContentTitle("Crew chat")
+                .setGroup(group).setGroupSummary(true).setGroupAlertBehavior(Notification.GROUP_ALERT_CHILDREN)
+                .setContentIntent(openChat(ctx, group.hashCode())).setAutoCancel(true).build());
     }
 
     static PendingIntent openTracker(Context ctx, int rc) {

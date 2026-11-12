@@ -108,7 +108,10 @@ public class StartActivity extends Activity {
 
     private void openTracker() {
         launched = true;
-        startActivity(new Intent(this, TrackerActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP));
+        Intent t = new Intent(this, TrackerActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        String open = getIntent() != null ? getIntent().getStringExtra("open") : null;   // e.g. a chat notification
+        if (open != null) t.putExtra("open", open);
+        startActivity(t);
         finish();
     }
 

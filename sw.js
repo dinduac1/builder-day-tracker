@@ -76,7 +76,8 @@ self.addEventListener("notificationclick", e => {
   e.notification.close();
   e.waitUntil((async () => {
     const wins = await self.clients.matchAll({type: "window", includeUncontrolled: true});
-    for (const w of wins) if ("focus" in w) return w.focus();
-    return self.clients.openWindow(e.notification.data && e.notification.data.url || "./");
+    const url = (e.notification.data && e.notification.data.url) || "./";
+    for (const w of wins) if ("focus" in w) { await w.focus(); if (url.includes("open=chat")) w.postMessage({open: "chat"}); return; }
+    return self.clients.openWindow(url);
   })());
 });

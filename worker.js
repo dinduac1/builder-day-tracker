@@ -107,7 +107,8 @@ async function crewNotify(env, body) {
     {headers: {authorization: "Bearer " + idToken}});
   if (!r.ok) return json({error: "Not a member of this crew"}, 403);
   const docs = (await r.json()).documents || [];
-  const msg = {title: String(title || "Your crew").slice(0, 80), body: text.slice(0, 240), tag: tag || "crew-" + code, url: "/"};
+  const t = tag || "crew-" + code;
+  const msg = {title: String(title || "Your crew").slice(0, 80), body: text.slice(0, 240), tag: t, url: t.startsWith("chat-") ? "/?open=chat" : "/"};
   let fcm = 0, web = 0;
   const fcmToken = env.FCM_SA_JSON ? await googleAccessToken(env).catch(() => null) : null;
   for (const d of docs) {

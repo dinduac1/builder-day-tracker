@@ -91,3 +91,15 @@ save("s_warn",    seq(("E6", .07, "beep", .8), ("rest", .07), ("E6", .07, "beep"
 save("s_nag",     seq(("B5", .09, "square", .9), ("rest", .04), ("E6", .09, "square", .9), ("rest", .04), ("B5", .09, "square", .9), ("rest", .04), ("E6", .09, "square", .9),
                        ("rest", .25), ("B5", .09, "square", .9), ("rest", .04), ("E6", .09, "square", .9), ("rest", .04), ("B5", .09, "square", .9), ("rest", .04), ("E6", .2, "square", .9)), peak=0.95)  # urgent: get up
 print("sounds:", sorted(os.listdir(OUT)))
+
+# Crew chat message: a soft glass "pop" into a bright, short chime — friendly, quick, unmistakably a message
+def mix(*layers):
+    """layers: (start_seconds, samples)"""
+    n = max(int(RATE * s) + len(x) for s, x in layers); out = [0.0] * n
+    for s, x in layers:
+        o = int(RATE * s)
+        for i, v in enumerate(x): out[o + i] += v
+    return out
+save("s_message", mix((0.0, tone(NOTE["E6"], .09, "marimba", .9)),
+                      (0.07, tone(NOTE["B6"], .42, "bell", .75)),
+                      (0.07, tone(NOTE["E7"], .30, "bell", .18))), peak=0.8)

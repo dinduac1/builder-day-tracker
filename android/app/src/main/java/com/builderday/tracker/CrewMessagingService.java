@@ -23,6 +23,7 @@ public class CrewMessagingService extends FirebaseMessagingService {
         String body = d.containsKey("body") ? d.get("body") : "";
         String tag = d.containsKey("tag") ? d.get("tag") : "crew";
         Notifs.createChannels(this);
-        Notifs.postCrew(this, Math.abs((tag + body).hashCode()) % 100000 + 10000, title, body);
+        if (tag.startsWith("chat-")) Notifs.postChat(this, tag, title, body);
+        else Notifs.postCrew(this, Math.abs((tag + body).hashCode()) % 100000 + 10000, title, body);
     }
 }

@@ -17,12 +17,12 @@ import org.json.JSONObject;
 final class NotifPrefs {
     /** Sounds people can pick, in the order shown. "default" = the phone's notification sound, "silent" = none. */
     static final String[][] SOUNDS = {
-        {"s_train", "Punch"}, {"s_build", "Rising marimba"}, {"s_publish", "Bright arpeggio"}, {"s_connect", "Ping"},
+        {"s_message", "Message (ORDO)"}, {"s_train", "Punch"}, {"s_build", "Rising marimba"}, {"s_publish", "Bright arpeggio"}, {"s_connect", "Ping"},
         {"s_review", "Closing bells"}, {"s_study", "Clear bell"}, {"s_lunch", "Warm chime"}, {"s_break", "Easy pluck"},
         {"s_exec", "Knock-knock"}, {"s_drills", "Drill beeps"}, {"s_life", "Warm chord"}, {"s_wind", "Soft swell"},
         {"s_sleep", "Low hush"}, {"s_warn", "Tick-tick"}, {"s_nag", "Urgent"}, {"default", "Phone default"}, {"silent", "Silent"},
     };
-    static final String[] EXTRAS = {"warn", "nag", "crew", "wake"};
+    static final String[] EXTRAS = {"warn", "nag", "crew", "wake", "chat"};
     private static MediaPlayer preview;
 
     private static SharedPreferences p(Context ctx) { return ctx.getSharedPreferences("notif", Context.MODE_PRIVATE); }
@@ -39,6 +39,7 @@ final class NotifPrefs {
         if (s != null && validSound(s)) return s;
         if ("warn".equals(key)) return "s_warn";
         if ("crew".equals(key)) return "s_connect";
+        if ("chat".equals(key)) return "s_message";
         return Notifs.hasSound(ctx, key) ? "s_" + key : "s_exec";
     }
 
@@ -70,6 +71,7 @@ final class NotifPrefs {
             o.put("extras", ex);
             o.put("warnSound", soundOf(ctx, "warn"));
             o.put("crewSound", soundOf(ctx, "crew"));
+            o.put("chatSound", soundOf(ctx, "chat"));
             JSONObject bl = new JSONObject();
             for (Schedule.Block b : Schedule.BLOCKS) {
                 JSONObject x = new JSONObject();
