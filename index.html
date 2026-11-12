@@ -727,7 +727,7 @@ textarea.tx{resize:vertical;min-height:64px;line-height:1.45}
 .chatv textarea{font:inherit;font-size:16px;resize:none;border:0;border-radius:22px;padding:11px 16px;background:#1a1d26;color:var(--ink);max-height:140px;height:44px;line-height:1.35;outline:none}
 .chatv .snd{width:48px;height:48px;border-radius:50%;border:0;background:var(--accent);color:#0A0C16;display:grid;place-content:center;cursor:pointer;touch-action:none;transition:transform .15s}
 .chatv .snd svg{width:22px;height:22px}
-.chatv .snd.rec{transform:scale(1.35);background:#FF6E6A;color:#fff}
+.chatv .snd.recording{transform:scale(1.35);background:#FF6E6A;color:#fff}
 .chatv .replybar,.chatv .rec{display:grid;grid-template-columns:4px minmax(0,1fr) 36px;gap:10px;align-items:center;padding:4px 6px}
 .chatv .replybar i{align-self:stretch;background:var(--accent);border-radius:2px}
 .chatv .replybar b{display:block;color:var(--accent);font-size:13px}.chatv .replybar span{display:block;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -808,6 +808,53 @@ textarea.tx{resize:vertical;min-height:64px;line-height:1.45}
 .cedit .tl2 .h.a{left:-9px;border-radius:8px 0 0 8px}.cedit .tl2 .h.b{right:-9px;border-radius:0 8px 8px 0}
 .cedit .tl2 .h::after{content:"";position:absolute;left:7px;top:35%;bottom:35%;width:3px;border-radius:2px;background:#0A0C16}
 .cedit .busy{position:absolute;inset:0;z-index:3;background:rgba(0,0,0,.72);display:grid;place-content:center;color:#fff;font-family:var(--f-mono);font-size:13px}
+.chatv .rec[hidden],.chatv .replybar[hidden],.chatv .mentions[hidden],.chatv .needhandle[hidden],.chatv .crow[hidden]{display:none!important}
+.chatv .mentions .mnone{padding:12px 14px;font-size:13.5px;color:var(--muted)}
+.chatv .rec{grid-template-columns:auto auto auto minmax(0,1fr) auto!important;gap:10px!important;padding:0 10px!important}
+.chatv .rec .rtrash{display:none;width:36px;height:36px;border:0;background:none;color:var(--warn);cursor:pointer;place-content:center}
+.chatv .rec .rtrash svg{width:22px;height:22px}
+.chatv .rec.locked .rtrash{display:grid}
+.chatv .rec.locked .hint{display:none}
+.chatv .rec .rwave{width:100%;height:28px;min-width:0}
+.chatv .rlock{position:absolute;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 78px);width:40px;padding:10px 0 8px;border-radius:999px;background:#1a1d26;border:1px solid var(--line);display:grid;justify-items:center;gap:4px;color:var(--muted);animation:rlk 1.2s ease-in-out infinite}
+.chatv .rlock[hidden]{display:none}
+.chatv .rlock svg{width:18px;height:18px}.chatv .rlock span{font-size:10px}
+@keyframes rlk{50%{transform:translateY(-6px)}}
+.vn .vp .spin{width:16px;height:16px;border-radius:50%;border:2.5px solid currentColor;border-right-color:transparent;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.chatv > .cam.ccam{position:fixed;z-index:95}
+.chatv .notifnudge{align-self:stretch;margin:0 4px 2px;border:0;border-radius:12px;background:#141a3a;color:var(--accent);font:inherit;font-size:13px;font-weight:600;padding:9px 12px;cursor:pointer;text-align:left}
+.ccam .ccs{width:96px;height:96px;touch-action:none}
+.ccam .ccs svg{width:96px;height:96px}
+.ccam .ccs .core{transition:r .2s,fill .2s}
+.ccam.recording .ccs .core{r:18;fill:#FF6E6A}
+.ccam.recording .ccs .seg{opacity:0}
+.ccam .ccrec{position:absolute;top:calc(env(safe-area-inset-top,0px) + 74px);left:50%;transform:translateX(-50%);z-index:4;display:flex;gap:8px;align-items:center;background:rgba(8,9,12,.6);border-radius:999px;padding:6px 14px;font-family:var(--f-mono);font-size:14px;color:#fff}
+.ccam .ccrec .dotr{width:10px;height:10px;border-radius:50%;background:#FF6E6A;animation:blink 1s infinite}
+.ccam .ccrec[hidden]{display:none}
+.ccam .cbot{grid-template-columns:1fr auto 1fr}
+.ccam .cbot [data-a=gallery]{justify-self:start;width:48px;height:48px;padding:0;justify-content:center}
+.ccam .cbot [data-a=flip]{justify-self:end;width:48px;height:48px;padding:0;justify-content:center}
+.cgal{position:absolute;inset:0;z-index:8;background:#08090C;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto}
+.cgal .gh{display:grid;grid-template-columns:auto auto 1fr;gap:12px;align-items:center;padding:calc(env(safe-area-inset-top,0px) + 10px) 12px 10px;border-bottom:1px solid var(--line)}
+.cgal .gh .x{width:40px;height:40px;border-radius:50%;border:0;background:none;color:var(--ink);font-size:20px;cursor:pointer}
+.cgal .gh b{font-family:var(--f-display);font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:19px}
+.cgal .seg2{justify-self:end;display:flex;background:#14161c;border-radius:999px;padding:3px;gap:2px}
+.cgal .seg2 button{border:0;background:none;color:var(--muted);border-radius:999px;padding:6px 11px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.cgal .seg2 button.on{background:#7C8BFF;color:#0A0C16}
+.cgal .gpart{border:0;background:#141a3a;color:var(--ink);padding:10px 14px;font:inherit;font-size:13px;text-align:left;cursor:pointer}
+.cgal .gg{overflow-y:auto;display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:calc((100vw - 12px) / 3);gap:3px;padding:3px;align-content:start}
+.cgal .gt{position:relative;height:100%;border:0;padding:0;background:#14161c;overflow:hidden;cursor:pointer}
+.cgal .gt img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .15s}
+.cgal .gt.sel img{transform:scale(.86);border-radius:8px}
+.cgal .gt .n{position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.25);font-style:normal;font-family:var(--f-mono);font-size:12px;font-weight:700;display:grid;place-content:center;color:#0A0C16}
+.cgal .gt.sel .n{background:#7C8BFF;border-color:#7C8BFF}
+.cgal .gt .vd{position:absolute;left:6px;bottom:6px;font-family:var(--f-mono);font-size:11px;color:#fff;text-shadow:0 1px 4px #000}
+.cgal .gcam{display:grid;place-content:center;justify-items:center;gap:6px;color:var(--accent);background:#10131d}
+.cgal .gcam svg{width:30px;height:30px}.cgal .gcam span{font-size:12px;font-weight:600;color:var(--ink)}
+.cgal .gempty{grid-column:1 / -1;text-align:center;color:var(--muted);padding:30px}
+.cgal .gbar{display:flex;justify-content:space-between;align-items:center;padding:10px 14px calc(env(safe-area-inset-bottom,0px) + 10px);background:#111318;border-top:1px solid var(--line)}
+.cgal .gbar[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -3317,7 +3364,9 @@ function watchChat(){
   }, () => {});
 }
 const firstName = n => (n || "Someone").split(" ")[0];
-const mentionsMe = t => !!myHandle() && new RegExp(`@${myHandle()}\\b`, "i").test(t || "");
+const mentionTag = m => (m.handle || firstName(m.name).toLowerCase().replace(/[^a-z0-9_]/g, "")) || "";
+const myTags = () => [myHandle(), firstName(profile().name || "").toLowerCase().replace(/[^a-z0-9_]/g, "")].filter(x => x && x.length >= 2);
+const mentionsMe = t => /@crew\b/i.test(t || "") || myTags().some(h => new RegExp(`@${h}\\b`, "i").test(t || ""));
 function msgPreview(m){
   if (m.media) return ({image: "📷 Photo", video: "🎥 Video", audio: `🎤 Voice note${m.media.dur ? " " + fmtSec(Math.round(m.media.dur)) : ""}`}[m.media.type] || "📎 File") + (m.text ? " · " + m.text : "");
   return m.text || "";
@@ -3379,11 +3428,12 @@ function avatarHtml(uid, name){
 }
 /** Text with @mentions of crew members highlighted and links made tappable. */
 function richText(el, text){
-  const handles = new Set(crewState.members.map(m => (m.handle || "").toLowerCase()).filter(Boolean)); if (myHandle()) handles.add(myHandle());
-  const re = /(@[a-z0-9_]{3,20})|(https?:\/\/[^\s<]+)/gi; let last = 0, m;
+  const handles = new Set(crewState.members.map(m => mentionTag(m).toLowerCase()).filter(Boolean)); myTags().forEach(h => handles.add(h));
+  const mine = new Set(myTags()); handles.add("crew"); mine.add("crew");
+  const re = /(@[a-z0-9_]{2,20})|(https?:\/\/[^\s<]+)/gi; let last = 0, m;
   while ((m = re.exec(text))) {
     if (m.index > last) el.appendChild(document.createTextNode(text.slice(last, m.index)));
-    if (m[1] && handles.has(m[1].slice(1).toLowerCase())) { const s = document.createElement("span"); s.className = "mention" + (m[1].slice(1).toLowerCase() === myHandle() ? " mine" : ""); s.textContent = m[1]; el.appendChild(s); }
+    if (m[1] && handles.has(m[1].slice(1).toLowerCase())) { const s = document.createElement("span"); s.className = "mention" + (mine.has(m[1].slice(1).toLowerCase()) ? " mine" : ""); s.textContent = m[1]; el.appendChild(s); }
     else if (m[2]) { const a = document.createElement("a"); a.className = "lnk"; a.href = m[2]; a.target = "_blank"; a.rel = "noopener"; a.textContent = m[2]; el.appendChild(a); }
     else el.appendChild(document.createTextNode(m[0]));
     last = m.index + m[0].length;
@@ -3400,7 +3450,8 @@ function openChat(){
     <div class="cl" role="log" aria-live="polite"></div>
     <div class="cc"><div class="replybar" hidden></div><div class="mentions" hidden></div><div class="needhandle" hidden></div>
       <div class="crow"><button class="ib att" aria-label="Photos and videos">${CI.clip}</button><textarea rows="1" maxlength="1000" placeholder="Message" aria-label="Message"></textarea><button class="ib cam2" aria-label="Camera">${CI.camera}</button><button class="snd" aria-label="Hold to record a voice note">${CI.mic}</button></div>
-      <div class="rec" hidden><span class="dotr"></span><span class="rt">0:00</span><span class="hint">‹ Slide to cancel</span></div></div>`;
+      <div class="rec" hidden><button class="rtrash" aria-label="Delete recording">${CI.del}</button><span class="dotr"></span><span class="rt">0:00</span><canvas class="rwave" width="300" height="40"></canvas><span class="hint">‹ Slide to cancel</span></div>
+      <div class="rlock" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="11" width="12" height="9" rx="2"/><path d="M9 11V8a3 3 0 0 1 6 0v3"/></svg><span>▲</span></div></div>`;
   el.querySelector(".ch b").textContent = crewState.name || "Crew";
   const names = crewState.members.map(m => m.handle ? "@" + m.handle : firstName(m.name));
   el.querySelector(".ch small").textContent = `${crewState.members.length} member${crewState.members.length === 1 ? "" : "s"}${names.length ? " · " + names.slice(0, 4).join(", ") : ""}`;
@@ -3411,14 +3462,15 @@ function openChat(){
   wireComposer(el);
   drawReply(); drawNeedHandle();
   if (!NATIVE && "Notification" in window && Notification.permission === "default") {
-    const nb = document.createElement("button"); nb.className = "dsep"; nb.style.cssText = "align-self:stretch;margin:6px 8px;cursor:pointer;border:0;color:var(--accent)";
+    const nb = document.createElement("button"); nb.className = "notifnudge";
     nb.textContent = "🔔 Get notified when your crew messages you";
     nb.onclick = async () => { const m = await enableWebCrewAlerts(); nb.textContent = m || "Notifications are on."; setTimeout(() => nb.remove(), 1800); };
-    el.querySelector(".cl").before(nb);
+    el.querySelector(".cc").prepend(nb);
   }
   drawChat(true);
 }
 function closeChatBack(){
+  if (history.state && history.state.chat) return;   // a screen opened over the chat closed; the chat stays
   chat.open = false; window.removeEventListener("popstate", closeChatBack);
   if (vn.audio) vn.audio.pause();
   const el = $("chatv"); if (el) el.remove(); renderCrew();
@@ -3449,37 +3501,54 @@ function wireComposer(el){
   ta.oninput = grow; mode();
   const send = () => { const t = ta.value.trim(); if (!t) return; postMessage({text: t}); ta.value = ""; grow(); ta.focus(); };
   ta.onkeydown = e => { if (e.key === "Enter" && !e.shiftKey && !("ontouchstart" in window)) { e.preventDefault(); send(); } };
-  // @mention suggestions
+  // @mention suggestions: the whole crew, as soon as you type @
   function mentionPick(){
     const pre = ta.value.slice(0, ta.selectionStart), m = /(^|\s)@([a-z0-9_]*)$/i.exec(pre);
     if (!m) { men.hidden = true; return; }
-    const q = m[2].toLowerCase();
-    const list = crewState.members.filter(x => x.uid !== (crewFS() || {}).uid && x.handle && (x.handle.startsWith(q) || (x.name || "").toLowerCase().startsWith(q))).slice(0, 6);
-    if (!list.length) { men.hidden = true; return; }
+    const q = m[2].toLowerCase(), me = (crewFS() || {}).uid;
+    const others = crewState.members.filter(x => x.uid !== me);
+    const list = others.filter(x => !q || mentionTag(x).toLowerCase().startsWith(q) || (x.name || "").toLowerCase().startsWith(q)).slice(0, 8);
     men.hidden = false; men.innerHTML = "";
-    list.forEach(x => { const b = document.createElement("button"); b.innerHTML = `<span class="av">${avatarHtml(x.uid, x.name)}</span><span><b></b><small></small></span>`;
-      b.querySelector("b").textContent = x.name || ""; b.querySelector("small").textContent = "@" + x.handle;
+    if (others.length && (!q || "crew".startsWith(q) || "everyone".startsWith(q) || "all".startsWith(q))) {
+      const b = document.createElement("button"); b.innerHTML = `<span class="av" style="background:var(--accent);color:#0A0C16">${others.length + 1}</span><span><b>Everyone in the crew</b><small>@crew</small></span>`;
       b.onmousedown = e => e.preventDefault();
-      b.onclick = () => { const start = pre.length - m[2].length - 1; ta.value = ta.value.slice(0, start) + "@" + x.handle + " " + ta.value.slice(ta.selectionStart); ta.focus(); const c = start + x.handle.length + 2; ta.setSelectionRange(c, c); men.hidden = true; mode(); };
+      b.onclick = () => { const start = pre.length - m[2].length - 1; ta.value = ta.value.slice(0, start) + "@crew " + ta.value.slice(ta.selectionStart); ta.focus(); const c = start + 6; ta.setSelectionRange(c, c); men.hidden = true; mode(); };
+      men.appendChild(b);
+    }
+    if (!list.length && men.childElementCount) return;
+    if (!list.length) { men.innerHTML = `<div class="mnone">${others.length ? "No one in your crew matches @" + esc(q) : "You're the only one in this crew so far. Invite your people from the Crew panel."}</div>`; return; }
+    list.forEach(x => { const tag = mentionTag(x); const b = document.createElement("button"); b.innerHTML = `<span class="av">${avatarHtml(x.uid, x.name)}</span><span><b></b><small></small></span>`;
+      b.querySelector("b").textContent = x.name || ""; b.querySelector("small").textContent = "@" + tag;
+      b.onmousedown = e => e.preventDefault();
+      b.onclick = () => { const start = pre.length - m[2].length - 1; ta.value = ta.value.slice(0, start) + "@" + tag + " " + ta.value.slice(ta.selectionStart); ta.focus(); const c = start + tag.length + 2; ta.setSelectionRange(c, c); men.hidden = true; mode(); };
       men.appendChild(b); });
   }
-  ta.onclick = mentionPick;
-  // send, or hold to record
-  let startX = 0, holdT = null;
+  ta.onclick = mentionPick; ta.onkeyup = mentionPick;
+  // voice notes: tap = locked recording (Send / trash), hold = release to send, slide up = lock, slide left = cancel
+  let sx = 0, sy = 0, downAt = 0, pressing = false;
   snd.onpointerdown = e => {
-    if (snd.dataset.mode === "send") return;
-    e.preventDefault(); startX = e.clientX; snd.setPointerCapture(e.pointerId);
-    holdT = setTimeout(() => { holdT = null; startRec(el); }, 180);
+    if (snd.dataset.mode === "send" || vn.state === "lock" || vn.state === "starting") return;
+    e.preventDefault(); sx = e.clientX; sy = e.clientY; downAt = Date.now(); pressing = true;
+    try { snd.setPointerCapture(e.pointerId); } catch(_) {}
+    startRec(el).then(ok => { if (ok && !pressing) setLock(el); });   // let go during a permission prompt: keep recording, locked
   };
-  snd.onpointermove = e => { if (vn.rec && e.clientX - startX < -90) stopRec(el, false); };
-  const up = () => {
-    if (holdT) { clearTimeout(holdT); holdT = null; toast("Hold the mic to record, release to send."); return; }
-    if (vn.rec) stopRec(el, true);
+  snd.onpointermove = e => {
+    if (!pressing || vn.state !== "hold") return;
+    if (e.clientX - sx < -90) { pressing = false; stopRec(el, false); }
+    else if (sy - e.clientY > 70) { pressing = false; setLock(el); }
   };
-  snd.onpointerup = up; snd.onpointercancel = () => { if (holdT) { clearTimeout(holdT); holdT = null; } if (vn.rec) stopRec(el, false); };
-  snd.onclick = () => { if (snd.dataset.mode === "send") send(); };
+  snd.onpointerup = () => {
+    if (!pressing) return; pressing = false;
+    if (vn.state === "hold") { if (Date.now() - downAt < 350) setLock(el); else stopRec(el, true); }
+  };
+  snd.onpointercancel = () => { if (pressing && vn.state === "hold") setLock(el); pressing = false; };   // interrupted (a prompt, a call): keep it
+  snd.onclick = () => {
+    if (vn.state === "lock") { if (Date.now() - vn.lockAt > 400) stopRec(el, true); return; }
+    if (snd.dataset.mode === "send") send();
+  };
+  el.querySelector(".rtrash").onclick = () => stopRec(el, false);
   el.querySelector(".att").onclick = () => pickGallery(el);
-  cam2.onclick = () => cameraSheet(el);
+  cam2.onclick = () => chatCamera(el);
 }
 function sheet(el, items){
   const sh = document.createElement("div"); sh.className = "csheet";
@@ -3488,14 +3557,67 @@ function sheet(el, items){
   sh.onclick = e => { if (e.target === sh) sh.remove(); };
   el.appendChild(sh);
 }
-/** 📎: the phone's photo & video grid straight away (several at once). */
+/** 📎: in the app, ORDO's own gallery; on the website, the phone's picker. */
 function pickGallery(el){
+  if (!(NATIVE && NATIVE.galleryPage)) return pickFiles(el);
+  const acc = NATIVE.galleryAccess();
+  if (acc !== "none") return openGallery(el, acc);
+  window.__ordoGalleryPerm = st => st === "none" ? galleryDenied(el) : openGallery(el, st);
+  NATIVE.askGallery();
+}
+function galleryDenied(el){
+  sheet(el, [[CI.photo, "Allow ORDO to see your photos", () => NATIVE.openAppSettings()], [CI.clip, "Pick with the phone's picker instead", () => pickFiles(el)]]);
+}
+function openGallery(el, access){
+  const g = document.createElement("div"); g.className = "cgal"; g.id = "cgal";
+  g.innerHTML = `<div class="gh"><button class="x" aria-label="Close">✕</button><b>Gallery</b><div class="seg2"><button data-k="all" class="on">All</button><button data-k="image">Photos</button><button data-k="video">Videos</button></div></div>
+    ${access === "partial" ? `<button class="gpart">You've let ORDO see only some photos. <u>Allow all</u></button>` : "<span></span>"}
+    <div class="gg"></div><div class="gbar" hidden><span></span><button class="btn primary">Next →</button></div>`;
+  el.appendChild(g);
+  history.pushState({cgal: 1}, ""); window.addEventListener("popstate", galBack);
+  const grid = g.querySelector(".gg"), bar = g.querySelector(".gbar");
+  let kind = "all", offset = 0, done = false, loading = false; const picked = [];
+  g.querySelector(".x").onclick = () => history.back();
+  const part = g.querySelector(".gpart"); if (part) part.onclick = () => NATIVE.openAppSettings();
+  const paintSel = () => {
+    grid.querySelectorAll(".gt[data-key]").forEach(t => { const k = picked.findIndex(p => p.key === t.dataset.key); t.classList.toggle("sel", k >= 0); t.querySelector(".n").textContent = k >= 0 ? k + 1 : ""; });
+    bar.hidden = !picked.length; bar.querySelector("span").textContent = `${picked.length} selected`;
+  };
+  const tileCam = () => { const t = document.createElement("button"); t.className = "gt gcam"; t.innerHTML = `${CI.camera}<span>Camera</span>`; t.onclick = () => { galClose(); history.back(); setTimeout(() => chatCamera(el), 80); }; grid.appendChild(t); };
+  const more = () => {
+    if (loading || done) return; loading = true;
+    let page = []; try { page = JSON.parse(NATIVE.galleryPage(offset, 60, kind)); } catch(e){}
+    offset += page.length; if (page.length < 60) done = true;
+    page.forEach(m => {
+      const key = m.type + "/" + m.id, t = document.createElement("button"); t.className = "gt"; t.dataset.key = key;
+      t.innerHTML = `<img alt="" loading="lazy" decoding="async" src="/__local/thumb/${key}">${m.type === "video" ? `<span class="vd">▶ ${fmtSec(Math.round(m.dur || 0))}</span>` : ""}<i class="n"></i>`;
+      t.onclick = () => { const k = picked.findIndex(p => p.key === key); if (k >= 0) picked.splice(k, 1); else if (picked.length < 30) picked.push({key, ...m}); else toast("Up to 30 at a time."); paintSel(); };
+      grid.appendChild(t);
+    });
+    if (!offset && done) grid.insertAdjacentHTML("beforeend", `<p class="gempty">No photos or videos found on this phone.</p>`);
+    loading = false; paintSel();
+  };
+  const reset = () => { grid.innerHTML = ""; offset = 0; done = false; tileCam(); more(); };
+  g.querySelectorAll(".seg2 button").forEach(b => b.onclick = () => { kind = b.dataset.k; g.querySelectorAll(".seg2 button").forEach(x => x.classList.toggle("on", x === b)); reset(); });
+  grid.onscroll = () => { if (grid.scrollTop + grid.clientHeight > grid.scrollHeight - 600) more(); };
+  bar.querySelector("button").onclick = async () => {
+    const btn = bar.querySelector("button"); btn.disabled = true; btn.textContent = "Loading…";
+    const files = [];
+    for (const p of picked) {
+      try { const r = await fetch(`/__local/file/${p.key}`); const b = await r.blob(); files.push(new File([b], `${p.type === "video" ? "video" : "photo"}-${p.id}.${(p.mime || b.type || "").split("/")[1] || "jpg"}`, {type: p.mime || b.type})); }
+      catch(e) { toast("Couldn't open one of those."); }
+    }
+    galClose(); history.back();
+    if (files.length) setTimeout(() => openEditor(el, files), 80);
+  };
+  reset();
+}
+function galBack(){ if (history.state && history.state.cgal) return; galClose(); }
+function galClose(){ window.removeEventListener("popstate", galBack); const g = $("cgal"); if (g) g.remove(); }
+/** The phone's own picker (website, or when gallery access is refused). */
+function pickFiles(el){
   const i = document.createElement("input"); i.type = "file"; i.accept = "image/*,video/*"; i.multiple = true;
   i.onchange = () => i.files.length && openEditor(el, [...i.files]); i.click();
-}
-function cameraSheet(el){
-  const cap = accept => { const i = document.createElement("input"); i.type = "file"; i.accept = accept; i.capture = "environment"; i.onchange = () => i.files.length && openEditor(el, [...i.files]); i.click(); };
-  sheet(el, [[CI.camera, "Take a photo", () => cap("image/*")], [CI.video, "Record a video", () => cap("video/*")], [CI.photo, "Choose from gallery", () => pickGallery(el)]]);
 }
 const VIDEO_MAX = 25 * 1024 * 1024, VIDEO_MAX_LEN = 300;
 const CROPS = [["orig", "Original", 0], ["1:1", "1:1", 1], ["4:5", "4:5", 4 / 5], ["9:16", "9:16", 9 / 16]];
@@ -3708,44 +3830,75 @@ function transcodeVideo(it, ac, onProgress){
   });
 }
 // ---- voice notes
-const vn = {rec: null, stream: null, chunks: [], t0: 0, levels: [], timer: null, ctx: null, audio: null, playing: null};
+const vn = {state: "idle", rec: null, stream: null, chunks: [], t0: 0, levels: [], timer: null, sample: null, ctx: null, audio: null, playing: null, lockAt: 0};
+const REC_MIME = () => ["audio/webm;codecs=opus", "audio/mp4", "audio/ogg;codecs=opus", "audio/webm"].find(t => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) || "";
+/** Start recording. Resolves true once it's actually recording (after any permission prompt). */
 async function startRec(el){
-  if (!navigator.mediaDevices || !window.MediaRecorder) return toast("Voice notes aren't supported here.");
-  try { vn.stream = await navigator.mediaDevices.getUserMedia({audio: {echoCancellation: true, noiseSuppression: true}}); }
-  catch(e) { return toast("ORDO needs the microphone for voice notes. Allow it in your phone's settings."); }
-  const mime = ["audio/webm;codecs=opus", "audio/ogg;codecs=opus", "audio/mp4", "audio/webm"].find(t => MediaRecorder.isTypeSupported(t)) || "";
-  vn.rec = new MediaRecorder(vn.stream, mime ? {mimeType: mime, audioBitsPerSecond: 32000} : undefined);
+  if (!navigator.mediaDevices || !window.MediaRecorder) { toast("Voice notes aren't supported on this device."); return false; }
+  if (vn.state !== "idle") return false;
+  vn.state = "starting";
+  try { vn.stream = await navigator.mediaDevices.getUserMedia({audio: {echoCancellation: true, noiseSuppression: true, autoGainControl: true}}); }
+  catch(e) { vn.state = "idle"; toast("ORDO needs the microphone for voice notes. Allow it when asked, or in your phone's settings → Apps → ORDO → Permissions."); return false; }
+  if (!$("chatv")) { vn.stream.getTracks().forEach(t => t.stop()); vn.state = "idle"; return false; }
+  const mime = REC_MIME();
+  vn.rec = new MediaRecorder(vn.stream, mime ? {mimeType: mime, audioBitsPerSecond: 48000} : undefined);
   vn.chunks = []; vn.levels = []; vn.t0 = Date.now();
-  vn.rec.ondataavailable = e => e.data.size && vn.chunks.push(e.data);
-  vn.rec.start(250);
+  vn.rec.ondataavailable = e => { if (e.data && e.data.size) vn.chunks.push(e.data); };
+  vn.rec.start(200);
   try {
     vn.ctx = new (window.AudioContext || window.webkitAudioContext)();
     const an = vn.ctx.createAnalyser(); an.fftSize = 512; vn.ctx.createMediaStreamSource(vn.stream).connect(an);
-    const buf = new Uint8Array(an.fftSize);
-    vn.sample = setInterval(() => { an.getByteTimeDomainData(buf); let s = 0; for (const v of buf) s += (v - 128) ** 2; vn.levels.push(Math.sqrt(s / buf.length)); }, 70);
+    const buf = new Uint8Array(an.fftSize), cv = el.querySelector(".rwave"), cx = cv.getContext("2d");
+    vn.sample = setInterval(() => {
+      an.getByteTimeDomainData(buf); let s = 0; for (const v of buf) s += (v - 128) ** 2; vn.levels.push(Math.sqrt(s / buf.length));
+      const W = cv.width, H = cv.height, n = Math.floor(W / 5), arr = vn.levels.slice(-n), mx = Math.max(6, ...arr);
+      cx.clearRect(0, 0, W, H); cx.fillStyle = "#FF6E6A";
+      arr.forEach((v, k) => { const h = Math.max(3, v / mx * H); cx.fillRect(W - (arr.length - k) * 5, (H - h) / 2, 3, h); });
+    }, 70);
   } catch(e){}
-  const snd = el.querySelector(".snd"), rec = el.querySelector(".rec"), row = el.querySelector(".crow");
-  snd.classList.add("rec"); rec.hidden = false; row.querySelector("textarea").style.visibility = "hidden"; row.querySelector(".att").style.visibility = "hidden";
-  const rt = rec.querySelector(".rt");
-  vn.timer = setInterval(() => { const s = (Date.now() - vn.t0) / 1000; rt.textContent = fmtSec(Math.floor(s)); if (s >= 300) stopRec(el, true); }, 200);
-  try { navigator.vibrate && navigator.vibrate(30); } catch(e){}
+  vn.state = "hold"; recUI(el, "hold");
+  const rt = el.querySelector(".rt");
+  vn.timer = setInterval(() => { const sec = (Date.now() - vn.t0) / 1000; rt.textContent = fmtSec(Math.floor(sec)); if (sec >= 300) stopRec(el, true); }, 200);
+  try { navigator.vibrate && navigator.vibrate(25); } catch(e){}
+  return true;
+}
+function setLock(el){ if (vn.state !== "hold") return; vn.state = "lock"; vn.lockAt = Date.now(); recUI(el, "lock"); try { navigator.vibrate && navigator.vibrate(15); } catch(e){} }
+function recUI(el, mode){
+  const snd = el.querySelector(".snd"), rec = el.querySelector("div.rec"), row = el.querySelector(".crow"), lock = el.querySelector(".rlock");
+  const on = mode !== "off";
+  rec.hidden = !on; rec.classList.toggle("locked", mode === "lock");
+  lock.hidden = mode !== "hold";
+  row.querySelector("textarea").style.visibility = on ? "hidden" : "";
+  row.querySelector(".att").style.visibility = on ? "hidden" : "";
+  const cam2 = row.querySelector(".cam2"); if (cam2) cam2.style.visibility = on ? "hidden" : "";
+  snd.classList.toggle("recording", mode === "hold");
+  snd.innerHTML = mode === "lock" ? CI.send : CI.mic;
+  snd.setAttribute("aria-label", mode === "lock" ? "Send voice note" : "Hold to record a voice note");
 }
 function stopRec(el, send){
-  const r = vn.rec; if (!r) return;
-  vn.rec = null; clearInterval(vn.timer); clearInterval(vn.sample);
-  const dur = (Date.now() - vn.t0) / 1000, levels = vn.levels.slice();
+  const r = vn.rec; if (!r || vn.state === "idle") return;
+  vn.rec = null; vn.state = "idle"; clearInterval(vn.timer); clearInterval(vn.sample);
+  const dur = (Date.now() - vn.t0) / 1000, levels = vn.levels.slice(), stream = vn.stream, ctx = vn.ctx;
+  recUI(el, "off");
+  const ta = el.querySelector("textarea"); if (ta) ta.dispatchEvent(new Event("input"));
   r.onstop = () => {
-    vn.stream.getTracks().forEach(t => t.stop()); try { vn.ctx && vn.ctx.close(); } catch(e){}
-    if (!send) { toast("Voice note discarded."); return; }
-    if (dur < 0.8) { toast("Hold the mic a little longer."); return; }
+    stream.getTracks().forEach(t => t.stop()); try { ctx && ctx.close(); } catch(e){}
+    if (!send) { toast("Voice note deleted."); return; }
+    if (dur < 0.7 || !vn.chunks.length) { toast("Too short. Tap the mic to record, then Send."); return; }
     const blob = new Blob(vn.chunks, {type: (r.mimeType || "audio/webm").split(";")[0]});
     const N = 40, wave = []; for (let i = 0; i < N; i++) { const a = levels.slice(Math.floor(i * levels.length / N), Math.floor((i + 1) * levels.length / N)); wave.push(a.length ? Math.max(...a) : 0); }
     const mx = Math.max(1, ...wave);
     sendMedia(blob, "audio", {dur: Math.round(dur * 10) / 10, wave: wave.map(v => Math.round(v / mx * 31))}, "");
   };
+  try { r.requestData(); } catch(e){}
   r.stop();
-  const snd = el.querySelector(".snd"), rec = el.querySelector(".rec"), row = el.querySelector(".crow");
-  snd.classList.remove("rec"); rec.hidden = true; row.querySelector("textarea").style.visibility = ""; row.querySelector(".att").style.visibility = "";
+}
+const audioBlobs = {};   // media url → local object URL: download once, then play from the phone
+async function localAudio(src){
+  if (src.startsWith("blob:")) return src;
+  if (audioBlobs[src]) return audioBlobs[src];
+  const r = await fetch(src); if (!r.ok) throw new Error("not ready");
+  return (audioBlobs[src] = URL.createObjectURL(await r.blob()));
 }
 function voiceBubble(m, src){
   const w = document.createElement("div"); w.className = "vn";
@@ -3753,17 +3906,115 @@ function voiceBubble(m, src){
   w.innerHTML = `<button class="vp" aria-label="Play">${CI.play}</button><div class="vw">${wave.map(v => `<i style="height:${Math.max(3, v / 31 * 26)}px"></i>`).join("")}</div><span class="vt">${fmtSec(Math.round((m.media && m.media.dur) || 0))}</span>`;
   const btn = w.querySelector(".vp"), bars = [...w.querySelectorAll(".vw i")], vt = w.querySelector(".vt"), total = (m.media && m.media.dur) || 0;
   const paint = (t, playing) => { const k = total ? t / total : 0; bars.forEach((b, i) => b.classList.toggle("on", i / bars.length < k)); vt.textContent = playing ? fmtSec(Math.floor(t)) + " / " + fmtSec(Math.round(total)) : fmtSec(Math.round(total)); btn.innerHTML = playing ? CI.pause : CI.play; };
-  btn.onclick = () => {
+  btn.onclick = async e => {
+    e.stopPropagation();
     if (!vn.audio) vn.audio = new Audio();
     const a = vn.audio;
-    if (vn.playing === w && !a.paused) { a.pause(); return; }
-    if (vn.playing !== w) { if (vn.playing && vn.playing.__paint) vn.playing.__paint(0, false); a.src = src; vn.playing = w; }
+    if (vn.playing && vn.playing.src === src && !a.paused) { a.pause(); return; }
+    btn.innerHTML = '<span class="spin"></span>';
+    let url;
+    for (let k = 0; k < 4 && !url; k++) { try { url = await localAudio(src); } catch(err) { await new Promise(r => setTimeout(r, 1200)); } }   // a brand-new note can take a moment to reach every server
+    if (!url) { paint(0, false); return toast("Couldn't load that voice note. Check your connection."); }
+    if (!vn.playing || vn.playing.src !== src) { if (vn.playing && vn.playing.paint) vn.playing.paint(0, false); a.src = url; }
+    vn.playing = {src, paint};
     a.ontimeupdate = () => paint(a.currentTime, true); a.onpause = () => paint(a.currentTime, false); a.onended = () => { paint(0, false); vn.playing = null; };
-    a.play().catch(() => toast("Couldn't play that voice note."));
+    a.play().catch(() => { paint(0, false); toast("This phone can't play that voice note format."); });
   };
-  w.__paint = paint;
+  if (vn.playing && vn.playing.src === src && vn.audio && !vn.audio.paused) { vn.playing.paint = paint; paint(vn.audio.currentTime, true); }
   return w;
 }
+
+// ---- ORDO camera in chat: tap = photo, hold = video
+const cc = {stream: null, facing: "environment", rec: null, chunks: [], t0: 0, torch: false, raf: null, holdT: null};
+const CC_MAX = 60;
+async function chatCamera(el){
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return pickGallery(el);
+  const c = document.createElement("div"); c.className = "cam ccam"; c.id = "ccam";
+  c.innerHTML = `<video playsinline muted autoplay></video><div class="flash"></div>
+    <div class="ctop"><button class="cbtn" data-a="close" aria-label="Close">✕</button><div class="ttl">ORDO camera<small>Tap for photo · hold for video</small></div><button class="cbtn" data-a="torch" aria-label="Flash" hidden>⚡</button></div>
+    <div class="ccrec" hidden><span class="dotr"></span><span class="t">0:00</span></div><div></div>
+    <div class="cbot"><button class="cbtn" data-a="gallery" aria-label="Gallery">${CAM_ICONS.gallery}</button>
+      <button class="shutter ccs" data-a="shoot" aria-label="Tap for photo, hold for video"><svg viewBox="0 0 90 90"><circle cx="45" cy="45" r="40" fill="none" stroke="#F3F1EC" stroke-width="5"/><circle class="prog" cx="45" cy="45" r="40" fill="none" stroke="#7C8BFF" stroke-width="5" stroke-linecap="round" stroke-dasharray="0 252" transform="rotate(-90 45 45)"/><path class="seg" d="M56 10.6A36 36 0 0 1 79.4 34" fill="none" stroke="#7C8BFF" stroke-width="5" stroke-linecap="round"/><circle class="core" cx="45" cy="45" r="31" fill="#F3F1EC"/></svg></button>
+      <button class="cbtn" data-a="flip" aria-label="Switch camera">${CAM_ICONS.flip}</button></div>`;
+  el.appendChild(c);
+  history.pushState({ccam: 1}, ""); window.addEventListener("popstate", ccBack);
+  const q = a => c.querySelector(`[data-a=${a}]`);
+  q("close").onclick = () => history.back();
+  q("gallery").onclick = () => { ccClose(); history.back(); pickGallery(el); };
+  q("flip").onclick = () => { if (cc.rec) return; cc.facing = cc.facing === "user" ? "environment" : "user"; ccStart(c); };
+  q("torch").onclick = async () => { cc.torch = !cc.torch; try { await cc.stream.getVideoTracks()[0].applyConstraints({advanced: [{torch: cc.torch}]}); q("torch").classList.toggle("on", cc.torch); } catch(e){} };
+  const sh = q("shoot");
+  let held = false;
+  sh.onpointerdown = e => { e.preventDefault(); try { sh.setPointerCapture(e.pointerId); } catch(_){} held = false; cc.holdT = setTimeout(() => { held = true; ccRecord(el, c); }, 260); };
+  sh.onpointerup = sh.onpointercancel = () => { clearTimeout(cc.holdT); if (held) ccStopRecord(el, c); else ccPhoto(el, c); held = false; };
+  await ccStart(c);
+}
+function ccBack(){ if (history.state && history.state.ccam) return; ccClose(); }
+function ccClose(){
+  window.removeEventListener("popstate", ccBack);
+  if (cc.rec) { try { cc.rec.onstop = null; cc.rec.stop(); } catch(e){} cc.rec = null; }
+  if (cc.stream) cc.stream.getTracks().forEach(t => t.stop()); cc.stream = null; cancelAnimationFrame(cc.raf);
+  const c = $("ccam"); if (c) c.remove();
+}
+async function ccStart(c){
+  if (cc.stream) cc.stream.getTracks().forEach(t => t.stop());
+  const v = {facingMode: cc.facing, width: {ideal: 1920}, height: {ideal: 1080}};
+  try { cc.stream = await navigator.mediaDevices.getUserMedia({video: v, audio: true}); }
+  catch(e) { try { cc.stream = await navigator.mediaDevices.getUserMedia({video: v}); } catch(e2) { cc.stream = null; } }
+  if (!cc.stream) { toast("ORDO can't open the camera. Allow camera access in your phone's settings."); ccClose(); history.back(); return; }
+  const vid = c.querySelector("video"); vid.srcObject = cc.stream; vid.classList.toggle("mirror", cc.facing === "user"); vid.play().catch(() => {});
+  let torch = false; try { torch = !!(cc.stream.getVideoTracks()[0].getCapabilities().torch); } catch(e){}
+  c.querySelector("[data-a=torch]").hidden = !torch;
+}
+async function ccPhoto(el, c){
+  if (!cc.stream) return;
+  const v = c.querySelector("video"), track = cc.stream.getVideoTracks()[0];
+  let src = null;
+  if ("ImageCapture" in window) { try { src = await createImageBitmap(await new ImageCapture(track).takePhoto()); } catch(e) { src = null; } }
+  const w = src ? src.width : v.videoWidth, h = src ? src.height : v.videoHeight;
+  const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+  const x = cv.getContext("2d"); if (cc.facing === "user") { x.translate(w, 0); x.scale(-1, 1); }
+  x.drawImage(src || v, 0, 0, w, h);
+  const fl = c.querySelector(".flash"); fl.style.opacity = .85; setTimeout(() => fl.style.opacity = 0, 70);
+  beep(1500, .04, .12);
+  const blob = await new Promise(r => cv.toBlob(r, "image/jpeg", .92));
+  ccClose(); history.back();
+  setTimeout(() => openEditor(el, [new File([blob], `ORDO-${Date.now()}.jpg`, {type: "image/jpeg"})]), 60);
+}
+function ccRecord(el, c){
+  if (!cc.stream || cc.rec) return;
+  const mime = ["video/mp4;codecs=avc1,mp4a", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"].find(t => MediaRecorder.isTypeSupported(t)) || "";
+  try { cc.rec = new MediaRecorder(cc.stream, mime ? {mimeType: mime, videoBitsPerSecond: 2800000, audioBitsPerSecond: 96000} : undefined); }
+  catch(e) { toast("This phone can't record video here."); return; }
+  cc.chunks = []; cc.t0 = Date.now();
+  cc.rec.ondataavailable = e => { if (e.data && e.data.size) cc.chunks.push(e.data); };
+  cc.rec.start(500);
+  c.classList.add("recording"); c.querySelector(".ccrec").hidden = false;
+  const prog = c.querySelector(".prog"), t = c.querySelector(".ccrec .t");
+  const tick = () => {
+    const sec = (Date.now() - cc.t0) / 1000;
+    prog.setAttribute("stroke-dasharray", `${(251.3 * Math.min(1, sec / CC_MAX)).toFixed(1)} 252`);
+    t.textContent = fmtSec(Math.floor(sec));
+    if (sec >= CC_MAX) return ccStopRecord(el, c);
+    cc.raf = requestAnimationFrame(tick);
+  };
+  tick();
+  try { navigator.vibrate && navigator.vibrate(30); } catch(e){}
+}
+function ccStopRecord(el, c){
+  const r = cc.rec; if (!r) return;
+  cc.rec = null; cancelAnimationFrame(cc.raf);
+  const dur = (Date.now() - cc.t0) / 1000, type = (r.mimeType || "video/webm").split(";")[0];
+  r.onstop = () => {
+    const blob = new Blob(cc.chunks, {type});
+    ccClose(); history.back();
+    if (dur < 0.6 || !blob.size) return toast("Hold the shutter a little longer to record.");
+    setTimeout(() => openEditor(el, [new File([blob], `ORDO-${Date.now()}.${type.includes("mp4") ? "mp4" : "webm"}`, {type})]), 60);
+  };
+  try { r.requestData(); } catch(e){}
+  r.stop();
+}
+
 function viewImage(el, src){
   const v = document.createElement("div"); v.className = "cview";
   v.innerHTML = `<div class="pt"><button>✕ Close</button><button>${"Save to phone"}</button></div><img alt="">`;

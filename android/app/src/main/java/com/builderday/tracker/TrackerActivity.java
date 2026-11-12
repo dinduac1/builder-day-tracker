@@ -64,7 +64,7 @@ public class TrackerActivity extends Activity {
     private android.webkit.ValueCallback<Uri[]> pickCallback;   // profile photo picker
     private boolean picking = false;
     private Uri cameraUri;                                     // where the camera writes a progress photo
-    private static final int RC_CAM = 8, RC_LOCK = 9, RC_CONFIRM = 12;
+    private static final int RC_CAM = 8, RC_LOCK = 9, RC_CONFIRM = 12, RC_GAL = 13;
     private String[] pendingLock;                              // a lock change waiting for "confirm it's you"
     private android.webkit.PermissionRequest pendingCam;      // the page asked for camera / microphone; waiting on Android's prompt
     private String[] pendingRes;                           // the picker isn't "leaving the app": no relock
@@ -109,6 +109,10 @@ public class TrackerActivity extends Activity {
                 if (!req.isForMainFrame()) return false;
                 try { startActivity(new Intent(Intent.ACTION_VIEW, u)); } catch (Exception ignored) { }
                 return true;                                          // other sites open in their own app/browser
+            }
+            @Override
+            public android.webkit.WebResourceResponse shouldInterceptRequest(WebView v, WebResourceRequest req) {
+                return localMedia(req.getUrl());
             }
             @Override
             public void onPageFinished(WebView v, String url) {
@@ -176,6 +180,12 @@ public class TrackerActivity extends Activity {
         } catch (Throwable t) { Log.w(TAG, "push token unavailable", t); }
 
         pendingOpen = getIntent().getStringExtra("open");
+        // requests made through the service worker reach the app here, not through the WebViewClient
+        try {
+            android.webkit.ServiceWorkerController.getInstance().setServiceWorkerClient(new android.webkit.ServiceWorkerClient() {
+                @Override public android.webkit.WebResourceResponse shouldInterceptRequest(WebResourceRequest req) { return localMedia(req.getUrl()); }
+            });
+        } catch (Throwable t) { Log.w(TAG, "service worker client", t); }
         if (state != null) web.restoreState(state);
         else web.loadUrl(getString(R.string.site_url));
     }
@@ -193,6 +203,7 @@ public class TrackerActivity extends Activity {
     @Override
     public void onRequestPermissionsResult(int rc, String[] perms, int[] results) {
         super.onRequestPermissionsResult(rc, perms, results);
+        if (rc == RC_GAL) { js("window.__ordoGalleryPerm && window.__ordoGalleryPerm(" + JSONObject.quote(galleryAccess()) + ")"); return; }
         if (rc != RC_CAM || pendingCam == null) return;
         boolean all = results.length > 0;
         for (int r : results) if (r != android.content.pm.PackageManager.PERMISSION_GRANTED) all = false;
@@ -434,6 +445,43 @@ public class TrackerActivity extends Activity {
         }
         /** The page has drawn its first screen: drop the loading animation. */
         @JavascriptInterface public void appReady() { runOnUiThread(() -> { hideSplash(); pageReady = true; deliverOpen(); }); }
+        /** "all", "partial" (Android 14: only some photos allowed) or "none". */
+        @JavascriptInterface public String galleryAccess() { return TrackerActivity.this.galleryAccess(); }
+        @JavascriptInterface public void askGallery() {
+            runOnUiThread(() -> {
+                picking = true;
+                if (Build.VERSION.SDK_INT >= 34) requestPermissions(new String[]{android.Manifest.permission.READ_MEDIA_IMAGES, android.Manifest.permission.READ_MEDIA_VIDEO, android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED}, RC_GAL);
+                else if (Build.VERSION.SDK_INT >= 33) requestPermissions(new String[]{android.Manifest.permission.READ_MEDIA_IMAGES, android.Manifest.permission.READ_MEDIA_VIDEO}, RC_GAL);
+                else requestPermissions(new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE}, RC_GAL);
+            });
+        }
+        @JavascriptInterface public void openAppSettings() {
+            runOnUiThread(() -> { picking = true; startActivity(new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()))); });
+        }
+        /** Newest first. kind: "all" | "image" | "video". Each: {id, type, w, h, dur (s), size, date}. */
+        @JavascriptInterface public String galleryPage(int offset, int limit, String kind) {
+            org.json.JSONArray out = new org.json.JSONArray();
+            try {
+                Uri files = android.provider.MediaStore.Files.getContentUri("external");
+                java.util.List<String> proj = new java.util.ArrayList<>(java.util.Arrays.asList("_id", "media_type", "mime_type", "width", "height", "date_added", "_size"));
+                if (Build.VERSION.SDK_INT >= 29) proj.add("duration");
+                Bundle args = new Bundle();
+                args.putString(android.content.ContentResolver.QUERY_ARG_SQL_SELECTION, "image".equals(kind) ? "media_type=1" : "video".equals(kind) ? "media_type=3" : "media_type=1 OR media_type=3");
+                args.putString(android.content.ContentResolver.QUERY_ARG_SQL_SORT_ORDER, "date_added DESC");
+                args.putInt(android.content.ContentResolver.QUERY_ARG_LIMIT, Math.max(1, Math.min(200, limit)));
+                args.putInt(android.content.ContentResolver.QUERY_ARG_OFFSET, Math.max(0, offset));
+                try (android.database.Cursor c = getContentResolver().query(files, proj.toArray(new String[0]), args, null)) {
+                    if (c != null) while (c.moveToNext()) {
+                        boolean video = c.getInt(1) == 3;
+                        org.json.JSONObject o = new org.json.JSONObject().put("id", c.getLong(0)).put("type", video ? "video" : "image")
+                                .put("mime", c.getString(2)).put("w", c.getInt(3)).put("h", c.getInt(4)).put("date", c.getLong(5)).put("size", c.getLong(6));
+                        if (proj.size() > 7) o.put("dur", c.getLong(7) / 1000.0);
+                        out.put(o);
+                    }
+                }
+            } catch (Exception e) { Log.w(TAG, "gallery", e); }
+            return out.toString();
+        }
         @JavascriptInterface public void notify(String title, String body) {
             Notifs.createChannels(getApplicationContext());
             Notifs.postCrew(getApplicationContext(), Math.abs(body.hashCode()) % 100000 + 10000, title, body);
@@ -485,6 +533,46 @@ public class TrackerActivity extends Activity {
     }
     private void reportLock(String error) {
         web.evaluateJavascript("window.__ordoLockChanged && window.__ordoLockChanged(" + AppLock.info(this) + "," + JSONObject.quote(error) + ")", null);
+    }
+
+    private String galleryAccess() {
+        java.util.function.Predicate<String> ok = p -> checkSelfPermission(p) == android.content.pm.PackageManager.PERMISSION_GRANTED;
+        if (Build.VERSION.SDK_INT >= 33) {
+            if (ok.test(android.Manifest.permission.READ_MEDIA_IMAGES) || ok.test(android.Manifest.permission.READ_MEDIA_VIDEO)) return "all";
+            if (Build.VERSION.SDK_INT >= 34 && ok.test(android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED)) return "partial";
+            return "none";
+        }
+        return ok.test(android.Manifest.permission.READ_EXTERNAL_STORAGE) ? "all" : "none";
+    }
+
+    /** /__local/thumb|file/image|video/<id> on our own site: answered from the phone's media store, never the network. */
+    private android.webkit.WebResourceResponse localMedia(Uri u) {
+        try {
+            if (u == null || !siteHost().equals(u.getHost())) return null;
+            java.util.List<String> p = u.getPathSegments();
+            if (p.size() != 4 || !"__local".equals(p.get(0))) return null;
+            boolean video = "video".equals(p.get(2));
+            long id = Long.parseLong(p.get(3));
+            Uri item = android.content.ContentUris.withAppendedId(video ? android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI : android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+            java.util.Map<String, String> h = new java.util.HashMap<>();
+            h.put("Cache-Control", "private, max-age=3600");
+            android.content.ContentResolver cr = getContentResolver();
+            if ("thumb".equals(p.get(1))) {
+                android.graphics.Bitmap b;
+                if (Build.VERSION.SDK_INT >= 29) b = cr.loadThumbnail(item, new android.util.Size(360, 360), null);
+                else b = video ? android.provider.MediaStore.Video.Thumbnails.getThumbnail(cr, id, android.provider.MediaStore.Video.Thumbnails.MINI_KIND, null)
+                               : android.provider.MediaStore.Images.Thumbnails.getThumbnail(cr, id, android.provider.MediaStore.Images.Thumbnails.MINI_KIND, null);
+                if (b == null) return new android.webkit.WebResourceResponse("text/plain", "utf-8", 404, "Not Found", h, new java.io.ByteArrayInputStream(new byte[0]));
+                java.io.ByteArrayOutputStream o = new java.io.ByteArrayOutputStream();
+                b.compress(android.graphics.Bitmap.CompressFormat.JPEG, 82, o);
+                return new android.webkit.WebResourceResponse("image/jpeg", null, 200, "OK", h, new java.io.ByteArrayInputStream(o.toByteArray()));
+            }
+            if ("file".equals(p.get(1))) {
+                String mime = cr.getType(item);
+                return new android.webkit.WebResourceResponse(mime != null ? mime : (video ? "video/mp4" : "image/jpeg"), null, 200, "OK", h, cr.openInputStream(item));
+            }
+        } catch (Exception e) { Log.w(TAG, "local media", e); }
+        return null;
     }
 
     private void deliverOpen() {

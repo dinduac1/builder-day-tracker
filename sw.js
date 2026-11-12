@@ -20,6 +20,7 @@ self.addEventListener("fetch", e => {
   const req = e.request, url = new URL(req.url);
   if (req.method !== "GET") return;
   const same = url.origin === self.location.origin;
+  if (same && url.pathname.startsWith("/__local/")) return;           // the app's own gallery: answered by the app, never cached
   if (same && url.pathname.startsWith("/api/media/")) {               // chat photos, videos, voice notes: download once
     e.respondWith((async () => {
       const c = await caches.open(MEDIA_CACHE), hit = await c.match(url.pathname);
