@@ -862,6 +862,14 @@ textarea.tx{resize:vertical;min-height:64px;line-height:1.45}
 .chipbtn.tick i{width:16px;height:16px;border-radius:5px;border:1.5px solid var(--line-strong);display:grid;place-content:center;font-style:normal;font-size:11px;line-height:1}
 .chipbtn.tick.on i{border-color:var(--accent-ink);background:var(--accent-ink);color:var(--accent)}
 .goal .dayareas{grid-column:2 / -1}
+.chatv .crow{position:relative}
+.chatv .vdraft{position:absolute;left:0;right:54px;top:50%;transform:translateY(-50%);display:grid;grid-template-columns:auto auto minmax(0,1fr);gap:8px;align-items:center;background:#1a1d26;border-radius:22px;padding:2px 12px 2px 4px;min-height:48px}
+.chatv .vdraft[hidden]{display:none}
+.chatv .vdraft .rtrash{display:grid;width:38px;height:38px;border:0;background:none;color:var(--warn);place-content:center;cursor:pointer}
+.chatv .vdraft .rtrash svg{width:21px;height:21px}
+.chatv .vdraft .dl{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.chatv .vdraft .vn{min-width:0}
+.chatv .vdraft .vn .vp{width:34px;height:34px}
 </style>
 </head>
 <body>
@@ -3481,6 +3489,7 @@ function openChat(){
     <div class="cc"><div class="replybar" hidden></div><div class="mentions" hidden></div><div class="needhandle" hidden></div>
       <div class="crow"><button class="ib att" aria-label="Photos and videos">${CI.clip}</button><textarea rows="1" maxlength="1000" placeholder="Message" aria-label="Message"></textarea><button class="ib cam2" aria-label="Camera">${CI.camera}</button><button class="snd" aria-label="Hold to record a voice note">${CI.mic}</button></div>
       <div class="rec" hidden><button class="rtrash" aria-label="Delete recording">${CI.del}</button><span class="dotr"></span><span class="rt">0:00</span><canvas class="rwave" width="300" height="40"></canvas><span class="hint">‹ Slide to cancel</span></div>
+      <div class="vdraft" hidden></div>
       <div class="rlock" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="11" width="12" height="9" rx="2"/><path d="M9 11V8a3 3 0 0 1 6 0v3"/></svg><span>▲</span></div></div>`;
   el.querySelector(".ch b").textContent = crewState.name || "Crew";
   const names = crewState.members.map(m => m.handle ? "@" + m.handle : firstName(m.name));
@@ -3490,7 +3499,7 @@ function openChat(){
   window.addEventListener("popstate", closeChatBack);
   el.querySelector(".back").onclick = () => history.back();
   wireComposer(el);
-  drawReply(); drawNeedHandle();
+  drawReply(); drawNeedHandle(); loadVoiceDraft(el);
   if (!NATIVE && "Notification" in window && Notification.permission === "default") {
     const nb = document.createElement("button"); nb.className = "notifnudge";
     nb.textContent = "🔔 Get notified when your crew messages you";
@@ -3527,7 +3536,7 @@ function drawReply(){
 function wireComposer(el){
   const ta = el.querySelector("textarea"), snd = el.querySelector(".snd"), men = el.querySelector(".mentions");
   const cam2 = el.querySelector(".cam2");
-  const mode = () => { const typing = !!ta.value.trim(); cam2.hidden = typing; snd.innerHTML = typing ? CI.send : CI.mic; snd.setAttribute("aria-label", typing ? "Send" : "Hold to record a voice note"); snd.dataset.mode = typing ? "send" : "mic"; };
+  const mode = () => { if (vn.draft && vn.draft.code === chat.code) return; const typing = !!ta.value.trim(); cam2.hidden = typing; snd.innerHTML = typing ? CI.send : CI.mic; snd.setAttribute("aria-label", typing ? "Send" : "Hold to record a voice note"); snd.dataset.mode = typing ? "send" : "mic"; };
   const grow = () => { ta.style.height = "44px"; ta.style.height = Math.min(140, ta.scrollHeight) + "px"; mode(); mentionPick(); };
   ta.oninput = grow; mode();
   const send = () => { const t = ta.value.trim(); if (!t) return; postMessage({text: t}); ta.value = ""; grow(); ta.focus(); };
@@ -3558,7 +3567,7 @@ function wireComposer(el){
   // voice notes: tap = locked recording (Send / trash), hold = release to send, slide up = lock, slide left = cancel
   let sx = 0, sy = 0, downAt = 0, pressing = false;
   snd.onpointerdown = e => {
-    if (snd.dataset.mode === "send" || vn.state === "lock" || vn.state === "starting") return;
+    if (snd.dataset.mode === "send" || snd.dataset.mode === "draft" || vn.state === "lock" || vn.state === "starting") return;
     e.preventDefault(); sx = e.clientX; sy = e.clientY; downAt = Date.now(); pressing = true;
     try { snd.setPointerCapture(e.pointerId); } catch(_) {}
     startRec(el).then(ok => { if (ok && !pressing) setLock(el); });   // let go during a permission prompt: keep recording, locked
@@ -3575,6 +3584,7 @@ function wireComposer(el){
   snd.onpointercancel = () => { if (pressing && vn.state === "hold") setLock(el); pressing = false; };   // interrupted (a prompt, a call): keep it
   snd.onclick = () => {
     if (vn.state === "lock") { if (Date.now() - vn.lockAt > 400) stopRec(el, true); return; }
+    if (snd.dataset.mode === "draft" && vn.draft) { const d = vn.draft; clearVoiceDraft(); drawVoiceDraft(el); sendMedia(d.blob, "audio", {dur: d.dur, wave: d.wave}, ""); return; }
     if (snd.dataset.mode === "send") send();
   };
   el.querySelector(".rtrash").onclick = () => stopRec(el, false);
@@ -3922,19 +3932,21 @@ function recUI(el, mode){
   snd.innerHTML = mode === "lock" ? CI.send : CI.mic;
   snd.setAttribute("aria-label", mode === "lock" ? "Send voice note" : "Hold to record a voice note");
 }
+/** send: true = send now, false = delete, "draft" = keep it in the chat for later (mic still goes off now). */
 function stopRec(el, send){
   const r = vn.rec; if (!r || vn.state === "idle") return;
   vn.rec = null; vn.state = "idle"; clearInterval(vn.timer); clearInterval(vn.sample);
-  const dur = (Date.now() - vn.t0) / 1000, levels = vn.levels.slice(), stream = vn.stream, ctx = vn.ctx;
+  const dur = (Date.now() - vn.t0) / 1000, levels = vn.levels.slice(), stream = vn.stream, ctx = vn.ctx, code = chat.code;
   recUI(el, "off");
   const ta = el.querySelector("textarea"); if (ta) ta.dispatchEvent(new Event("input"));
   r.onstop = () => {
     if (!send) { toast("Voice note deleted."); return; }
-    if (dur < 0.7 || !vn.chunks.length) { toast("Too short. Tap the mic to record, then Send."); return; }
+    if (dur < 0.7 || !vn.chunks.length) { if (send === true) toast("Too short. Tap the mic to record, then Send."); return; }
     const blob = new Blob(vn.chunks, {type: (r.mimeType || "audio/webm").split(";")[0]});
     const N = 40, wave = []; for (let i = 0; i < N; i++) { const a = levels.slice(Math.floor(i * levels.length / N), Math.floor((i + 1) * levels.length / N)); wave.push(a.length ? Math.max(...a) : 0); }
-    const mx = Math.max(1, ...wave);
-    sendMedia(blob, "audio", {dur: Math.round(dur * 10) / 10, wave: wave.map(v => Math.round(v / mx * 31))}, "");
+    const mx = Math.max(1, ...wave), extra = {dur: Math.round(dur * 10) / 10, wave: wave.map(v => Math.round(v / mx * 31))};
+    if (send === "draft") { saveVoiceDraft(code, blob, extra); return; }
+    sendMedia(blob, "audio", extra, "");
   };
   try { r.requestData(); } catch(e){}
   try { r.stop(); } catch(e){}
@@ -3949,11 +3961,34 @@ function releaseMic(stream, ctx){
 /** Nothing keeps listening or filming when you leave: chat closed, ORDO in the background, page hidden. */
 function releaseAllMedia(why){
   const el = $("chatv");
-  if (vn.state !== "idle") { if (el && vn.rec) stopRec(el, false); else { vn.state = "idle"; releaseMic(vn.stream, vn.ctx); } if (why) toast(why); }
+  if (vn.state !== "idle") { if (el && vn.rec) stopRec(el, "draft"); else { vn.state = "idle"; releaseMic(vn.stream, vn.ctx); } if (why) toast(why); }
   if (cc.mic) { cc.mic.getTracks().forEach(t => t.stop()); cc.mic = null; }
   if ($("ccam")) { ccClose(); if (history.state && history.state.ccam) history.back(); }
 }
-document.addEventListener("visibilitychange", () => { if (document.hidden) releaseAllMedia(vn.state !== "idle" ? "Recording stopped: ORDO went to the background." : ""); });
+document.addEventListener("visibilitychange", () => { if (document.hidden) releaseAllMedia(vn.state !== "idle" ? "Mic off. Your voice note is saved as a draft in the chat." : ""); });
+// ---- voice note drafts (kept on this phone, one per crew)
+async function saveVoiceDraft(code, blob, extra){
+  vn.draft = {code, blob, ...extra};
+  try { await idb.put("vdraft:" + code, {blob, ...extra}); } catch(e){}
+  const el = $("chatv"); if (el && chat.code === code) drawVoiceDraft(el);
+}
+async function loadVoiceDraft(el){
+  if (!vn.draft || vn.draft.code !== chat.code) { try { const v = await idb.get("vdraft:" + chat.code); vn.draft = v && v.blob ? {code: chat.code, ...v} : null; } catch(e) { vn.draft = null; } }
+  drawVoiceDraft(el);
+}
+function clearVoiceDraft(){ const c = vn.draft && vn.draft.code; vn.draft = null; if (c) idb.del("vdraft:" + c).catch(() => {}); }
+function drawVoiceDraft(el){
+  const bar = el.querySelector(".vdraft"), row = el.querySelector(".crow"), snd = el.querySelector(".snd");
+  if (bar.parentElement !== row) row.appendChild(bar);   // sits exactly over the message box
+  const d = vn.draft && vn.draft.code === chat.code ? vn.draft : null;
+  bar.hidden = !d;
+  ["textarea", ".att", ".cam2"].forEach(q => { const x = row.querySelector(q); if (x) x.style.visibility = d ? "hidden" : ""; });
+  if (!d) { snd.innerHTML = CI.mic; snd.dataset.mode = "mic"; const ta = row.querySelector("textarea"); if (ta) ta.dispatchEvent(new Event("input")); return; }
+  bar.innerHTML = `<button class="rtrash" aria-label="Delete draft">${CI.del}</button><span class="dl">Draft</span>`;
+  bar.appendChild(voiceBubble({media: {dur: d.dur, wave: d.wave}}, URL.createObjectURL(d.blob)));
+  bar.querySelector(".rtrash").onclick = () => { clearVoiceDraft(); drawVoiceDraft(el); toast("Draft deleted."); };
+  snd.innerHTML = CI.send; snd.dataset.mode = "draft"; snd.setAttribute("aria-label", "Send voice note");
+}
 const audioBlobs = {};   // media url → local object URL: download once, then play from the phone
 async function localAudio(src){
   if (src.startsWith("blob:")) return src;
